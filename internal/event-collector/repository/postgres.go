@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -68,7 +66,6 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 }
 
 func CreateConnectionString(values map[string]string) string {
-	// https://www.postgresql.org/docs//libpq-connect.html#id-1.7.3.8.3.5
 	pairs := []string{}
 
 	replacer := strings.NewReplacer(`\`, `\\`, `'`, `\'`)
@@ -76,8 +73,5 @@ func CreateConnectionString(values map[string]string) string {
 		pairs = append(pairs, k+"='"+replacer.Replace(v)+"'")
 	}
 
-	result := strings.Join(pairs, " ")
-
-	fmt.Fprintf(os.Stderr, "connection string is %s\n", result)
-	return result
+	return strings.Join(pairs, " ")
 }
