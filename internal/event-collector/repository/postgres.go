@@ -33,10 +33,29 @@ func NewECRepo(cfg *config.ECConfig) (error, *RepoPostgres) {
 // Set up the DB for use, create tables
 func (s *RepoPostgres) Setup(ctx context.Context) {
 	setupStmts := []string{
+		// For yunikorn-core/pkg/webservice/dao/ApplicationDAOInfo struct
 		`DROP TABLE IF EXISTS applications`,
 		`CREATE TABLE applications(
-			Id TEXT,
-			UNIQUE (Id),
+			id UUID,
+			used_resource JSONB NOT NULL,
+			max_used_resource JSONB NOT NULL,
+			pending_resource JSONB NOT NULL,
+			partition TEXT NOT NULL,
+			queue_name TEXT NOT NULL,
+			submission_time BIGINT NOT NULL,
+			finished_time BIGINT,
+			requests JSONB NOT NULL,
+			allocations JSONB NOT NULL,
+			state TEXT,
+			"user" TEXT,
+			groups TEXT[],
+			rejected_message TEXT,
+			state_log JSONB NOT NULL,
+			place_holder_data JSONB NOT NULL,
+			has_reserved BOOLEAN,
+			reservations TEXT[],
+			max_request_priority INTEGER,
+			UNIQUE (id),
 			PRIMARY KEY (Id))`,
 	}
 
