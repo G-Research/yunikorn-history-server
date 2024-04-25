@@ -55,7 +55,7 @@ commands: build/event-collector
 build/event-collector: go.mod go.sum $(shell find cmd internal)
 	@echo "building event-collector"
 	@mkdir -p build
-	"$(GO)" build $(RACE) -a -ldflags '-extldflags "-static"' -o build/event-collecotr ./cmd/event-collector
+	"$(GO)" build $(RACE) -a -ldflags '-extldflags "-static"' -o build/event-collector ./cmd/event-collector
 
 # Remove generated build artifacts
 .PHONY: clean
