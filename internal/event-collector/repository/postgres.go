@@ -4,9 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"richscott/yhs/internal/event-collector/config"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
-	"richscott/yhs/internal/event-collector/config"
 )
 
 type RepoPostgres struct {
@@ -54,7 +55,63 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			reservations TEXT[],
 			max_request_priority INTEGER,
 			UNIQUE (id),
-			PRIMARY KEY (Id))`,
+			PRIMARY KEY (id))`,
+		// for yunikorn-core/pkg/webservice/dao/PartitionQueueDAOInfo struct
+		`DROP TABLE IF EXISTS queues`,
+		`CREATE TABLE queues(
+			id UUID,
+			queue_name TEXT NOT NULL,
+			status TEXT,
+			partition TEXT NOT NULL,
+			pending_resource JSONB,
+			max_resource JSONB,
+			guaranteed_resource JSONB NOT NULL,
+			allocated_resource JSONB NOT NULL,
+			preempting_resource JSONB NOT NULL,
+			head_room JSONB,
+			is_leaf BOOLEAN,
+			is_managed BOOLEAN,
+			properties JSONB,
+			parent TEXT,
+			template_info JSONB,
+			children UUID[],
+			children_names TEXT[],
+			abs_used_capacity JSONB,
+			max_running_apps INTEGER,
+			running_apps INTEGER NOT NULL,
+			current_priority INTEGER,
+			allocating_accepted_apps TEXT[],
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
+		// for yunikorn-core/pkg/webservice/dao/ClusterDAOInfo struct
+		`DROP TABLE IF EXISTS clusters`,
+		`CREATE TABLE clusters(
+			id UUID,
+			start_time BIGINT NOT NULL,
+			rm_build_information JSONB,
+			partition_name TEXT NOT NULL,
+			cluster_name TEXT NOT NULL,
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
+		// for yunikorn-core/pkg/webservice/dao/NodeDAOInfo struct
+		`DROP TABLE IF EXISTS nodes`,
+		`CREATE TABLE nodes(
+			id UUID,
+			node_id TEXT NOT NULL,
+			host_name TEXT NOT NULL,
+			rack_name TEXT,
+			attributes JSONB,
+			capacity JSONB NOT NULL,
+			allocated JSONB NOT NULL,
+			occupied JSONB NOT NULL,
+			available JSONB NOT NULL,
+			utilized JSONB NOT NULL,
+			allocations JSONB,
+			schedulable BOOLEAN,
+			is_reserved BOOLEAN,
+			reservations TEXT[],
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
 	}
 
 	for _, stmt := range setupStmts {
