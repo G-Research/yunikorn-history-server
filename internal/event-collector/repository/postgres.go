@@ -12,7 +12,8 @@ import (
 
 type RepoPostgres struct {
 	config *config.ECConfig
-	dbpool *pgxpool.Pool
+	// Make it public for now
+	Dbpool *pgxpool.Pool
 }
 
 func NewECRepo(cfg *config.ECConfig) (error, *RepoPostgres) {
@@ -26,12 +27,27 @@ func NewECRepo(cfg *config.ECConfig) (error, *RepoPostgres) {
 		return errors.Wrap(err, "cannot create Postgres connection pool"), nil
 	}
 
-	return nil, &RepoPostgres{config: cfg, dbpool: pool}
+	return nil, &RepoPostgres{config: cfg, Dbpool: pool}
 }
 
 // Set up the DB for use, create tables
 func (s *RepoPostgres) Setup(ctx context.Context) {
 	setupStmts := []string{
+		`DROP TABLE IF EXISTS partitions`,
+		`CREATE TABLE partitions(
+			id UUID,
+			cluster_id TEXT NOT NULL,
+			name TEXT NOT NULL,
+			capacity JSONB NOT NULL,
+			used_capacity JSONB NOT NULL,
+			utilization JSONB NOT NULL,
+			total_nodes INTEGER,
+			applications JSONB NOT NULL,
+			total_containers INTEGER,
+			state TEXT,
+			last_state_transition_time BIGINT,
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
 		// For yunikorn-core/pkg/webservice/dao/ApplicationDAOInfo struct
 		`DROP TABLE IF EXISTS applications`,
 		`CREATE TABLE applications(
@@ -65,9 +81,9 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			partition TEXT NOT NULL,
 			pending_resource JSONB,
 			max_resource JSONB,
-			guaranteed_resource JSONB NOT NULL,
-			allocated_resource JSONB NOT NULL,
-			preempting_resource JSONB NOT NULL,
+			guaranteed_resource JSONB ,
+			allocated_resource JSONB ,
+			preempting_resource JSONB ,
 			head_room JSONB,
 			is_leaf BOOLEAN,
 			is_managed BOOLEAN,
@@ -81,16 +97,6 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			running_apps INTEGER NOT NULL,
 			current_priority INTEGER,
 			allocating_accepted_apps TEXT[],
-			UNIQUE (id),
-			PRIMARY KEY (id))`,
-		// for yunikorn-core/pkg/webservice/dao/ClusterDAOInfo struct
-		`DROP TABLE IF EXISTS clusters`,
-		`CREATE TABLE clusters(
-			id UUID,
-			start_time BIGINT NOT NULL,
-			rm_build_information JSONB,
-			partition_name TEXT NOT NULL,
-			cluster_name TEXT NOT NULL,
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
 		// for yunikorn-core/pkg/webservice/dao/NodeDAOInfo struct
@@ -115,7 +121,7 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 	}
 
 	for _, stmt := range setupStmts {
-		_, err := s.dbpool.Exec(ctx, stmt)
+		_, err := s.Dbpool.Exec(ctx, stmt)
 		if err != nil {
 			panic(err)
 		}
