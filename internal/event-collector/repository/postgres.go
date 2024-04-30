@@ -13,7 +13,7 @@ import (
 type RepoPostgres struct {
 	config *config.ECConfig
 	// Make it public for now
-	Dbpool *pgxpool.Pool
+	dbpool *pgxpool.Pool
 }
 
 func NewECRepo(cfg *config.ECConfig) (error, *RepoPostgres) {
@@ -27,7 +27,7 @@ func NewECRepo(cfg *config.ECConfig) (error, *RepoPostgres) {
 		return errors.Wrap(err, "cannot create Postgres connection pool"), nil
 	}
 
-	return nil, &RepoPostgres{config: cfg, Dbpool: pool}
+	return nil, &RepoPostgres{config: cfg, dbpool: pool}
 }
 
 // Set up the DB for use, create tables
@@ -47,31 +47,34 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			state TEXT,
 			last_state_transition_time BIGINT,
 			UNIQUE (id),
+			UNIQUE (name),
 			PRIMARY KEY (id))`,
 		// For yunikorn-core/pkg/webservice/dao/ApplicationDAOInfo struct
 		`DROP TABLE IF EXISTS applications`,
 		`CREATE TABLE applications(
 			id UUID,
-			used_resource JSONB NOT NULL,
-			max_used_resource JSONB NOT NULL,
-			pending_resource JSONB NOT NULL,
+			app_id TEXT NOT NULL,
+			used_resource JSONB,
+			max_used_resource JSONB,
+			pending_resource JSONB,
 			partition TEXT NOT NULL,
 			queue_name TEXT NOT NULL,
 			submission_time BIGINT NOT NULL,
 			finished_time BIGINT,
 			requests JSONB,
-			allocations JSONB NOT NULL,
+			allocations JSONB,
 			state TEXT,
 			"user" TEXT,
 			groups TEXT[],
 			rejected_message TEXT,
-			state_log JSONB NOT NULL,
+			state_log JSONB,
 			place_holder_data JSONB,
 			has_reserved BOOLEAN,
 			reservations TEXT[],
 			max_request_priority INTEGER,
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
+		`CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue_name, app_id)`,
 		// for yunikorn-core/pkg/webservice/dao/PartitionQueueDAOInfo struct
 		`DROP TABLE IF EXISTS queues`,
 		`CREATE TABLE queues(
@@ -99,6 +102,7 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			allocating_accepted_apps TEXT[],
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
+		`CREATE UNIQUE INDEX idx_partition_queue_name ON queues (partition, queue_name)`,
 		// for yunikorn-core/pkg/webservice/dao/NodeDAOInfo struct
 		`DROP TABLE IF EXISTS nodes`,
 		`CREATE TABLE nodes(
@@ -117,11 +121,12 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			is_reserved BOOLEAN,
 			reservations TEXT[],
 			UNIQUE (id),
+			UNIQUE (node_id),
 			PRIMARY KEY (id))`,
 	}
 
 	for _, stmt := range setupStmts {
-		_, err := s.Dbpool.Exec(ctx, stmt)
+		_, err := s.dbpool.Exec(ctx, stmt)
 		if err != nil {
 			panic(err)
 		}
