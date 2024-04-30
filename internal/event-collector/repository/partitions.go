@@ -10,8 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertPartitions(partitions []*dao.PartitionInfo) error {
-	// OPTIMIZE: Find a more performant way to upsert partitions
-	updateStmt := `INSERT INTO partitions (
+	upsertPartition := `INSERT INTO partitions (
 		id, 
 		cluster_id,
 		name, 
@@ -34,19 +33,20 @@ func (s *RepoPostgres) UpsertPartitions(partitions []*dao.PartitionInfo) error {
 		state = EXCLUDED.state,
 		last_state_transition_time = EXCLUDED.last_state_transition_time`
 	for _, p := range partitions {
-		_, err := s.dbpool.Exec(context.Background(), updateStmt, pgx.NamedArgs{
-			"id":                         uuid.NewString(),
-			"cluster_id":                 p.ClusterID,
-			"name":                       p.Name,
-			"capacity":                   p.Capacity.Capacity,
-			"used_capacity":              p.Capacity.UsedCapacity,
-			"utilization":                p.Capacity.Utilization,
-			"total_nodes":                p.TotalNodes,
-			"applications":               p.Applications,
-			"total_containers":           p.TotalContainers,
-			"state":                      p.State,
-			"last_state_transition_time": p.LastStateTransitionTime,
-		})
+		_, err := s.dbpool.Exec(context.Background(), upsertPartition,
+			pgx.NamedArgs{
+				"id":                         uuid.NewString(),
+				"cluster_id":                 p.ClusterID,
+				"name":                       p.Name,
+				"capacity":                   p.Capacity.Capacity,
+				"used_capacity":              p.Capacity.UsedCapacity,
+				"utilization":                p.Capacity.Utilization,
+				"total_nodes":                p.TotalNodes,
+				"applications":               p.Applications,
+				"total_containers":           p.TotalContainers,
+				"state":                      p.State,
+				"last_state_transition_time": p.LastStateTransitionTime,
+			})
 		if err != nil {
 			return fmt.Errorf("could not insert/update partition into DB: %v", err)
 		}

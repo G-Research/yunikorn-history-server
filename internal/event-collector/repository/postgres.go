@@ -12,7 +12,6 @@ import (
 
 type RepoPostgres struct {
 	config *config.ECConfig
-	// Make it public for now
 	dbpool *pgxpool.Pool
 }
 

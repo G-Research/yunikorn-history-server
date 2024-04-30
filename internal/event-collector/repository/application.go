@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertApplications(apps []*dao.ApplicationDAOInfo) error {
-	insertSQL := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
+	upsertApp := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
 			partition, queue_name, submission_time, finished_time, requests, allocations, state,
 			"user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations,
 			max_request_priority)
@@ -33,7 +33,7 @@ func (s *RepoPostgres) UpsertApplications(apps []*dao.ApplicationDAOInfo) error 
 			max_request_priority = EXCLUDED.max_request_priority`
 
 	for _, a := range apps {
-		_, err := s.dbpool.Exec(context.Background(), insertSQL,
+		_, err := s.dbpool.Exec(context.Background(), upsertApp,
 			pgx.NamedArgs{
 				"id":                   uuid.NewString(),
 				"app_id":               a.ApplicationID,

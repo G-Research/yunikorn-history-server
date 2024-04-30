@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertQueues(queues []*dao.PartitionQueueDAOInfo) error {
-	updateStmt := `INSERT INTO queues (
+	upsertQueue := `INSERT INTO queues (
 		id,
 		queue_name,
 		status,
@@ -51,30 +51,31 @@ func (s *RepoPostgres) UpsertQueues(queues []*dao.PartitionQueueDAOInfo) error {
 		max_running_apps = EXCLUDED.max_running_apps,
 		running_apps = EXCLUDED.running_apps`
 	for _, q := range queues {
-		_, err := s.dbpool.Exec(context.Background(), updateStmt, pgx.NamedArgs{
-			"id":                       uuid.NewString(),
-			"queue_name":               q.QueueName,
-			"status":                   q.Status,
-			"partition":                q.Partition,
-			"pending_resource":         q.PendingResource,
-			"max_resource":             q.MaxResource,
-			"guaranteed_resource":      q.GuaranteedResource,
-			"allocated_resource":       q.AllocatedResource,
-			"preempting_resource":      q.PreemptingResource,
-			"head_room":                q.HeadRoom,
-			"is_leaf":                  q.IsLeaf,
-			"is_managed":               q.IsManaged,
-			"properties":               q.Properties,
-			"parent":                   q.Parent,
-			"template_info":            q.TemplateInfo,
-			"children":                 q.Children,
-			"children_names":           q.ChildrenNames,
-			"abs_used_capacity":        q.AbsUsedCapacity,
-			"max_running_apps":         q.MaxRunningApps,
-			"running_apps":             q.RunningApps,
-			"current_priority":         q.CurrentPriority,
-			"allocating_accepted_apps": q.AllocatingAcceptedApps,
-		})
+		_, err := s.dbpool.Exec(context.Background(), upsertQueue,
+			pgx.NamedArgs{
+				"id":                       uuid.NewString(),
+				"queue_name":               q.QueueName,
+				"status":                   q.Status,
+				"partition":                q.Partition,
+				"pending_resource":         q.PendingResource,
+				"max_resource":             q.MaxResource,
+				"guaranteed_resource":      q.GuaranteedResource,
+				"allocated_resource":       q.AllocatedResource,
+				"preempting_resource":      q.PreemptingResource,
+				"head_room":                q.HeadRoom,
+				"is_leaf":                  q.IsLeaf,
+				"is_managed":               q.IsManaged,
+				"properties":               q.Properties,
+				"parent":                   q.Parent,
+				"template_info":            q.TemplateInfo,
+				"children":                 q.Children,
+				"children_names":           q.ChildrenNames,
+				"abs_used_capacity":        q.AbsUsedCapacity,
+				"max_running_apps":         q.MaxRunningApps,
+				"running_apps":             q.RunningApps,
+				"current_priority":         q.CurrentPriority,
+				"allocating_accepted_apps": q.AllocatingAcceptedApps,
+			})
 		if err != nil {
 			return fmt.Errorf("could not insert/update queue into DB: %v", err)
 		}

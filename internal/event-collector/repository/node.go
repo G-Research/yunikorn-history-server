@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
-	insertSQL := `INSERT INTO nodes (id, node_id, host_name, rack_name, attributes, capacity, allocated,
+	upsertNode := `INSERT INTO nodes (id, node_id, host_name, rack_name, attributes, capacity, allocated,
 		occupied, available, utilized, allocations, schedulable, is_reserved, reservations )
 		VALUES (@id, @node_id, @host_name, @rack_name, @attributes, @capacity, @allocated,
 		@occupied, @available, @utilized, @allocations, @schedulable, @is_reserved, @reservations)
@@ -26,7 +26,7 @@ func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
 		reservations = EXCLUDED.reservations`
 
 	for _, n := range nodes {
-		_, err := s.dbpool.Exec(context.Background(), insertSQL,
+		_, err := s.dbpool.Exec(context.Background(), upsertNode,
 			pgx.NamedArgs{
 				"id":           uuid.NewString(),
 				"node_id":      n.NodeID,
