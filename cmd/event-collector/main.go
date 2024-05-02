@@ -65,7 +65,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := ws.Start(context.Background()); err != nil {
+		if err := ws.Start(ctx); err != nil {
 			fmt.Fprintf(os.Stderr, "could not run webservice: %v\n", err)
 			os.Exit(1)
 		}
