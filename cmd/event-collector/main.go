@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	//"github.com/apache/yunikorn-scheduler-interface/lib/go/common"
-	"richscott/yhs/internal/event-collector/config"
-	"richscott/yhs/internal/event-collector/repository"
-	"richscott/yhs/internal/event-collector/ykclient"
+	"richscott/yhs/internal/config"
+	"richscott/yhs/internal/repository"
 	"richscott/yhs/internal/webservice"
+	"richscott/yhs/internal/ykclient"
 )
 
 var (

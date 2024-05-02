@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"richscott/yhs/internal/event-collector/config"
+	"richscott/yhs/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"

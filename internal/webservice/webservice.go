@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"richscott/yhs/internal/event-collector/config"
-	"richscott/yhs/internal/event-collector/repository"
+	"richscott/yhs/internal/config"
+	"richscott/yhs/internal/repository"
 
 	"github.com/julienschmidt/httprouter"
 )
