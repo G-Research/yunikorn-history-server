@@ -82,3 +82,90 @@ func (s *RepoPostgres) UpsertQueues(queues []*dao.PartitionQueueDAOInfo) error {
 	}
 	return nil
 }
+
+func (s *RepoPostgres) GetAllQueues() ([]*dao.PartitionQueueDAOInfo, error) {
+	var queues []*dao.PartitionQueueDAOInfo
+	rows, err := s.dbpool.Query(context.Background(), "SELECT * FROM queues")
+	if err != nil {
+		return nil, fmt.Errorf("could not get queues from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var q dao.PartitionQueueDAOInfo
+		var id string
+		err = rows.Scan(
+			&id,
+			&q.QueueName,
+			&q.Status,
+			&q.Partition,
+			&q.PendingResource,
+			&q.MaxResource,
+			&q.GuaranteedResource,
+			&q.AllocatedResource,
+			&q.PreemptingResource,
+			&q.HeadRoom,
+			&q.IsLeaf,
+			&q.IsManaged,
+			&q.Properties,
+			&q.Parent,
+			&q.TemplateInfo,
+			&q.Children,
+			&q.ChildrenNames,
+			&q.AbsUsedCapacity,
+			&q.MaxRunningApps,
+			&q.RunningApps,
+			&q.CurrentPriority,
+			&q.AllocatingAcceptedApps,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan queue from DB: %v", err)
+		}
+		queues = append(queues, &q)
+	}
+	return queues, nil
+}
+
+func (s RepoPostgres) GetQueuesPerPartition(parition string) ([]*dao.PartitionQueueDAOInfo, error) {
+	selectStmt := `SELECT * FROM queues WHERE partition = $1`
+
+	var queues []*dao.PartitionQueueDAOInfo
+
+	rows, err := s.dbpool.Query(context.Background(), selectStmt, parition)
+	if err != nil {
+		return nil, fmt.Errorf("could not get queues from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var q dao.PartitionQueueDAOInfo
+		var id string
+		err = rows.Scan(
+			&id,
+			&q.QueueName,
+			&q.Status,
+			&q.Partition,
+			&q.PendingResource,
+			&q.MaxResource,
+			&q.GuaranteedResource,
+			&q.AllocatedResource,
+			&q.PreemptingResource,
+			&q.HeadRoom,
+			&q.IsLeaf,
+			&q.IsManaged,
+			&q.Properties,
+			&q.Parent,
+			&q.TemplateInfo,
+			&q.Children,
+			&q.ChildrenNames,
+			&q.AbsUsedCapacity,
+			&q.MaxRunningApps,
+			&q.RunningApps,
+			&q.CurrentPriority,
+			&q.AllocatingAcceptedApps,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan queue from DB: %v", err)
+		}
+		queues = append(queues, &q)
+	}
+	return queues, nil
+}

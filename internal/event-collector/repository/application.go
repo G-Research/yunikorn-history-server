@@ -62,3 +62,53 @@ func (s *RepoPostgres) UpsertApplications(apps []*dao.ApplicationDAOInfo) error 
 	}
 	return nil
 }
+
+func (s *RepoPostgres) GetAllApplications() ([]*dao.ApplicationDAOInfo, error) {
+	selectStmt := `SELECT * FROM applications`
+
+	var apps []*dao.ApplicationDAOInfo
+
+	rows, err := s.dbpool.Query(context.Background(), selectStmt)
+	if err != nil {
+		return nil, fmt.Errorf("could not get applications from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var app dao.ApplicationDAOInfo
+		var id string
+		err := rows.Scan(&id, &app.ApplicationID, &app.UsedResource, &app.MaxUsedResource, &app.PendingResource,
+			&app.Partition, &app.QueueName, &app.SubmissionTime, &app.FinishedTime, &app.Requests, &app.Allocations,
+			&app.State, &app.User, &app.Groups, &app.RejectedMessage, &app.StateLog, &app.PlaceholderData,
+			&app.HasReserved, &app.Reservations, &app.MaxRequestPriority)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan application from DB: %v", err)
+		}
+		apps = append(apps, &app)
+	}
+	return apps, nil
+}
+
+func (s *RepoPostgres) GetAppsPerPartitionPerQueue(partition, queue string) ([]*dao.ApplicationDAOInfo, error) {
+	selectStmt := `SELECT * FROM applications WHERE queue_name = $1 AND partition = $2`
+
+	var apps []*dao.ApplicationDAOInfo
+
+	rows, err := s.dbpool.Query(context.Background(), selectStmt, queue, partition)
+	if err != nil {
+		return nil, fmt.Errorf("could not get applications from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var app dao.ApplicationDAOInfo
+		var id string
+		err := rows.Scan(&id, &app.ApplicationID, &app.UsedResource, &app.MaxUsedResource, &app.PendingResource,
+			&app.Partition, &app.QueueName, &app.SubmissionTime, &app.FinishedTime, &app.Requests, &app.Allocations,
+			&app.State, &app.User, &app.Groups, &app.RejectedMessage, &app.StateLog, &app.PlaceholderData,
+			&app.HasReserved, &app.Reservations, &app.MaxRequestPriority)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan application from DB: %v", err)
+		}
+		apps = append(apps, &app)
+	}
+	return apps, nil
+}

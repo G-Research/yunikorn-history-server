@@ -53,3 +53,34 @@ func (s *RepoPostgres) UpsertPartitions(partitions []*dao.PartitionInfo) error {
 	}
 	return nil
 }
+
+func (s *RepoPostgres) GetAllPartitions() ([]*dao.PartitionInfo, error) {
+	var partitions []*dao.PartitionInfo
+	rows, err := s.dbpool.Query(context.Background(), "SELECT * FROM partitions")
+	if err != nil {
+		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p dao.PartitionInfo
+		var id string
+		err = rows.Scan(
+			&id,
+			&p.ClusterID,
+			&p.Name,
+			&p.Capacity.Capacity,
+			&p.Capacity.UsedCapacity,
+			&p.Capacity.Utilization,
+			&p.TotalNodes,
+			&p.Applications,
+			&p.TotalContainers,
+			&p.State,
+			&p.LastStateTransitionTime,
+		)
+		partitions = append(partitions, &p)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan partition from DB: %v", err)
+		}
+	}
+	return partitions, nil
+}
