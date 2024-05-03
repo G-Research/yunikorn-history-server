@@ -20,11 +20,6 @@ var (
 	yhsServerAddr = ":8989"
 )
 
-// TODO:
-// - Start an appropriate context with cancel, pass it around the services
-// - Add a graceful shutdown mechanism to handle OS signals and cancel the context
-// - Add a logger (zap) to the services
-// - Add a configiration handler through yaml, and make all variables configurable
 func main() {
 
 	ecConfig := config.ECConfig{
