@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"richscott/yhs/internal/event-collector/repository"
+	"richscott/yhs/internal/repository"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
