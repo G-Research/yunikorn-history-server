@@ -30,3 +30,7 @@ type QueuesResponse struct {
 type AppsResponse struct {
 	Apps []*dao.ApplicationDAOInfo `json:"apps"`
 }
+
+type NodesResponse struct {
+	Nodes []*dao.NodeDAOInfo `json:"nodes"`
+}

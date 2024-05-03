@@ -49,3 +49,25 @@ func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
 	}
 	return nil
 }
+
+func (s RepoPostgres) GetNodesPerPartition(partition string) ([]*dao.NodeDAOInfo, error) {
+	selectStmt := "SELECT * FROM nodes WHERE partition = $1"
+
+	nodes := []*dao.NodeDAOInfo{}
+
+	rows, err := s.dbpool.Query(context.Background(), selectStmt, partition)
+	if err != nil {
+		return nil, fmt.Errorf("could not get nodes from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		n := dao.NodeDAOInfo{}
+		var id string
+		err := rows.Scan(&id, &n.NodeID, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity, &n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable, &n.IsReserved, &n.Reservations)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan node: %v", err)
+		}
+		nodes = append(nodes, &n)
+	}
+	return nodes, nil
+}
