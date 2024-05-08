@@ -50,6 +50,26 @@ func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
 	return nil
 }
 
+func (s *RepoPostgres) InsertNodeUtilizations(u uuid.UUID, nus *[]dao.PartitionNodesUtilDAOInfo) error {
+	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
+		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
+
+	for _, nu := range *nus {
+		_, err := s.dbpool.Exec(context.Background(), insertSQL,
+			pgx.NamedArgs{
+				"id":              u.String(),
+				"cluster_id":      nu.ClusterID,
+				"partition":       nu.Partition,
+				"nodes_util_list": nu.NodesUtilList,
+			})
+		if err != nil {
+			return fmt.Errorf("could not insert node utilizations into DB: %v", err)
+		}
+
+	}
+	return nil
+}
+
 func (s RepoPostgres) GetNodesPerPartition(partition string) ([]*dao.NodeDAOInfo, error) {
 	selectStmt := "SELECT * FROM nodes WHERE partition = $1"
 
