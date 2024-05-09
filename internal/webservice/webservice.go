@@ -27,7 +27,6 @@ func NewWebService(addr string, storage *repository.RepoPostgres) *WebService {
 	}
 }
 
-// WISH(mo-fatah): change "get*" methods names to be "handle*"
 func (ws *WebService) Start(ctx context.Context) {
 	router := httprouter.New()
 	router.Handle("GET", PARTITIONS, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -60,7 +59,7 @@ func (ws *WebService) Start(ctx context.Context) {
 	})
 	ws.server.Handler = router
 	go func() {
-		fmt.Println("Starting webservice...")
+		fmt.Printf("Starting webservice on %s\n", ws.server.Addr)
 		err := ws.server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "HTTP serving error: %v\n", err)
