@@ -289,7 +289,7 @@ func (c *Client) loadCurrentPartitionNodes(ctx context.Context, partitionName st
 			nodes = append(nodes, &n)
 		}
 	}
-	if err := c.repo.UpsertNodes(ctx, nodes); err != nil {
+	if err := c.repo.UpsertNodes(ctx, nodes, partitionName); err != nil {
 		return nil, err
 	}
 	return nodes, nil

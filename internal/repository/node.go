@@ -9,10 +9,10 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo) error {
-	upsertNode := `INSERT INTO nodes (id, node_id, host_name, rack_name, attributes, capacity, allocated,
+func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error {
+	upsertNode := `INSERT INTO nodes (id, node_id, partition, host_name, rack_name, attributes, capacity, allocated,
 		occupied, available, utilized, allocations, schedulable, is_reserved, reservations )
-		VALUES (@id, @node_id, @host_name, @rack_name, @attributes, @capacity, @allocated,
+		VALUES (@id, @node_id, @partition, @host_name, @rack_name, @attributes, @capacity, @allocated,
 		@occupied, @available, @utilized, @allocations, @schedulable, @is_reserved, @reservations)
 	ON CONFLICT (node_id) DO UPDATE SET
 		capacity = EXCLUDED.capacity,
@@ -30,6 +30,7 @@ func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo
 			pgx.NamedArgs{
 				"id":           uuid.NewString(),
 				"node_id":      n.NodeID,
+				"partition":    partition,
 				"host_name":    n.HostName,
 				"rack_name":    n.RackName,
 				"attributes":   n.Attributes,
@@ -105,7 +106,7 @@ func (s RepoPostgres) GetNodesPerPartition(ctx context.Context, partition string
 	for rows.Next() {
 		n := dao.NodeDAOInfo{}
 		var id string
-		err := rows.Scan(&id, &n.NodeID, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity, &n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable, &n.IsReserved, &n.Reservations)
+		err := rows.Scan(&id, &n.NodeID, nil, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity, &n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable, &n.IsReserved, &n.Reservations)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan node: %v", err)
 		}

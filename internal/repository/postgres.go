@@ -107,6 +107,7 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 		`CREATE TABLE nodes(
 			id UUID,
 			node_id TEXT NOT NULL,
+			partition TEXT NOT NULL,
 			host_name TEXT NOT NULL,
 			rack_name TEXT,
 			attributes JSONB,
