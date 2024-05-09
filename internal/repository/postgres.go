@@ -140,7 +140,9 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			id UUID,
 			history_type history_type NOT NULL,
 			total_number BIGINT NOT NULL,
-			timestamp BIGINT NOT NULL)`,
+			timestamp BIGINT NOT NULL
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
 	}
 
 	for _, stmt := range setupStmts {
