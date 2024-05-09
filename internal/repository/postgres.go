@@ -122,6 +122,15 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			UNIQUE (id),
 			UNIQUE (node_id),
 			PRIMARY KEY (id))`,
+		// for yunikorn-core/pkg/webservice/dao/PartitionNodesUtilDAOInfo struct
+		`DROP TABLE IF EXISTS partition_nodes_util`,
+		`CREATE TABLE partition_nodes_util(
+			id UUID,
+			cluster_id TEXT NOT NULL,
+			partition TEXT NOT NULL,
+			nodes_util_list JSONB,
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
 	}
 
 	for _, stmt := range setupStmts {

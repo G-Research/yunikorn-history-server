@@ -11,6 +11,7 @@ import (
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/google/uuid"
 )
 
 var (
@@ -31,6 +32,7 @@ var (
 	// nodeEndPt  = func(partitionName, nodeID string) string {
 	// 	return fmt.Sprintf("/ws/v1/partition/%s/node/%s", partitionName, nodeID)
 	// }
+	nodeUtilEndPt     = "/ws/v1/scheduler/node-utilizations"
 	applicationsEndPt = func(partitionName, queueName string) string {
 		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s.%s/applications", partitionName, queueName, partitionName)
 	}
@@ -58,13 +60,12 @@ func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.Rep
 func (c *Client) Run() error {
 	err := c.loadUpCurrentClusterState()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	streamURL := c.endPointURL(streamEndPt)
 	resp, err := http.Get(streamURL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not request from %s: %v", streamURL, err)
-		os.Exit(1)
+		return fmt.Errorf("could not request from %s: %v", streamURL, err)
 	}
 
 	reader := bufio.NewReader(resp.Body)
@@ -120,6 +121,11 @@ func (c *Client) loadUpCurrentClusterState() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	_, err = c.loadCurrentNodeUtil()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -200,6 +206,16 @@ func (c *Client) loadCurrentApplications(partitionName, queueName string) ([]*da
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from %s: %v", url, err)
 	}
+
+	if resp.StatusCode != 200 {
+		errBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("could not read body of response error: %v", err)
+		}
+
+		return nil, fmt.Errorf("could not get applications from %s: %s", url, string(errBody))
+	}
+
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -262,6 +278,34 @@ func (c *Client) loadCurrentPartitionNodes(partitionName string) ([]*dao.NodeDAO
 		return nil, err
 	}
 	return nodes, nil
+}
+
+func (c *Client) loadCurrentNodeUtil() (*[]dao.PartitionNodesUtilDAOInfo, error) {
+	url := c.endPointURL(nodeUtilEndPt)
+	nus := []dao.PartitionNodesUtilDAOInfo{}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("could not get node utilizations from %s: %v", url, err)
+	}
+	reader := bufio.NewReader(resp.Body)
+	line, err := reader.ReadBytes('\n')
+	if err != nil {
+		return nil, fmt.Errorf("could not read node utilizations from response: %v", err)
+	}
+	if len(line) == 0 {
+		return nil, fmt.Errorf("could not read node utilizations from response: %v", err)
+	}
+	err = json.Unmarshal(line, &nus)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal node utilizations from response: %v", err)
+	}
+
+	if err := c.repo.InsertNodeUtilizations(uuid.New(), &nus); err != nil {
+		return nil, err
+	}
+
+	return &nus, nil
 }
 
 func (c *Client) endPointURL(endPt string) string {
