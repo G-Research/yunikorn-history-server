@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error {
-	upsertNode := `INSERT INTO nodes (id, node_id, partition, host_name, rack_name, attributes, capacity, allocated,
+	upsertSQL := `INSERT INTO nodes (id, node_id, partition, host_name, rack_name, attributes, capacity, allocated,
 		occupied, available, utilized, allocations, schedulable, is_reserved, reservations )
 		VALUES (@id, @node_id, @partition, @host_name, @rack_name, @attributes, @capacity, @allocated,
 		@occupied, @available, @utilized, @allocations, @schedulable, @is_reserved, @reservations)
@@ -26,7 +26,7 @@ func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo
 		reservations = EXCLUDED.reservations`
 
 	for _, n := range nodes {
-		_, err := s.dbpool.Exec(ctx, upsertNode,
+		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
 				"id":           uuid.NewString(),
 				"node_id":      n.NodeID,
@@ -72,9 +72,9 @@ func (s *RepoPostgres) InsertNodeUtilizations(ctx context.Context, u uuid.UUID, 
 }
 
 func (s *RepoPostgres) GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	selectStmt := `SELECT * FROM partition_nodes_util`
+	selectSQL := `SELECT * FROM partition_nodes_util`
 
-	rows, err := s.dbpool.Query(ctx, selectStmt)
+	rows, err := s.dbpool.Query(ctx, selectSQL)
 	if err != nil {
 		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
 	}
@@ -94,11 +94,11 @@ func (s *RepoPostgres) GetNodeUtilizations(ctx context.Context) ([]*dao.Partitio
 }
 
 func (s RepoPostgres) GetNodesPerPartition(ctx context.Context, partition string) ([]*dao.NodeDAOInfo, error) {
-	selectStmt := "SELECT * FROM nodes WHERE partition = $1"
+	selectSQL := "SELECT * FROM nodes WHERE partition = $1"
 
 	nodes := []*dao.NodeDAOInfo{}
 
-	rows, err := s.dbpool.Query(ctx, selectStmt, partition)
+	rows, err := s.dbpool.Query(ctx, selectSQL, partition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get nodes from DB: %v", err)
 	}

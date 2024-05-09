@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error {
-	upsertApp := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
+	upsertSQL := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
 			partition, queue_name, submission_time, finished_time, requests, allocations, state,
 			"user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations,
 			max_request_priority)
@@ -33,7 +33,7 @@ func (s *RepoPostgres) UpsertApplications(ctx context.Context, apps []*dao.Appli
 			max_request_priority = EXCLUDED.max_request_priority`
 
 	for _, a := range apps {
-		_, err := s.dbpool.Exec(ctx, upsertApp,
+		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
 				"id":                   uuid.NewString(),
 				"app_id":               a.ApplicationID,
@@ -64,11 +64,11 @@ func (s *RepoPostgres) UpsertApplications(ctx context.Context, apps []*dao.Appli
 }
 
 func (s *RepoPostgres) GetAllApplications(ctx context.Context) ([]*dao.ApplicationDAOInfo, error) {
-	selectStmt := `SELECT * FROM applications`
+	selectSQL := `SELECT * FROM applications`
 
 	var apps []*dao.ApplicationDAOInfo
 
-	rows, err := s.dbpool.Query(ctx, selectStmt)
+	rows, err := s.dbpool.Query(ctx, selectSQL)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
 	}
@@ -89,11 +89,11 @@ func (s *RepoPostgres) GetAllApplications(ctx context.Context) ([]*dao.Applicati
 }
 
 func (s *RepoPostgres) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string) ([]*dao.ApplicationDAOInfo, error) {
-	selectStmt := `SELECT * FROM applications WHERE queue_name = $1 AND partition = $2`
+	selectSQL := `SELECT * FROM applications WHERE queue_name = $1 AND partition = $2`
 
 	var apps []*dao.ApplicationDAOInfo
 
-	rows, err := s.dbpool.Query(ctx, selectStmt, queue, partition)
+	rows, err := s.dbpool.Query(ctx, selectSQL, queue, partition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
 	}

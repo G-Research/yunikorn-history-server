@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
-	upsertQueue := `INSERT INTO queues (
+	upsertSQL := `INSERT INTO queues (
 		id,
 		queue_name,
 		status,
@@ -51,7 +51,7 @@ func (s *RepoPostgres) UpsertQueues(ctx context.Context, queues []*dao.Partition
 		max_running_apps = EXCLUDED.max_running_apps,
 		running_apps = EXCLUDED.running_apps`
 	for _, q := range queues {
-		_, err := s.dbpool.Exec(ctx, upsertQueue,
+		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
 				"id":                       uuid.NewString(),
 				"queue_name":               q.QueueName,
@@ -126,11 +126,11 @@ func (s *RepoPostgres) GetAllQueues(ctx context.Context) ([]*dao.PartitionQueueD
 }
 
 func (s RepoPostgres) GetQueuesPerPartition(ctx context.Context, parition string) ([]*dao.PartitionQueueDAOInfo, error) {
-	selectStmt := `SELECT * FROM queues WHERE partition = $1`
+	selectSQL := `SELECT * FROM queues WHERE partition = $1`
 
 	var queues []*dao.PartitionQueueDAOInfo
 
-	rows, err := s.dbpool.Query(ctx, selectStmt, parition)
+	rows, err := s.dbpool.Query(ctx, selectSQL, parition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get queues from DB: %v", err)
 	}

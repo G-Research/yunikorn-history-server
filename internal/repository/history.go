@@ -10,11 +10,11 @@ import (
 )
 
 func (s *RepoPostgres) UpdateHistory(ctx context.Context, apps []*dao.ApplicationHistoryDAOInfo, containers []*dao.ContainerHistoryDAOInfo) error {
-	app_upsertStmt := `INSERT INTO history (id, history_type, total_number, timestamp) VALUES (@id, 'application', @total_number, @timestamp)`
-	container_upsertStmt := `INSERT INTO history (id, history_type, total_number, timestamp) VALUES (@id, 'container', @total_number, @timestamp)`
+	appSQL := `INSERT INTO history (id, history_type, total_number, timestamp) VALUES (@id, 'application', @total_number, @timestamp)`
+	containerSQL := `INSERT INTO history (id, history_type, total_number, timestamp) VALUES (@id, 'container', @total_number, @timestamp)`
 
 	for _, app := range apps {
-		_, err := s.dbpool.Exec(ctx, app_upsertStmt,
+		_, err := s.dbpool.Exec(ctx, appSQL,
 			pgx.NamedArgs{
 				"id":           uuid.NewString(),
 				"total_number": app.TotalApplications,
@@ -25,7 +25,7 @@ func (s *RepoPostgres) UpdateHistory(ctx context.Context, apps []*dao.Applicatio
 		}
 	}
 	for _, container := range containers {
-		_, err := s.dbpool.Exec(ctx, container_upsertStmt,
+		_, err := s.dbpool.Exec(ctx, containerSQL,
 			pgx.NamedArgs{
 				"id":           uuid.NewString(),
 				"total_number": container.TotalContainers,
@@ -39,8 +39,8 @@ func (s *RepoPostgres) UpdateHistory(ctx context.Context, apps []*dao.Applicatio
 }
 
 func (s *RepoPostgres) GetApplicationsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {
-	selectStmt := `SELECT * FROM history WHERE history_type = 'application'`
-	rows, err := s.dbpool.Query(ctx, selectStmt)
+	selectSQL := `SELECT * FROM history WHERE history_type = 'application'`
+	rows, err := s.dbpool.Query(ctx, selectSQL)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications history from DB: %v", err)
 	}
@@ -60,8 +60,8 @@ func (s *RepoPostgres) GetApplicationsHistory(ctx context.Context) ([]*dao.Appli
 }
 
 func (s *RepoPostgres) GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error) {
-	selectStmt := `SELECT * FROM history WHERE history_type = 'container'`
-	rows, err := s.dbpool.Query(ctx, selectStmt)
+	selectSQL := `SELECT * FROM history WHERE history_type = 'container'`
+	rows, err := s.dbpool.Query(ctx, selectSQL)
 	if err != nil {
 		return nil, fmt.Errorf("could not get containers history from DB: %v", err)
 	}

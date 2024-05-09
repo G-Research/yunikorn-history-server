@@ -10,7 +10,7 @@ import (
 )
 
 func (s *RepoPostgres) UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
-	upsertPartition := `INSERT INTO partitions (
+	upsertSQL := `INSERT INTO partitions (
 		id, 
 		cluster_id,
 		name, 
@@ -33,7 +33,7 @@ func (s *RepoPostgres) UpsertPartitions(ctx context.Context, partitions []*dao.P
 		state = EXCLUDED.state,
 		last_state_transition_time = EXCLUDED.last_state_transition_time`
 	for _, p := range partitions {
-		_, err := s.dbpool.Exec(ctx, upsertPartition,
+		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
 				"id":                         uuid.NewString(),
 				"cluster_id":                 p.ClusterID,
