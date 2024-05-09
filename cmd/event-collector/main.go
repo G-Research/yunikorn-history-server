@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sync"
+	"os/signal"
+	"syscall"
 
 	//"github.com/apache/yunikorn-scheduler-interface/lib/go/common"
 	"richscott/yhs/internal/config"
@@ -36,7 +37,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err, repo := repository.NewECRepo(&ecConfig)
+	err, repo := repository.NewECRepo(ctx, &ecConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not create db repository: %v\n", err)
 		os.Exit(1)
@@ -44,27 +45,15 @@ func main() {
 
 	repo.Setup(ctx)
 
-	ws := webservice.NewWebService(yhsServerAddr, repo)
-
 	client := ykclient.NewClient(httpProto, ykHost, ykPort, repo)
+	client.Run(ctx)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := client.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "could not run client: %v\n", err)
-			os.Exit(1)
-		}
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := ws.Start(ctx); err != nil {
-			fmt.Fprintf(os.Stderr, "could not run webservice: %v\n", err)
-			os.Exit(1)
-		}
-	}()
-	wg.Wait()
+	ws := webservice.NewWebService(yhsServerAddr, repo)
+	ws.Start(ctx)
 
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT)
+	<-signalChan
+
+	fmt.Println("Received signal, YHS shutting down...")
 }

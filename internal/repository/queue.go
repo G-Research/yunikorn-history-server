@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpsertQueues(queues []*dao.PartitionQueueDAOInfo) error {
+func (s *RepoPostgres) UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
 	upsertQueue := `INSERT INTO queues (
 		id,
 		queue_name,
@@ -51,7 +51,7 @@ func (s *RepoPostgres) UpsertQueues(queues []*dao.PartitionQueueDAOInfo) error {
 		max_running_apps = EXCLUDED.max_running_apps,
 		running_apps = EXCLUDED.running_apps`
 	for _, q := range queues {
-		_, err := s.dbpool.Exec(context.Background(), upsertQueue,
+		_, err := s.dbpool.Exec(ctx, upsertQueue,
 			pgx.NamedArgs{
 				"id":                       uuid.NewString(),
 				"queue_name":               q.QueueName,
@@ -83,9 +83,9 @@ func (s *RepoPostgres) UpsertQueues(queues []*dao.PartitionQueueDAOInfo) error {
 	return nil
 }
 
-func (s *RepoPostgres) GetAllQueues() ([]*dao.PartitionQueueDAOInfo, error) {
+func (s *RepoPostgres) GetAllQueues(ctx context.Context) ([]*dao.PartitionQueueDAOInfo, error) {
 	var queues []*dao.PartitionQueueDAOInfo
-	rows, err := s.dbpool.Query(context.Background(), "SELECT * FROM queues")
+	rows, err := s.dbpool.Query(ctx, "SELECT * FROM queues")
 	if err != nil {
 		return nil, fmt.Errorf("could not get queues from DB: %v", err)
 	}
@@ -125,12 +125,12 @@ func (s *RepoPostgres) GetAllQueues() ([]*dao.PartitionQueueDAOInfo, error) {
 	return queues, nil
 }
 
-func (s RepoPostgres) GetQueuesPerPartition(parition string) ([]*dao.PartitionQueueDAOInfo, error) {
+func (s RepoPostgres) GetQueuesPerPartition(ctx context.Context, parition string) ([]*dao.PartitionQueueDAOInfo, error) {
 	selectStmt := `SELECT * FROM queues WHERE partition = $1`
 
 	var queues []*dao.PartitionQueueDAOInfo
 
-	rows, err := s.dbpool.Query(context.Background(), selectStmt, parition)
+	rows, err := s.dbpool.Query(ctx, selectStmt, parition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get queues from DB: %v", err)
 	}

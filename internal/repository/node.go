@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
+func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo) error {
 	upsertNode := `INSERT INTO nodes (id, node_id, host_name, rack_name, attributes, capacity, allocated,
 		occupied, available, utilized, allocations, schedulable, is_reserved, reservations )
 		VALUES (@id, @node_id, @host_name, @rack_name, @attributes, @capacity, @allocated,
@@ -26,7 +26,7 @@ func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
 		reservations = EXCLUDED.reservations`
 
 	for _, n := range nodes {
-		_, err := s.dbpool.Exec(context.Background(), upsertNode,
+		_, err := s.dbpool.Exec(ctx, upsertNode,
 			pgx.NamedArgs{
 				"id":           uuid.NewString(),
 				"node_id":      n.NodeID,
@@ -50,12 +50,12 @@ func (s *RepoPostgres) UpsertNodes(nodes []*dao.NodeDAOInfo) error {
 	return nil
 }
 
-func (s *RepoPostgres) InsertNodeUtilizations(u uuid.UUID, nus *[]dao.PartitionNodesUtilDAOInfo) error {
+func (s *RepoPostgres) InsertNodeUtilizations(ctx context.Context, u uuid.UUID, nus *[]dao.PartitionNodesUtilDAOInfo) error {
 	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
 		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
 
 	for _, nu := range *nus {
-		_, err := s.dbpool.Exec(context.Background(), insertSQL,
+		_, err := s.dbpool.Exec(ctx, insertSQL,
 			pgx.NamedArgs{
 				"id":              u.String(),
 				"cluster_id":      nu.ClusterID,
@@ -70,12 +70,12 @@ func (s *RepoPostgres) InsertNodeUtilizations(u uuid.UUID, nus *[]dao.PartitionN
 	return nil
 }
 
-func (s RepoPostgres) GetNodesPerPartition(partition string) ([]*dao.NodeDAOInfo, error) {
+func (s RepoPostgres) GetNodesPerPartition(ctx context.Context, partition string) ([]*dao.NodeDAOInfo, error) {
 	selectStmt := "SELECT * FROM nodes WHERE partition = $1"
 
 	nodes := []*dao.NodeDAOInfo{}
 
-	rows, err := s.dbpool.Query(context.Background(), selectStmt, partition)
+	rows, err := s.dbpool.Query(ctx, selectStmt, partition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get nodes from DB: %v", err)
 	}

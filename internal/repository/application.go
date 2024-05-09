@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpsertApplications(apps []*dao.ApplicationDAOInfo) error {
+func (s *RepoPostgres) UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error {
 	upsertApp := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
 			partition, queue_name, submission_time, finished_time, requests, allocations, state,
 			"user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations,
@@ -33,7 +33,7 @@ func (s *RepoPostgres) UpsertApplications(apps []*dao.ApplicationDAOInfo) error 
 			max_request_priority = EXCLUDED.max_request_priority`
 
 	for _, a := range apps {
-		_, err := s.dbpool.Exec(context.Background(), upsertApp,
+		_, err := s.dbpool.Exec(ctx, upsertApp,
 			pgx.NamedArgs{
 				"id":                   uuid.NewString(),
 				"app_id":               a.ApplicationID,
@@ -63,12 +63,12 @@ func (s *RepoPostgres) UpsertApplications(apps []*dao.ApplicationDAOInfo) error 
 	return nil
 }
 
-func (s *RepoPostgres) GetAllApplications() ([]*dao.ApplicationDAOInfo, error) {
+func (s *RepoPostgres) GetAllApplications(ctx context.Context) ([]*dao.ApplicationDAOInfo, error) {
 	selectStmt := `SELECT * FROM applications`
 
 	var apps []*dao.ApplicationDAOInfo
 
-	rows, err := s.dbpool.Query(context.Background(), selectStmt)
+	rows, err := s.dbpool.Query(ctx, selectStmt)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
 	}
@@ -88,12 +88,12 @@ func (s *RepoPostgres) GetAllApplications() ([]*dao.ApplicationDAOInfo, error) {
 	return apps, nil
 }
 
-func (s *RepoPostgres) GetAppsPerPartitionPerQueue(partition, queue string) ([]*dao.ApplicationDAOInfo, error) {
+func (s *RepoPostgres) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string) ([]*dao.ApplicationDAOInfo, error) {
 	selectStmt := `SELECT * FROM applications WHERE queue_name = $1 AND partition = $2`
 
 	var apps []*dao.ApplicationDAOInfo
 
-	rows, err := s.dbpool.Query(context.Background(), selectStmt, queue, partition)
+	rows, err := s.dbpool.Query(ctx, selectStmt, queue, partition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
 	}
