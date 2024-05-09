@@ -40,7 +40,7 @@ func (s *RepoPostgres) UpdateHistory(ctx context.Context, apps []*dao.Applicatio
 
 func (s *RepoPostgres) GetApplicationsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {
 	selectStmt := `SELECT * FROM history WHERE history_type = 'application'`
-	rows, err := s.dbpool.Query(context.Background(), selectStmt)
+	rows, err := s.dbpool.Query(ctx, selectStmt)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications history from DB: %v", err)
 	}

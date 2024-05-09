@@ -37,7 +37,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err, repo := repository.NewECRepo(ctx, &ecConfig)
+	repo, err := repository.NewECRepo(ctx, &ecConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not create db repository: %v\n", err)
 		os.Exit(1)

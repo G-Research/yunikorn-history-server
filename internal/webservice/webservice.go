@@ -27,6 +27,7 @@ func NewWebService(addr string, storage *repository.RepoPostgres) *WebService {
 	}
 }
 
+// WISH(mo-fatah): change "get*" methods names to be "handle*"
 func (ws *WebService) Start(ctx context.Context) {
 	router := httprouter.New()
 	router.Handle("GET", PARTITIONS, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -52,6 +53,10 @@ func (ws *WebService) Start(ctx context.Context) {
 	router.Handle("GET", CONTAINERS_HISTORY, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		r = r.WithContext(ctx)
 		ws.getContainersHistory(w, r)
+	})
+	router.Handle("GET", NODE_UTILIZATION, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		r = r.WithContext(ctx)
+		ws.getNodeUtilizations(w, r)
 	})
 	ws.server.Handler = router
 	go func() {
@@ -141,6 +146,17 @@ func (ws *WebService) getContainersHistory(w http.ResponseWriter, r *http.Reques
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	err = json.NewEncoder(w).Encode(containersHistory)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (ws *WebService) getNodeUtilizations(w http.ResponseWriter, r *http.Request) {
+	nodeUtilization, err := ws.storage.GetNodeUtilizations(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	err = json.NewEncoder(w).Encode(nodeUtilization)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

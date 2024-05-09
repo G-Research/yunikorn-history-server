@@ -15,18 +15,18 @@ type RepoPostgres struct {
 	dbpool *pgxpool.Pool
 }
 
-func NewECRepo(ctx context.Context, cfg *config.ECConfig) (error, *RepoPostgres) {
+func NewECRepo(ctx context.Context, cfg *config.ECConfig) (*RepoPostgres, error) {
 	poolCfg, err := pgxpool.ParseConfig(CreateConnectionString(cfg.PostgresConfig.Connection))
 	if err != nil {
-		return errors.Wrap(err, "cannot parse Postgres connection config"), nil
+		return nil, errors.Wrap(err, "cannot parse Postgres connection config")
 	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
-		return errors.Wrap(err, "cannot create Postgres connection pool"), nil
+		return nil, errors.Wrap(err, "cannot create Postgres connection pool")
 	}
 
-	return nil, &RepoPostgres{config: cfg, dbpool: pool}
+	return &RepoPostgres{config: cfg, dbpool: pool}, nil
 }
 
 // Set up the DB for use, create tables
@@ -140,7 +140,7 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			id UUID,
 			history_type history_type NOT NULL,
 			total_number BIGINT NOT NULL,
-			timestamp BIGINT NOT NULL
+			timestamp BIGINT NOT NULL,
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
 	}

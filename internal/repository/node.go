@@ -70,6 +70,28 @@ func (s *RepoPostgres) InsertNodeUtilizations(ctx context.Context, u uuid.UUID, 
 	return nil
 }
 
+func (s *RepoPostgres) GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
+	selectStmt := `SELECT * FROM partition_nodes_util`
+
+	rows, err := s.dbpool.Query(ctx, selectStmt)
+	if err != nil {
+		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
+	}
+	defer rows.Close()
+
+	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
+	for rows.Next() {
+		nu := &dao.PartitionNodesUtilDAOInfo{}
+		var id string
+		err := rows.Scan(&id, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan node utilizations from DB: %v", err)
+		}
+		nodesUtil = append(nodesUtil, nu)
+	}
+	return nodesUtil, nil
+}
+
 func (s RepoPostgres) GetNodesPerPartition(ctx context.Context, partition string) ([]*dao.NodeDAOInfo, error) {
 	selectStmt := "SELECT * FROM nodes WHERE partition = $1"
 

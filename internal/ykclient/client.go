@@ -60,15 +60,15 @@ func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.Rep
 	}
 }
 
-func (c *Client) Run(ctx context.Context) error {
+func (c *Client) Run(ctx context.Context) {
 	err := c.loadUpCurrentClusterState(ctx)
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "could not load current cluster state: %v\n", err)
 	}
 	streamURL := c.endPointURL(streamEndPt)
 	resp, err := http.Get(streamURL)
 	if err != nil {
-		return fmt.Errorf("could not request from %s: %v", streamURL, err)
+		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
 	}
 
 	reader := bufio.NewReader(resp.Body)
@@ -106,7 +106,6 @@ func (c *Client) Run(ctx context.Context) error {
 			}
 		}
 	}()
-	return nil
 }
 
 func (c *Client) loadUpCurrentClusterState(ctx context.Context) error {
@@ -135,7 +134,7 @@ func (c *Client) loadUpCurrentClusterState(ctx context.Context) error {
 		}
 	}
 
-	_, err = c.loadCurrentNodeUtil()
+	_, err = c.loadCurrentNodeUtil(ctx)
 	if err != nil {
 		return err
 	}
