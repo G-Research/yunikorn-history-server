@@ -15,18 +15,18 @@ type RepoPostgres struct {
 	dbpool *pgxpool.Pool
 }
 
-func NewECRepo(cfg *config.ECConfig) (error, *RepoPostgres) {
+func NewECRepo(ctx context.Context, cfg *config.ECConfig) (*RepoPostgres, error) {
 	poolCfg, err := pgxpool.ParseConfig(CreateConnectionString(cfg.PostgresConfig.Connection))
 	if err != nil {
-		return errors.Wrap(err, "cannot parse Postgres connection config"), nil
+		return nil, errors.Wrap(err, "cannot parse Postgres connection config")
 	}
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), poolCfg)
+	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
-		return errors.Wrap(err, "cannot create Postgres connection pool"), nil
+		return nil, errors.Wrap(err, "cannot create Postgres connection pool")
 	}
 
-	return nil, &RepoPostgres{config: cfg, dbpool: pool}
+	return &RepoPostgres{config: cfg, dbpool: pool}, nil
 }
 
 // Set up the DB for use, create tables
@@ -107,6 +107,7 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 		`CREATE TABLE nodes(
 			id UUID,
 			node_id TEXT NOT NULL,
+			partition TEXT NOT NULL,
 			host_name TEXT NOT NULL,
 			rack_name TEXT,
 			attributes JSONB,
@@ -129,6 +130,18 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			cluster_id TEXT NOT NULL,
 			partition TEXT NOT NULL,
 			nodes_util_list JSONB,
+			UNIQUE (id),
+			PRIMARY KEY (id))`,
+		// for yunikorn-core/pkg/webservice/dao/ContainerHistoryDAOInfo and yunikorn-core/pkg/webservice/dao/ApplicationHistoryDAOInfo
+		`DROP TABLE IF EXISTS history`,
+		`DROP TYPE IF EXISTS history_type`,
+		// NOTE(mo-fatah): Is this the best way to do this?
+		`CREATE TYPE history_type AS ENUM ('container', 'application')`,
+		`CREATE TABLE history(
+			id UUID,
+			history_type history_type NOT NULL,
+			total_number BIGINT NOT NULL,
+			timestamp BIGINT NOT NULL,
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
 	}

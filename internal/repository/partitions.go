@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpsertPartitions(partitions []*dao.PartitionInfo) error {
-	upsertPartition := `INSERT INTO partitions (
+func (s *RepoPostgres) UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
+	upsertSQL := `INSERT INTO partitions (
 		id, 
 		cluster_id,
 		name, 
@@ -33,7 +33,7 @@ func (s *RepoPostgres) UpsertPartitions(partitions []*dao.PartitionInfo) error {
 		state = EXCLUDED.state,
 		last_state_transition_time = EXCLUDED.last_state_transition_time`
 	for _, p := range partitions {
-		_, err := s.dbpool.Exec(context.Background(), upsertPartition,
+		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
 				"id":                         uuid.NewString(),
 				"cluster_id":                 p.ClusterID,
@@ -54,9 +54,9 @@ func (s *RepoPostgres) UpsertPartitions(partitions []*dao.PartitionInfo) error {
 	return nil
 }
 
-func (s *RepoPostgres) GetAllPartitions() ([]*dao.PartitionInfo, error) {
+func (s *RepoPostgres) GetAllPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
 	var partitions []*dao.PartitionInfo
-	rows, err := s.dbpool.Query(context.Background(), "SELECT * FROM partitions")
+	rows, err := s.dbpool.Query(ctx, "SELECT * FROM partitions")
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
 	}

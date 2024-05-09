@@ -2,6 +2,7 @@ package ykclient
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,8 +19,10 @@ var (
 	streamEndPt = "/ws/v1/events/stream"
 	// appHistoryEndPt       = "/ws/v1/history/apps"
 	// containerHistoryEndPt = "/ws/v1/history/containers"
-	partitionsEndPt     = "/ws/v1/partitions"
-	partitionNodesEndPt = func(partitionName string) string {
+	partitionsEndPt        = "/ws/v1/partitions"
+	appsHistoryEndPt       = "/ws/v1/history/apps"
+	containersHistoryEndPt = "/ws/v1/history/containers"
+	partitionNodesEndPt    = func(partitionName string) string {
 		return fmt.Sprintf("/ws/v1/partition/%s/nodes", partitionName)
 	}
 	queuesEndPt = func(partitionName string) string {
@@ -57,73 +60,85 @@ func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.Rep
 	}
 }
 
-func (c *Client) Run() error {
-	err := c.loadUpCurrentClusterState()
+func (c *Client) Run(ctx context.Context) {
+	err := c.loadUpCurrentClusterState(ctx)
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "could not load current cluster state: %v\n", err)
 	}
 	streamURL := c.endPointURL(streamEndPt)
 	resp, err := http.Get(streamURL)
 	if err != nil {
-		return fmt.Errorf("could not request from %s: %v", streamURL, err)
+		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
 	}
 
 	reader := bufio.NewReader(resp.Body)
-	for {
-		line, err := reader.ReadBytes('\n')
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: could not read from http stream: %v", err)
-			break
-		}
+	go func() {
+		fmt.Println("Starting YuniKorn event stream client")
+		for {
+			select {
+			case <-ctx.Done():
+				// TODO: add logging here to indicate that the client is shutting down
+				return
+			default:
+				line, err := reader.ReadBytes('\n')
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error: could not read from http stream: %v", err)
+					break
+				}
 
-		ev := si.EventRecord{}
-		err = json.Unmarshal(line, &ev)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
-			break
-		}
+				ev := si.EventRecord{}
+				err = json.Unmarshal(line, &ev)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
+					break
+				}
 
-		if ev.Type == si.EventRecord_APP {
-			fmt.Printf("Application\n")
-			fmt.Printf("---------\n")
-			fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.Type)])
-			fmt.Printf("ObjectId     : %s\n", ev.ObjectID)
-			fmt.Printf("Message      : %s\n", ev.Message)
-			fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
-			fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
-			fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
+				if ev.Type == si.EventRecord_APP {
+					fmt.Printf("Application\n")
+					fmt.Printf("---------\n")
+					fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.Type)])
+					fmt.Printf("ObjectId     : %s\n", ev.ObjectID)
+					fmt.Printf("Message      : %s\n", ev.Message)
+					fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
+					fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
+					fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
+				}
+			}
 		}
-	}
-	return nil
+	}()
 }
 
-func (c *Client) loadUpCurrentClusterState() error {
-	partitions, err := c.loadCurrentPartitions()
+func (c *Client) loadUpCurrentClusterState(ctx context.Context) error {
+	partitions, err := c.loadCurrentPartitions(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, part := range partitions {
-		_, err := c.loadCurrentPartitionNodes(part.Name)
+		_, err := c.loadCurrentPartitionNodes(ctx, part.Name)
 		if err != nil {
 			return err
 		}
 	}
 
-	partitionQueues, err := c.loadCurrentQueues(partitions)
+	partitionQueues, err := c.loadCurrentQueues(ctx, partitions)
 	if err != nil {
 		return err
 	}
 
 	for _, q := range partitionQueues {
 		fmt.Printf("loading applications for partition %s, queue %s\n", q.Partition, q.QueueName)
-		_, err := c.loadCurrentApplications(q.Partition, q.QueueName)
+		_, err := c.loadCurrentApplications(ctx, q.Partition, q.QueueName)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = c.loadCurrentNodeUtil()
+	_, err = c.loadCurrentNodeUtil(ctx)
+	if err != nil {
+		return err
+	}
+	err = c.loadClusterHistory(ctx)
 	if err != nil {
 		return err
 	}
@@ -131,7 +146,7 @@ func (c *Client) loadUpCurrentClusterState() error {
 	return nil
 }
 
-func (c *Client) loadCurrentPartitions() ([]*dao.PartitionInfo, error) {
+func (c *Client) loadCurrentPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
 	partitions := []*dao.PartitionInfo{}
 	url := c.endPointURL(partitionsEndPt)
 	resp, err := http.Get(url)
@@ -157,13 +172,13 @@ func (c *Client) loadCurrentPartitions() ([]*dao.PartitionInfo, error) {
 		}
 		partitions = append(partitions, pi...)
 	}
-	if err = c.repo.UpsertPartitions(partitions); err != nil {
+	if err = c.repo.UpsertPartitions(ctx, partitions); err != nil {
 		return nil, err
 	}
 	return partitions, nil
 }
 
-func (c *Client) loadCurrentQueues(partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
+func (c *Client) loadCurrentQueues(ctx context.Context, partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
 	queues := []*dao.PartitionQueueDAOInfo{}
 	for _, p := range partitions {
 		url := c.endPointURL(queuesEndPt(p.Name))
@@ -192,13 +207,13 @@ func (c *Client) loadCurrentQueues(partitions []*dao.PartitionInfo) ([]*dao.Part
 			queues = append(queues, &qi)
 		}
 	}
-	if err := c.repo.UpsertQueues(queues); err != nil {
+	if err := c.repo.UpsertQueues(ctx, queues); err != nil {
 		return nil, err
 	}
 	return queues, nil
 }
 
-func (c *Client) loadCurrentApplications(partitionName, queueName string) ([]*dao.ApplicationDAOInfo, error) {
+func (c *Client) loadCurrentApplications(ctx context.Context, partitionName, queueName string) ([]*dao.ApplicationDAOInfo, error) {
 	apps := []*dao.ApplicationDAOInfo{}
 	url := c.endPointURL(applicationsEndPt(partitionName, queueName))
 
@@ -238,13 +253,13 @@ func (c *Client) loadCurrentApplications(partitionName, queueName string) ([]*da
 			apps = append(apps, &a)
 		}
 	}
-	if err := c.repo.UpsertApplications(apps); err != nil {
+	if err := c.repo.UpsertApplications(ctx, apps); err != nil {
 		return nil, err
 	}
 	return apps, nil
 }
 
-func (c *Client) loadCurrentPartitionNodes(partitionName string) ([]*dao.NodeDAOInfo, error) {
+func (c *Client) loadCurrentPartitionNodes(ctx context.Context, partitionName string) ([]*dao.NodeDAOInfo, error) {
 	nodes := []*dao.NodeDAOInfo{}
 	url := c.endPointURL(partitionNodesEndPt(partitionName))
 
@@ -274,13 +289,13 @@ func (c *Client) loadCurrentPartitionNodes(partitionName string) ([]*dao.NodeDAO
 			nodes = append(nodes, &n)
 		}
 	}
-	if err := c.repo.UpsertNodes(nodes); err != nil {
+	if err := c.repo.UpsertNodes(ctx, nodes, partitionName); err != nil {
 		return nil, err
 	}
 	return nodes, nil
 }
 
-func (c *Client) loadCurrentNodeUtil() (*[]dao.PartitionNodesUtilDAOInfo, error) {
+func (c *Client) loadCurrentNodeUtil(ctx context.Context) (*[]dao.PartitionNodesUtilDAOInfo, error) {
 	url := c.endPointURL(nodeUtilEndPt)
 	nus := []dao.PartitionNodesUtilDAOInfo{}
 
@@ -301,11 +316,87 @@ func (c *Client) loadCurrentNodeUtil() (*[]dao.PartitionNodesUtilDAOInfo, error)
 		return nil, fmt.Errorf("could not unmarshal node utilizations from response: %v", err)
 	}
 
-	if err := c.repo.InsertNodeUtilizations(uuid.New(), &nus); err != nil {
+	if err := c.repo.InsertNodeUtilizations(ctx, uuid.New(), &nus); err != nil {
 		return nil, err
 	}
 
 	return &nus, nil
+}
+
+func (c *Client) loadClusterHistory(ctx context.Context) error {
+	appsHistory, err := c.loadAppsHistory()
+	if err != nil {
+		return err
+	}
+	containersHistory, err := c.loadContainersHistory()
+	if err != nil {
+		return err
+	}
+	return c.repo.UpdateHistory(ctx, appsHistory, containersHistory)
+}
+
+func (c *Client) loadAppsHistory() ([]*dao.ApplicationHistoryDAOInfo, error) {
+	appsHistory := []*dao.ApplicationHistoryDAOInfo{}
+	url := c.endPointURL(appsHistoryEndPt)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("could not get applications history from %s: %v", url, err)
+	}
+	reader := bufio.NewReader(resp.Body)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, fmt.Errorf("could not read applications history from response: %v", err)
+		}
+		if len(line) == 0 {
+			break
+		}
+		responseAppsHistory := []dao.ApplicationHistoryDAOInfo{}
+		err = json.Unmarshal(line, &responseAppsHistory)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal applications history from response: %v", err)
+		}
+
+		for _, a := range responseAppsHistory {
+			appsHistory = append(appsHistory, &a)
+		}
+	}
+	return appsHistory, nil
+}
+
+func (c *Client) loadContainersHistory() ([]*dao.ContainerHistoryDAOInfo, error) {
+	containersHistory := []*dao.ContainerHistoryDAOInfo{}
+	url := c.endPointURL(containersHistoryEndPt)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("could not get containers history from %s: %v", url, err)
+	}
+	reader := bufio.NewReader(resp.Body)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, fmt.Errorf("could not read containers history from response: %v", err)
+		}
+		if len(line) == 0 {
+			break
+		}
+		responseContainersHistory := []dao.ContainerHistoryDAOInfo{}
+		err = json.Unmarshal(line, &responseContainersHistory)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal containers history from response: %v", err)
+		}
+
+		for _, c := range responseContainersHistory {
+			containersHistory = append(containersHistory, &c)
+		}
+	}
+	return containersHistory, nil
 }
 
 func (c *Client) endPointURL(endPt string) string {
