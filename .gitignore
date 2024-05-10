@@ -1,0 +1,11 @@
+*.tmp
+.DS_Store
+.build
+*.swp
+*.a
+/tools/
+/build/
+/_output/
+.idea
+/coverage.txt
+/shellcheck
