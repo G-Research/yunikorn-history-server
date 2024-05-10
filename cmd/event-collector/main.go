@@ -7,11 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	//"github.com/apache/yunikorn-scheduler-interface/lib/go/common"
-	"richscott/yhs/internal/config"
-	"richscott/yhs/internal/repository"
-	"richscott/yhs/internal/webservice"
-	"richscott/yhs/internal/ykclient"
+	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/repository"
+	"github.com/G-Research/yunikorn-history-server/internal/webservice"
+	"github.com/G-Research/yunikorn-history-server/internal/ykclient"
 )
 
 var (

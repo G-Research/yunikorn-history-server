@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"net/http"
 	"os"
-	"richscott/yhs/internal/config"
-	"richscott/yhs/internal/repository"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
