@@ -8,7 +8,8 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"richscott/yhs/internal/repository"
+
+	"github.com/G-Research/yunikorn-history-server/internal/repository"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"

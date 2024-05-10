@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"richscott/yhs/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
