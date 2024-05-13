@@ -26,8 +26,8 @@ func main() {
 		PostgresConfig: config.PostgresConfig{
 			Connection: map[string]string{
 				"dbname":   "yhs",
-				"user":     "postgres",
-				"password": "psw",
+				"user":     "yhs",
+				"password": "yhs",
 				"host":     "localhost",
 				"port":     "5432",
 			},
