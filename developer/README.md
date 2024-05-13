@@ -45,4 +45,10 @@ Then run YHS:
 ```sh
   $ build/event-collector
 ``` 
+You can safely stop it by pressing `<Control>+C`.
+
+## Shutting Down 
+To stop the Postgres container, either type `<Control>+C` if it's running in attached mode, or run `docker compose down postgres` if it's running in detached mode.
+
+To stop the Yunikorn cluster, run `kind delete cluster`. To also clean up stale Docker container storage on your disk, run `docker system prune --volumes -f`, although it's not strictly necessary every time.
 
