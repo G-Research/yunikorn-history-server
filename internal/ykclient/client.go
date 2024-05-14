@@ -15,42 +15,6 @@ import (
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
 )
 
-var (
-	streamEndPt            = "/ws/v1/events/stream"
-	partitionsEndPt        = "/ws/v1/partitions"
-	appsHistoryEndPt       = "/ws/v1/history/apps"
-	containersHistoryEndPt = "/ws/v1/history/containers"
-	partitionNodesEndPt    = func(partitionName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/nodes", partitionName)
-	}
-	queuesEndPt = func(partitionName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/queues", partitionName)
-	}
-	// queueEndPt = func(partitionName, queueName string) string {
-	// 	return fmt.Sprintf("/ws/v1/partition/%s/queue/%s", partitionName, queueName)
-	// }
-	// nodesEndPt = "/ws/v1/nodes"
-	// nodeEndPt  = func(partitionName, nodeID string) string {
-	// 	return fmt.Sprintf("/ws/v1/partition/%s/node/%s", partitionName, nodeID)
-	// }
-	nodeUtilEndPt           = "/ws/v1/scheduler/node-utilizations"
-	applicationsByPartEndPt = func(partitionName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/applications/active", partitionName)
-	}
-	applicationsByQueueEndPt = func(partitionName, queueName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/applications", partitionName, queueName)
-	}
-	applicationByPartEndPt = func(partitionName, appID string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/application/%s", partitionName, appID)
-	}
-	applicationByQueueEndPt = func(partitionName, queueName, appID string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/application/%s", partitionName, queueName, appID)
-	}
-	// applicationEndPt = func(partitionName, queueName, appID string) string {
-	// 	return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/application/%s", partitionName, queueName, appID)
-	// }
-)
-
 type Client struct {
 	httpProto string
 	ykHost    string
@@ -187,8 +151,9 @@ func (c *Client) startup(ctx context.Context) {
 	}
 }
 
-// Usually the returned queues are a signle heirarchical structure, this function
-// and returns a list of all queues in the hierarchy in a flat array
+// Usually the returned queues are a signle heirarchical structure, the root queue,
+// and all other queues are children queues.
+// flattenQueues returns a list of all queues in the hierarchy in a flat array
 func flattenQueues(qs []dao.PartitionQueueDAOInfo) []dao.PartitionQueueDAOInfo {
 	var queues []dao.PartitionQueueDAOInfo
 	for _, q := range qs {

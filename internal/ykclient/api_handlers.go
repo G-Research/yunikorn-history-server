@@ -11,6 +11,32 @@ import (
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 )
 
+var (
+	streamEndPt            = "/ws/v1/events/stream"
+	partitionsEndPt        = "/ws/v1/partitions"
+	appsHistoryEndPt       = "/ws/v1/history/apps"
+	containersHistoryEndPt = "/ws/v1/history/containers"
+	partitionNodesEndPt    = func(partitionName string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/nodes", partitionName)
+	}
+	queuesEndPt = func(partitionName string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/queues", partitionName)
+	}
+	nodeUtilEndPt           = "/ws/v1/scheduler/node-utilizations"
+	applicationsByPartEndPt = func(partitionName string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/applications/active", partitionName)
+	}
+	applicationsByQueueEndPt = func(partitionName, queueName string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/applications", partitionName, queueName)
+	}
+	applicationByPartEndPt = func(partitionName, appID string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/application/%s", partitionName, appID)
+	}
+	applicationByQueueEndPt = func(partitionName, queueName, appID string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/application/%s", partitionName, queueName, appID)
+	}
+)
+
 func (c *Client) GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
 	partitions := []*dao.PartitionInfo{}
 	url := c.endPointURL(partitionsEndPt)
