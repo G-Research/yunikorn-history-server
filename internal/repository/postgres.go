@@ -165,6 +165,18 @@ func CreateConnectionString(cfg config.PostgresConfig) string {
 		fmt.Sprintf("password='%s'", r.Replace(cfg.Password)),
 		fmt.Sprintf("dbname='%s'", r.Replace(cfg.DbName)),
 	}
+	if cfg.PoolMaxConns > 0 {
+		pairs = append(pairs, fmt.Sprintf("pool_max_conns='%d'", cfg.PoolMaxConns))
+	}
+	if cfg.PoolMinConns > 0 {
+		pairs = append(pairs, fmt.Sprintf("pool_min_conns='%d'", cfg.PoolMinConns))
+	}
+	if cfg.PoolMaxConnLifetime > 0 {
+		pairs = append(pairs, fmt.Sprintf("pool_max_conn_lifetime='%s'", cfg.PoolMaxConnLifetime))
+	}
+	if cfg.PoolMaxConnIdleTime > 0 {
+		pairs = append(pairs, fmt.Sprintf("pool_man_conn_idle_time='%s'", cfg.PoolMaxConnIdleTime))
+	}
 
 	return strings.Join(pairs, " ")
 }
