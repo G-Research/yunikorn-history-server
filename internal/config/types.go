@@ -12,9 +12,10 @@ type PostgresConfig struct {
 	DbName              string
 	Username            string
 	Password            string
-	PoolMaxOpenConns    int
-	PoolMaxIdleConns    int
+	PoolMaxConns        int
+	PoolMinConns        int
 	PoolMaxConnLifetime time.Duration
+	PoolMaxConnIdleTime time.Duration
 }
 
 type ECConfig struct {

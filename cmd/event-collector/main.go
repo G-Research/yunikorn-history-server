@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
@@ -46,14 +47,29 @@ func main() {
 	ykPort = k.Int("yunikorn.port")
 	yhsServerAddr = k.String("yhs.serverAddr")
 
+	pgCfg := config.PostgresConfig{
+		Host:     k.String("db.host"),
+		Port:     k.Int("db.port"),
+		Username: k.String("db.user"),
+		Password: k.String("db.password"),
+		DbName:   k.String("db.dbname"),
+	}
+
+	if k.Int("pool_max_conns") > 0 {
+		pgCfg.PoolMaxConns = k.Int("pool_max_conns")
+	}
+	if k.Int("pool_min_conns") > 0 {
+		pgCfg.PoolMinConns = k.Int("pool_min_conns")
+	}
+	if k.Duration("pool_max_conn_lifetime") > time.Duration(0) {
+		pgCfg.PoolMaxConnLifetime = k.Duration("pool_max_conn_lifetime")
+	}
+	if k.Duration("pool_max_conn_idletime") > time.Duration(0) {
+		pgCfg.PoolMaxConnIdleTime = k.Duration("pool_max_conn_idletime")
+	}
+
 	ecConfig := config.ECConfig{
-		PostgresConfig: config.PostgresConfig{
-			Host:     k.String("db.host"),
-			Port:     k.Int("db.port"),
-			Username: k.String("db.user"),
-			Password: k.String("db.password"),
-			DbName:   k.String("db.dbname"),
-		},
+		PostgresConfig: pgCfg,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
