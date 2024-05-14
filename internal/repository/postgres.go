@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
@@ -16,7 +17,7 @@ type RepoPostgres struct {
 }
 
 func NewECRepo(ctx context.Context, cfg *config.ECConfig) (*RepoPostgres, error) {
-	poolCfg, err := pgxpool.ParseConfig(CreateConnectionString(cfg.PostgresConfig.Connection))
+	poolCfg, err := pgxpool.ParseConfig(CreateConnectionString(cfg.PostgresConfig))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot parse Postgres connection config")
 	}
@@ -154,12 +155,15 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 	}
 }
 
-func CreateConnectionString(values map[string]string) string {
-	pairs := []string{}
+func CreateConnectionString(cfg config.PostgresConfig) string {
+	r := strings.NewReplacer(`\`, `\\`, `'`, `\'`)
 
-	replacer := strings.NewReplacer(`\`, `\\`, `'`, `\'`)
-	for k, v := range values {
-		pairs = append(pairs, k+"='"+replacer.Replace(v)+"'")
+	pairs := []string{
+		fmt.Sprintf("host='%s'", r.Replace(cfg.Host)),
+		fmt.Sprintf("port='%d'", cfg.Port),
+		fmt.Sprintf("user='%s'", r.Replace(cfg.Username)),
+		fmt.Sprintf("password='%s'", r.Replace(cfg.Password)),
+		fmt.Sprintf("dbname='%s'", r.Replace(cfg.DbName)),
 	}
 
 	return strings.Join(pairs, " ")
