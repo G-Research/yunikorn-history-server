@@ -18,19 +18,19 @@ func (s *RepoPostgres) UpsertApplications(ctx context.Context, apps []*dao.Appli
 			@submission_time, @finished_time, @requests, @allocations, @state, @user, @groups,
 			@rejected_message, @state_log, @place_holder_data, @has_reserved, @reservations, @max_request_priority)
 		ON CONFLICT (partition, queue_name, app_id) DO UPDATE SET
-			used_resource = EXCLUDED.used_resource,
-			max_used_resource = EXCLUDED.max_used_resource,
-			pending_resource = EXCLUDED.pending_resource,
-			finished_time = EXCLUDED.finished_time,
-			requests = EXCLUDED.requests,
-			allocations = EXCLUDED.allocations,
-			state = EXCLUDED.state,
-			rejected_message = EXCLUDED.rejected_message,
-			state_log = EXCLUDED.state_log,
-			place_holder_data = EXCLUDED.place_holder_data,
-			has_reserved = EXCLUDED.has_reserved,
-			reservations = EXCLUDED.reservations,
-			max_request_priority = EXCLUDED.max_request_priority`
+			used_resource = COALESCE(EXCLUDED.used_resource, applications.used_resource),
+			max_used_resource = COALESCE(EXCLUDED.max_used_resource, applications.max_used_resource),
+			pending_resource = COALESCE(EXCLUDED.pending_resource, applications.pending_resource),
+			finished_time = COALESCE(EXCLUDED.finished_time, applications.finished_time),
+			requests = COALESCE(EXCLUDED.requests, applications.requests),
+			allocations = COALESCE(EXCLUDED.allocations, applications.allocations),
+			state = COALESCE(EXCLUDED.state, applications.state),
+			rejected_message = COALESCE(EXCLUDED.rejected_message, applications.rejected_message),
+			state_log = COALESCE(EXCLUDED.state_log, applications.state_log),
+			place_holder_data = COALESCE(EXCLUDED.place_holder_data, applications.place_holder_data),
+			has_reserved = COALESCE(EXCLUDED.has_reserved, applications.has_reserved),
+			reservations = COALESCE(EXCLUDED.reservations, applications.reservations),
+			max_request_priority = COALESCE(EXCLUDED.max_request_priority, applications.max_request_priority)`
 
 	for _, a := range apps {
 		_, err := s.dbpool.Exec(ctx, upsertSQL,
