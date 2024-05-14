@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
+func (s *RepoPostgres) UpsertQueues(ctx context.Context, queues []dao.PartitionQueueDAOInfo) error {
 	upsertSQL := `INSERT INTO queues (
 		id,
 		queue_name,
