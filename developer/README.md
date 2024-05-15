@@ -43,7 +43,7 @@ this directory) and build YHS:
 ``` 
 Then run YHS:
 ```sh
-  $ build/event-collector
+  $ build/event-collector yhs.yml
 ``` 
 You can safely stop it by pressing `<Control>+C`.
 

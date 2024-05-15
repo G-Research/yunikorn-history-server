@@ -7,10 +7,15 @@ import (
 )
 
 type PostgresConfig struct {
-	PoolMaxOpenConns    int
-	PoolMaxIdleConns    int
+	Host                string
+	Port                int
+	DbName              string
+	Username            string
+	Password            string
+	PoolMaxConns        int
+	PoolMinConns        int
 	PoolMaxConnLifetime time.Duration
-	Connection          map[string]string
+	PoolMaxConnIdleTime time.Duration
 }
 
 type ECConfig struct {
