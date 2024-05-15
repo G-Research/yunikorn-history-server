@@ -2,7 +2,13 @@
 
 # Create a local K8S cluster (using Kind) with a Yunikorn scheduler
 
-arch=$(uname -m)         # usually either amd64 or arm64
+machine_arch=$(uname -m)
+if [ $machine_arch = 'x86_64' ]; then
+    arch='amd64'
+elif [ $machine_arch = 'arm64' ]; then
+    arch='arm64'
+fi
+
 ns=yunikorn
 registry=gresearch
 
