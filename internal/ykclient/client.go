@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"github.com/google/uuid"
 
@@ -39,6 +40,12 @@ func (c *Client) Run(ctx context.Context) {
 		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
 	}
 
+	evCounts := ctx.Value(config.EventCounts).(config.EventTypeCounts)
+	if evCounts == nil {
+		fmt.Fprintf(os.Stderr, "could not get eventCounts map from context\n")
+		return
+	}
+
 	reader := bufio.NewReader(resp.Body)
 	go func() {
 		fmt.Println("Starting YuniKorn event stream client")
@@ -59,6 +66,13 @@ func (c *Client) Run(ctx context.Context) {
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
 					break
+				}
+
+				evKey := config.EventTypeKey{Type: ev.Type, ChangeType: ev.EventChangeType}
+				if count, exists := evCounts[evKey]; exists {
+					evCounts[evKey] = count + 1
+				} else {
+					evCounts[evKey] = 1
 				}
 
 				if ev.Type == si.EventRecord_APP {

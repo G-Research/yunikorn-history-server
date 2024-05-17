@@ -22,6 +22,7 @@ var (
 	ykHost        string
 	ykPort        int
 	yhsServerAddr string
+	eventCounts   config.EventTypeCounts
 )
 
 func main() {
@@ -68,6 +69,8 @@ func main() {
 		pgCfg.PoolMaxConnIdleTime = k.Duration("pool_max_conn_idletime")
 	}
 
+	eventCounts = config.EventTypeCounts{}
+
 	ecConfig := config.ECConfig{
 		PostgresConfig: pgCfg,
 	}
@@ -81,6 +84,8 @@ func main() {
 	}
 
 	repo.Setup(ctx)
+
+	ctx = context.WithValue(ctx, config.EventCounts, eventCounts)
 
 	client := ykclient.NewClient(httpProto, ykHost, ykPort, repo)
 	client.Run(ctx)
