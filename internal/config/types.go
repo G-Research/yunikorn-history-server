@@ -1,9 +1,21 @@
 package config
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+)
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
+var (
+	EventCounts = contextKey("eventCounts")
 )
 
 type PostgresConfig struct {
@@ -39,3 +51,14 @@ type AppsResponse struct {
 type NodesResponse struct {
 	Nodes []*dao.NodeDAOInfo `json:"nodes"`
 }
+
+type EventTypeKey struct {
+	Type       si.EventRecord_Type       `json:"Type"`
+	ChangeType si.EventRecord_ChangeType `json:"ChangeType"`
+}
+
+func (evtKey EventTypeKey) String() string {
+	return fmt.Sprintf("Type: %v, ChangeType: %v", evtKey.Type, evtKey.ChangeType)
+}
+
+type EventTypeCounts map[EventTypeKey]int

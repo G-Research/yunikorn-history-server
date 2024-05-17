@@ -57,6 +57,10 @@ func (ws *WebService) Start(ctx context.Context) {
 		r = r.WithContext(ctx)
 		ws.getNodeUtilizations(w, r)
 	})
+	router.Handle("GET", EVENT_STATISTICS, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		r = r.WithContext(ctx)
+		ws.getEventStatistics(w, r)
+	})
 	ws.server.Handler = router
 	go func() {
 		fmt.Printf("Starting webservice on %s\n", ws.server.Addr)
@@ -158,5 +162,24 @@ func (ws *WebService) getNodeUtilizations(w http.ResponseWriter, r *http.Request
 	err = json.NewEncoder(w).Encode(nodeUtilization)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (ws *WebService) getEventStatistics(w http.ResponseWriter, r *http.Request) {
+	evCounts := r.Context().Value(config.EventCounts).(config.EventTypeCounts)
+	if evCounts == nil {
+		fmt.Fprintf(os.Stderr, "getEventStatistics(): could not get eventCounts map from context\n")
+		return
+	}
+
+	evCountsStr := map[string]int{}
+	for k, v := range evCounts {
+		evCountsStr[k.String()] = v
+	}
+
+	err := json.NewEncoder(w).Encode(&evCountsStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
