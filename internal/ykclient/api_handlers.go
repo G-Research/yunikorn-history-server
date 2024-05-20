@@ -108,7 +108,7 @@ func (c *Client) GetApplications(ctx context.Context, partitionName, queueName s
 	}
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("could not get applications from %s: %v", url, err)
+		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
@@ -147,6 +147,9 @@ func (c *Client) GetApplications(ctx context.Context, partitionName, queueName s
 	return apps, nil
 }
 
+// GetApplication calls the YuniKorn Scheduler API to get the application information for the given partition, queue and appID
+// If partitionName is empty, it defaults to "default"
+// If queueName is empty, it gets the application from the partition level
 func (c *Client) GetApplication(ctx context.Context, partitionName, queueName, appID string) (*dao.ApplicationDAOInfo, error) {
 	var url string
 	if partitionName == "" {
@@ -160,7 +163,7 @@ func (c *Client) GetApplication(ctx context.Context, partitionName, queueName, a
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("could not get application from %s: %v", url, err)
+		return nil, err
 	}
 
 	if resp.StatusCode != 200 {

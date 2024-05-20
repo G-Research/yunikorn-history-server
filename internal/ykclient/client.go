@@ -20,6 +20,7 @@ type Client struct {
 	ykHost    string
 	ykPort    int
 	repo      *repository.RepoPostgres
+	appMap    map[string]*dao.ApplicationDAOInfo
 }
 
 func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.RepoPostgres) *Client {
@@ -28,6 +29,7 @@ func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.Rep
 		ykHost:    ykHost,
 		ykPort:    ykPort,
 		repo:      repo,
+		appMap:    make(map[string]*dao.ApplicationDAOInfo),
 	}
 }
 
@@ -60,6 +62,9 @@ func (c *Client) Run(ctx context.Context) {
 					fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
 					break
 				}
+				// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
+				// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
+				c.handleEvent(ctx, &ev)
 
 				if ev.Type == si.EventRecord_APP {
 					fmt.Printf("Application\n")
@@ -70,6 +75,7 @@ func (c *Client) Run(ctx context.Context) {
 					fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
 					fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
 					fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
+					fmt.Printf("Resource    : %+v\n", ev.Resource)
 				}
 			}
 		}

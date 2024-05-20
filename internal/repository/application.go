@@ -57,7 +57,7 @@ func (s *RepoPostgres) UpsertApplications(ctx context.Context, apps []*dao.Appli
 				"max_request_priority": a.MaxRequestPriority,
 			})
 		if err != nil {
-			return fmt.Errorf("could not insert application into DB: %v", err)
+			return err
 		}
 	}
 	return nil
