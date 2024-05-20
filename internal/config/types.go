@@ -57,8 +57,9 @@ type EventTypeKey struct {
 	ChangeType si.EventRecord_ChangeType `json:"ChangeType"`
 }
 
-func (evtKey EventTypeKey) String() string {
-	return fmt.Sprintf("Type: %v, ChangeType: %v", evtKey.Type, evtKey.ChangeType)
+func (ek EventTypeKey) MarshalText() (text []byte, err error) {
+	str := fmt.Sprintf("%s.%s", ek.Type, ek.ChangeType)
+	return []byte(str), nil
 }
 
 type EventTypeCounts map[EventTypeKey]int

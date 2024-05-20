@@ -169,17 +169,12 @@ func (ws *WebService) getEventStatistics(w http.ResponseWriter, r *http.Request)
 	evCounts := r.Context().Value(config.EventCounts).(config.EventTypeCounts)
 	if evCounts == nil {
 		fmt.Fprintf(os.Stderr, "getEventStatistics(): could not get eventCounts map from context\n")
+		http.Error(w, "statistics unavailable", http.StatusInternalServerError)
 		return
 	}
 
-	evCountsStr := map[string]int{}
-	for k, v := range evCounts {
-		evCountsStr[k.String()] = v
-	}
-
-	err := json.NewEncoder(w).Encode(&evCountsStr)
+	err := json.NewEncoder(w).Encode(&evCounts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 }
