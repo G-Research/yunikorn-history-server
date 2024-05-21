@@ -36,7 +36,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var k = koanf.New(".")
+	k := koanf.New(".")
 	if err := k.Load(file.Provider(cfgFile), yaml.Parser()); err != nil {
 		fmt.Fprintf(os.Stderr, "error loading file: %v", err)
 		os.Exit(1)
