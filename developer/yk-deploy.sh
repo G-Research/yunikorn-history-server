@@ -7,7 +7,7 @@
 # The Docker registry where you want to push/pull images
 registry=gresearch
 # The base directory which contains all the Yunikorn repo dirs below
-yk_repos_base=$HOME/src/yunikorn
+yk_repos_base=${1:-$HOME/src/yunikorn}
 
 # Settings below here should not need to be changed
 
