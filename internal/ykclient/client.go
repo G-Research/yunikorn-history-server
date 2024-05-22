@@ -37,10 +37,6 @@ func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.Rep
 func (c *Client) Run(ctx context.Context) {
 	go c.startup(ctx)
 	streamURL := c.endPointURL(streamEndPt)
-	resp, err := http.Get(streamURL)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
-	}
 
 	evCounts := ctx.Value(config.EventCounts).(config.EventTypeCounts)
 	if evCounts == nil {
@@ -48,52 +44,62 @@ func (c *Client) Run(ctx context.Context) {
 		return
 	}
 
-	reader := bufio.NewReader(resp.Body)
 	go func() {
 		fmt.Println("Starting YuniKorn event stream client")
-		for {
-			select {
-			case <-ctx.Done():
-				// TODO: add logging here to indicate that the client is shutting down
-				return
-			default:
-				line, err := reader.ReadBytes('\n')
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error: could not read from http stream: %v", err)
-					break
-				}
+		c.FetchEventStream(ctx, streamURL, evCounts)
+	}()
+}
 
-				ev := si.EventRecord{}
-				err = json.Unmarshal(line, &ev)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
-					break
-				}
-				// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
-				// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
-				c.handleEvent(ctx, &ev)
+func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCounts config.EventTypeCounts) {
+	// XXX TODO change http.Get to something that takes a context, so we can cancel
+	resp, err := http.Get(streamURL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
+	}
+	reader := bufio.NewReader(resp.Body)
 
-				evKey := config.EventTypeKey{Type: ev.Type, ChangeType: ev.EventChangeType}
-				if count, exists := evCounts[evKey]; exists {
-					evCounts[evKey] = count + 1
-				} else {
-					evCounts[evKey] = 1
-				}
+	for {
+		select {
+		case <-ctx.Done():
+			// TODO: add logging here to indicate that the client is shutting down
+			return
+		default:
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not read from http stream: %v", err)
+				break
+			}
 
-				if ev.Type == si.EventRecord_APP {
-					fmt.Printf("Application\n")
-					fmt.Printf("---------\n")
-					fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.Type)])
-					fmt.Printf("ObjectId     : %s\n", ev.ObjectID)
-					fmt.Printf("Message      : %s\n", ev.Message)
-					fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
-					fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
-					fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
-					fmt.Printf("Resource    : %+v\n", ev.Resource)
-				}
+			ev := si.EventRecord{}
+			err = json.Unmarshal(line, &ev)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
+				break
+			}
+			// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
+			// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
+			c.handleEvent(ctx, &ev)
+
+			evKey := config.EventTypeKey{Type: ev.Type, ChangeType: ev.EventChangeType}
+			if count, exists := evCounts[evKey]; exists {
+				evCounts[evKey] = count + 1
+			} else {
+				evCounts[evKey] = 1
+			}
+
+			if ev.Type == si.EventRecord_APP {
+				fmt.Printf("Application\n")
+				fmt.Printf("---------\n")
+				fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.Type)])
+				fmt.Printf("ObjectId     : %s\n", ev.ObjectID)
+				fmt.Printf("Message      : %s\n", ev.Message)
+				fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
+				fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
+				fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
+				fmt.Printf("Resource    : %+v\n", ev.Resource)
 			}
 		}
-	}()
+	}
 }
 
 // startup performs all necessary steps to load up the current state of the cluster
