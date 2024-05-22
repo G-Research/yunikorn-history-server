@@ -2,6 +2,7 @@ package ykclient
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -51,17 +52,27 @@ func (c *Client) Run(ctx context.Context) {
 }
 
 func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCounts config.EventTypeCounts) {
-	// XXX TODO change http.Get to something that takes a context, so we can cancel
-	resp, err := http.Get(streamURL)
+	ctx, cancel := context.WithCancel(ctx)
+
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, streamURL, bytes.NewBuffer([]byte{}))
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
+		return
 	}
+	defer func() {
+		resp.Body.Close()
+	}()
+
 	reader := bufio.NewReader(resp.Body)
 
 	for {
 		select {
 		case <-ctx.Done():
 			// TODO: add logging here to indicate that the client is shutting down
+			cancel()
 			return
 		default:
 			line, err := reader.ReadBytes('\n')
