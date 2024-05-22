@@ -64,3 +64,8 @@ clean:
 	"$(GO)" clean -cache -testcache -r
 	@echo "removing generated files"
 	@rm -rf build
+
+.PHONY: lint
+lint: ## run go linters.
+	@echo 'Running go linters.'
+	@golangci-lint run ./...
