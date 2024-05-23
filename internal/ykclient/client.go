@@ -60,6 +60,7 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
+		cancel()
 		return
 	}
 	defer func() {
