@@ -53,8 +53,8 @@ type NodesResponse struct {
 }
 
 type EventTypeKey struct {
-	Type       si.EventRecord_Type       `json:"Type"`
-	ChangeType si.EventRecord_ChangeType `json:"ChangeType"`
+	Type       si.EventRecord_Type
+	ChangeType si.EventRecord_ChangeType
 }
 
 func (ek EventTypeKey) MarshalText() (text []byte, err error) {
