@@ -16,7 +16,10 @@ Developing the Yunikorn service assumes a layout of having each of the four
 Yunikorn project repositories in a shared layout, and YHS uses this same layout.
 
 YHS assumes you have the repos in a shared top-level directory at `$HOME/src/yunikorn` - if
-you want it elsewhere, adjust the value of `yk_repos_base` at the top of `yk-deploy.sh`.
+you want it elsewhere, pass the absolute path of the top-level directory as shown in the following command.
+```sh
+  $ ./yk-deploy.sh /absolute/path/to/your/yunikorn-base-dir
+``` 
 
 The four Yunikorn repositories to be used are from:
 ```
