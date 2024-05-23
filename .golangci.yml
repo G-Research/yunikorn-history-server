@@ -71,7 +71,7 @@ linters-settings:
     min-complexity: 20
 
   goimports:
-    local-prefixes: github.com/gr-oss-devops/yunikorn-history-server # TODO: change this to GResearch
+    local-prefixes: github.com/G-Research/yunikorn-history-server
 
   govet:
     # report about shadowed variables

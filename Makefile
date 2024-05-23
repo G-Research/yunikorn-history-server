@@ -74,7 +74,7 @@ go-lint: ## run go linters.
 go-format: ## format go code.
 	@echo '>>> Formatting go code.'
 	@gofumpt -w .
-	@goimports -w -local github.com/gr-oss-devops/yunikorn-history-server $(shell find . -type f -name '*.go') ## TODO: update the local path in a PR
+	@goimports -w -local github.com/G-Research/yunikorn-history-server $(shell find . -type f -name '*.go')
 
 .PHONY: install-tools
 install-tools: ## install tools.
