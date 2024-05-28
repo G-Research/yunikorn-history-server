@@ -70,15 +70,7 @@ go-lint: ## run go linters.
 	@echo '>>> Running go linters.'
 	@golangci-lint run -v --issues-exit-code 0 ## TODO: remove after fixing all lint issues
 
-.PHONY: go-format
-go-format: ## format go code.
-	@echo '>>> Formatting go code.'
-	@gofumpt -w .
-	@goimports -w -local github.com/G-Research/yunikorn-history-server $(shell find . -type f -name '*.go')
-
 .PHONY: install-tools
 install-tools: ## install tools.
 	@echo '>>> Installing tools.'
-	@go install mvdan.cc/gofumpt@v0.5.0
-	@go install golang.org/x/tools/cmd/goimports@v0.13.0
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2

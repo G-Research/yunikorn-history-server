@@ -43,15 +43,7 @@ jobs:
         run: make install-tools
 
       - name: Check formatting
-        run: |
-          make go-format
-          modified=$(git ls-files --modified -- '*.go')
-          if [ -n "$modified" ]; then
-            for file in $modified; do
-              echo "::error file=$file::$file is not formatted properly (hint: run \"make go-format\" to fix this)"
-            done
-            exit 1
-          fi
+        run: gofmt -l . | wc -l | xargs -I {} test {} -eq 0 || (gofmt -l . && exit 1)
 
       - name: Check module files
         run: |
