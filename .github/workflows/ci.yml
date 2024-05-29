@@ -62,8 +62,7 @@ jobs:
           version_regex=" v([0-9]+\.[0-9]+\.[0-9]+) "
           [[ "$(golangci-lint version)" =~ $version_regex ]]
           echo version=${BASH_REMATCH[1]} >> $GITHUB_OUTPUT
-          cache_regex="Dir: (.*)
-          "
+          cache_regex='Dir: (.*)\n'
           [[ "$(golangci-lint cache status)" =~ $cache_regex ]]
           echo path=${BASH_REMATCH[1]} >> $GITHUB_OUTPUT
 

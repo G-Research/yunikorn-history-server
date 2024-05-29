@@ -73,4 +73,4 @@ go-lint: ## run go linters.
 .PHONY: install-tools
 install-tools: ## install tools.
 	@echo '>>> Installing tools.'
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
