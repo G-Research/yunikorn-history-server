@@ -64,3 +64,13 @@ clean:
 	"$(GO)" clean -cache -testcache -r
 	@echo "removing generated files"
 	@rm -rf build
+
+.PHONY: go-lint
+go-lint: ## run go linters.
+	@echo '>>> Running go linters.'
+	@golangci-lint run -v --issues-exit-code 0 ## TODO: remove after fixing all lint issues
+
+.PHONY: install-tools
+install-tools: ## install tools.
+	@echo '>>> Installing tools.'
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
