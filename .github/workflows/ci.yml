@@ -131,8 +131,8 @@ jobs:
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fasttrackml-archives-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/*
+          name: yunikorn-history-server-archives-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/*
 
       - name: Upload Docker artifact
         uses: actions/upload-artifact@v4
