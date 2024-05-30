@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf/parsers/yaml v0.1.0
+	github.com/knadh/koanf/providers/env v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
 	github.com/knadh/koanf/v2 v2.1.1
 	github.com/pkg/errors v0.9.1
