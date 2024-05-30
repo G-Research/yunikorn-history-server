@@ -74,3 +74,68 @@ jobs:
 
       - name: Run golangci-lint
         run: make go-lint
+
+  build:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
+    name: Build (${{ matrix.os }}/${{ matrix.arch }})
+    strategy:
+      matrix:
+        os: [ linux ]
+        arch: [ amd64, arm64 ]
+        include:
+          - os: linux
+            runner: ubuntu-latest
+      fail-fast: true
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: ./.github/actions/setup-go
+        with:
+          cache-prefix: build-${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Install arm64 cross-compilation toolchain on Linux
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+          echo CC=aarch64-linux-gnu-gcc >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker metadata
+        id: docker-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: yunikorn-history-server
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=edge
+
+      - name: Build software distribution
+        run: make dist
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          DOCKER_METADATA: ${{ steps.docker-metadata.outputs.json }}
+          DOCKER_OUTPUT: type=oci,dest=yunikorn-history-server-oci-${{ matrix.arch }}.tar
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fasttrackml-archives-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/*
+
+      - name: Upload Docker artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yunikorn-history-server-oci-images-${{ matrix.arch }}
+          path: yunikorn-history-server-oci-*.tar
