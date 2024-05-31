@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/repository"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -140,7 +141,6 @@ func (ws *WebService) getAppsHistory(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
 }
 
 func (ws *WebService) getContainersHistory(w http.ResponseWriter, r *http.Request) {

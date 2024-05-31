@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  go-lint:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
+    name: Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        id: setup-go
+        uses: ./.github/actions/setup-go
+        with:
+          cache-prefix: go-lint
+
+      - name: Compute tools cache info
+        id: tools-cache-info
+        run: |
+          echo path=$(go env GOPATH)/bin >> $GITHUB_OUTPUT
+          echo make-hash=$(make -n install-tools | sha256sum | cut -d' ' -f1) >> $GITHUB_OUTPUT
+
+      - name: Setup tools cache
+        uses: actions/cache@v4
+        id: tools-cache
+        with:
+          path: ${{ steps.tools-cache-info.outputs.path }}
+          key: tools-go-${{ steps.setup-go.outputs.go-version }}-make-${{ steps.tools-cache-info.outputs.make-hash }}
+
+      - name: Install tools
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        env:
+          GOCACHE: /tmp/tools/go-build
+          GOMODCACHE: /tmp/tools/go-mod
+        run: make install-tools
+
+      - name: Check formatting
+        run: gofmt -l . | wc -l | xargs -I {} test {} -eq 0 || (gofmt -l . && exit 1)
+
+      - name: Check module files
+        run: |
+          go mod tidy
+          modified=$(git ls-files --modified -- go.{mod,sum})
+          if [ -n "$modified" ]; then
+            for file in $modified; do
+              echo "::error file=$file::$file is not up to date (hint: run \"go mod tidy\" to fix this)"
+            done
+            exit 1
+          fi
+
+      - name: Compute golangci-lint cache info
+        id: golangci-lint-cache-info
+        run: |
+          version_regex=" v([0-9]+\.[0-9]+\.[0-9]+) "
+          [[ "$(golangci-lint version)" =~ $version_regex ]]
+          echo version=${BASH_REMATCH[1]} >> $GITHUB_OUTPUT
+          cache_regex='Dir: (.*)\n'
+          [[ "$(golangci-lint cache status)" =~ $cache_regex ]]
+          echo path=${BASH_REMATCH[1]} >> $GITHUB_OUTPUT
+
+      - name: Setup golangci-lint cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.golangci-lint-cache-info.outputs.path }}
+          key: golangci-lint-${{ steps.golangci-lint-cache-info.outputs.version }}-go-${{ steps.setup-go.outputs.go-version }}-mod-${{ hashFiles('go.sum') }}
+
+      - name: Run golangci-lint
+        run: make go-lint
