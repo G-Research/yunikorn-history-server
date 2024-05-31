@@ -29,6 +29,9 @@ echo ''
 echo 'Building Yunikorn images ...'
 cd $yk_repos_base/yunikorn-k8shim
 
+# For developing/testing any changes to the Yunikorn scheduler itself
+go mod edit -replace github.com/apache/yunikorn-core=${yk_repos_base}/yunikorn-core
+
 for file in admission-controller.yaml scheduler-load.yaml scheduler.yaml
 do
     if [ $machine_os = "Darwin" ] ; then
