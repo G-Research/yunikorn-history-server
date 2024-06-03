@@ -51,7 +51,9 @@ func (s *RepoPostgres) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo
 	return nil
 }
 
-func (s *RepoPostgres) InsertNodeUtilizations(ctx context.Context, u uuid.UUID, nus *[]dao.PartitionNodesUtilDAOInfo) error {
+func (s *RepoPostgres) InsertNodeUtilizations(ctx context.Context,
+	u uuid.UUID, nus *[]dao.PartitionNodesUtilDAOInfo) error {
+
 	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
 		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
 
@@ -106,7 +108,9 @@ func (s RepoPostgres) GetNodesPerPartition(ctx context.Context, partition string
 	for rows.Next() {
 		n := dao.NodeDAOInfo{}
 		var id string
-		err := rows.Scan(&id, &n.NodeID, nil, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity, &n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable, &n.IsReserved, &n.Reservations)
+		err := rows.Scan(&id, &n.NodeID, nil, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity,
+			&n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable,
+			&n.IsReserved, &n.Reservations)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan node: %v", err)
 		}

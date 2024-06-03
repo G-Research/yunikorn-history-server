@@ -133,7 +133,8 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			nodes_util_list JSONB,
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
-		// for yunikorn-core/pkg/webservice/dao/ContainerHistoryDAOInfo and yunikorn-core/pkg/webservice/dao/ApplicationHistoryDAOInfo
+		// for yunikorn-core/pkg/webservice/dao/ContainerHistoryDAOInfo and
+		// yunikorn-core/pkg/webservice/dao/ApplicationHistoryDAOInfo
 		`DROP TABLE IF EXISTS history`,
 		`DROP TYPE IF EXISTS history_type`,
 		// NOTE(mo-fatah): Is this the best way to do this?

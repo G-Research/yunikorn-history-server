@@ -88,7 +88,9 @@ func (s *RepoPostgres) GetAllApplications(ctx context.Context) ([]*dao.Applicati
 	return apps, nil
 }
 
-func (s *RepoPostgres) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string) ([]*dao.ApplicationDAOInfo, error) {
+func (s *RepoPostgres) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string) (
+	[]*dao.ApplicationDAOInfo, error) {
+
 	selectSQL := `SELECT * FROM applications WHERE queue_name = $1 AND partition = $2`
 
 	var apps []*dao.ApplicationDAOInfo

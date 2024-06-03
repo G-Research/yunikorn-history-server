@@ -9,9 +9,13 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *RepoPostgres) UpdateHistory(ctx context.Context, apps []*dao.ApplicationHistoryDAOInfo, containers []*dao.ContainerHistoryDAOInfo) error {
-	appSQL := `INSERT INTO history (id, history_type, total_number, timestamp) VALUES (@id, 'application', @total_number, @timestamp)`
-	containerSQL := `INSERT INTO history (id, history_type, total_number, timestamp) VALUES (@id, 'container', @total_number, @timestamp)`
+func (s *RepoPostgres) UpdateHistory(ctx context.Context, apps []*dao.ApplicationHistoryDAOInfo,
+	containers []*dao.ContainerHistoryDAOInfo) error {
+
+	appSQL := `INSERT INTO history (id, history_type, total_number, timestamp)
+		VALUES (@id, 'application', @total_number, @timestamp)`
+	containerSQL := `INSERT INTO history (id, history_type, total_number, timestamp)
+		VALUES (@id, 'container', @total_number, @timestamp)`
 
 	for _, app := range apps {
 		_, err := s.dbpool.Exec(ctx, appSQL,

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 )
@@ -40,10 +41,16 @@ var (
 func (c *Client) GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
 	partitions := []*dao.PartitionInfo{}
 	url := c.endPointURL(partitionsEndPt)
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions from %s: %v", url, err)
 	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -70,10 +77,18 @@ func (c *Client) GetPartitionQueues(ctx context.Context, partitionName string) (
 	queues := []dao.PartitionQueueDAOInfo{}
 	url := c.endPointURL(queuesEndPt(partitionName))
 
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get queues from %s: %v", url, err)
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
+
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -96,7 +111,9 @@ func (c *Client) GetPartitionQueues(ctx context.Context, partitionName string) (
 	return queues, nil
 }
 
-func (c *Client) GetApplications(ctx context.Context, partitionName, queueName string) ([]*dao.ApplicationDAOInfo, error) {
+func (c *Client) GetApplications(ctx context.Context, partitionName, queueName string) (
+	[]*dao.ApplicationDAOInfo, error) {
+
 	var url string
 	if partitionName == "" {
 		partitionName = "default"
@@ -106,10 +123,17 @@ func (c *Client) GetApplications(ctx context.Context, partitionName, queueName s
 	} else {
 		url = c.endPointURL(applicationsByQueueEndPt(partitionName, queueName))
 	}
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != 200 {
 		errBody, err := io.ReadAll(resp.Body)
@@ -139,18 +163,20 @@ func (c *Client) GetApplications(ctx context.Context, partitionName, queueName s
 			return nil, fmt.Errorf("could not unmarshal application from response: %v", err)
 		}
 
-		for _, a := range responseApps {
-			apps = append(apps, &a)
+		for i := range responseApps {
+			apps = append(apps, &responseApps[i])
 		}
 	}
 
 	return apps, nil
 }
 
-// GetApplication calls the YuniKorn Scheduler API to get the application information for the given partition, queue and appID
-// If partitionName is empty, it defaults to "default"
+// GetApplication calls the YuniKorn Scheduler API to get the application information for the given
+// partition, queue and appID. If partitionName is empty, it defaults to "default".
 // If queueName is empty, it gets the application from the partition level
-func (c *Client) GetApplication(ctx context.Context, partitionName, queueName, appID string) (*dao.ApplicationDAOInfo, error) {
+func (c *Client) GetApplication(ctx context.Context, partitionName, queueName, appID string) (
+	*dao.ApplicationDAOInfo, error) {
+
 	var url string
 	if partitionName == "" {
 		partitionName = "default"
@@ -161,10 +187,17 @@ func (c *Client) GetApplication(ctx context.Context, partitionName, queueName, a
 		url = c.endPointURL(applicationByQueueEndPt(partitionName, queueName, appID))
 	}
 
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != 200 {
 		errBody, err := io.ReadAll(resp.Body)
@@ -187,10 +220,18 @@ func (c *Client) GetPartitionNodes(ctx context.Context, partitionName string) ([
 	nodes := []*dao.NodeDAOInfo{}
 	url := c.endPointURL(partitionNodesEndPt(partitionName))
 
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get partition nodes from %s: %v", url, err)
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
+
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -218,10 +259,18 @@ func (c *Client) GetNodeUtil(ctx context.Context) (*[]dao.PartitionNodesUtilDAOI
 	url := c.endPointURL(nodeUtilEndPt)
 	nus := []dao.PartitionNodesUtilDAOInfo{}
 
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get node utilizations from %s: %v", url, err)
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
+
 	reader := bufio.NewReader(resp.Body)
 	line, err := reader.ReadBytes('\n')
 	if err != nil {
@@ -240,10 +289,18 @@ func (c *Client) GetNodeUtil(ctx context.Context) (*[]dao.PartitionNodesUtilDAOI
 func (c *Client) GetAppsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {
 	appsHistory := []*dao.ApplicationHistoryDAOInfo{}
 	url := c.endPointURL(appsHistoryEndPt)
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications history from %s: %v", url, err)
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
+
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -269,10 +326,18 @@ func (c *Client) GetAppsHistory(ctx context.Context) ([]*dao.ApplicationHistoryD
 func (c *Client) GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error) {
 	containersHistory := []*dao.ContainerHistoryDAOInfo{}
 	url := c.endPointURL(containersHistoryEndPt)
-	resp, err := http.Get(url)
+	resp, err := MakeGetRequest(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get containers history from %s: %v", url, err)
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not close response body: %v\n", err)
+		}
+	}()
+
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -291,9 +356,23 @@ func (c *Client) GetContainersHistory(ctx context.Context) ([]*dao.ContainerHist
 			return nil, fmt.Errorf("could not unmarshal containers history from response: %v", err)
 		}
 
-		for _, c := range responseContainersHistory {
-			containersHistory = append(containersHistory, &c)
+		for i := range responseContainersHistory {
+			containersHistory = append(containersHistory, &responseContainersHistory[i])
 		}
 	}
 	return containersHistory, nil
+}
+
+func MakeGetRequest(ctx context.Context, uri string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

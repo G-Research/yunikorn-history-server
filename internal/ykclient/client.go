@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/uuid"
+
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
-	"github.com/google/uuid"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
@@ -39,8 +40,8 @@ func (c *Client) Run(ctx context.Context) {
 	go c.startup(ctx)
 	streamURL := c.endPointURL(streamEndPt)
 
-	evCounts := ctx.Value(config.EventCounts).(config.EventTypeCounts)
-	if evCounts == nil {
+	evCounts, ok := ctx.Value(config.EventCounts).(config.EventTypeCounts)
+	if !ok || (evCounts == nil) {
 		fmt.Fprintf(os.Stderr, "could not get eventCounts map from context\n")
 		return
 	}
@@ -54,7 +55,13 @@ func (c *Client) Run(ctx context.Context) {
 func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCounts config.EventTypeCounts) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, streamURL, bytes.NewBuffer([]byte{}))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, streamURL, bytes.NewBuffer([]byte{}))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not create new HTTP request: %v\n", err)
+		cancel()
+		return
+	}
+
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
@@ -64,7 +71,10 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 		return
 	}
 	defer func() {
-		resp.Body.Close()
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: could not close body of event stream connection: %v\n", err)
+		}
 	}()
 
 	reader := bufio.NewReader(resp.Body)
@@ -92,23 +102,22 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 			// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
 			c.handleEvent(ctx, &ev)
 
-			evKey := config.EventTypeKey{Type: ev.Type, ChangeType: ev.EventChangeType}
+			evKey := config.EventTypeKey{Type: ev.GetType(), ChangeType: ev.GetEventChangeType()}
 			if count, exists := evCounts[evKey]; exists {
 				evCounts[evKey] = count + 1
 			} else {
 				evCounts[evKey] = 1
 			}
 
-			if ev.Type == si.EventRecord_APP {
-				fmt.Printf("Application\n")
+			if ev.GetType() == si.EventRecord_APP {
 				fmt.Printf("---------\n")
-				fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.Type)])
-				fmt.Printf("ObjectId     : %s\n", ev.ObjectID)
-				fmt.Printf("Message      : %s\n", ev.Message)
-				fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
-				fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
-				fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
-				fmt.Printf("Resource    : %+v\n", ev.Resource)
+				fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.GetType())])
+				fmt.Printf("ObjectId     : %s\n", ev.GetObjectID())
+				fmt.Printf("Message      : %s\n", ev.GetMessage())
+				fmt.Printf("Change Type  : %s\n", ev.GetEventChangeType())
+				fmt.Printf("Change Detail: %s\n", ev.GetEventChangeDetail())
+				fmt.Printf("Reference ID:  %s\n", ev.GetReferenceID())
+				fmt.Printf("Resource    : %+v\n", ev.GetResource())
 			}
 		}
 	}

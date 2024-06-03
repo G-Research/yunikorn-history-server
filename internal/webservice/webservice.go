@@ -22,7 +22,8 @@ type WebService struct {
 func NewWebService(addr string, storage *repository.RepoPostgres) *WebService {
 	return &WebService{
 		server: &http.Server{
-			Addr: addr,
+			Addr:        addr,
+			ReadTimeout: 30 * time.Second,
 		},
 		storage: storage,
 	}
@@ -72,7 +73,7 @@ func (ws *WebService) Start(ctx context.Context) {
 	}()
 	go func() {
 		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
 		fmt.Println("Shutting down webservice...")
 		err := ws.server.Shutdown(shutdownCtx)
@@ -166,8 +167,8 @@ func (ws *WebService) getNodeUtilizations(w http.ResponseWriter, r *http.Request
 }
 
 func (ws *WebService) getEventStatistics(w http.ResponseWriter, r *http.Request) {
-	evCounts := r.Context().Value(config.EventCounts).(config.EventTypeCounts)
-	if evCounts == nil {
+	evCounts, ok := r.Context().Value(config.EventCounts).(config.EventTypeCounts)
+	if !ok || (evCounts == nil) {
 		fmt.Fprintf(os.Stderr, "getEventStatistics(): could not get eventCounts map from context\n")
 		http.Error(w, "statistics unavailable", http.StatusInternalServerError)
 		return
