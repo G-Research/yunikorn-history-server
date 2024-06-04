@@ -49,7 +49,6 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			UNIQUE (id),
 			UNIQUE (name),
 			PRIMARY KEY (id))`,
-		// For yunikorn-core/pkg/webservice/dao/ApplicationDAOInfo struct
 		`DROP TABLE IF EXISTS applications`,
 		`CREATE TABLE applications(
 			id UUID,
@@ -75,7 +74,6 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
 		`CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue_name, app_id)`,
-		// for yunikorn-core/pkg/webservice/dao/PartitionQueueDAOInfo struct
 		`DROP TABLE IF EXISTS queues`,
 		`CREATE TABLE queues(
 			id UUID,
@@ -103,7 +101,6 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
 		`CREATE UNIQUE INDEX idx_partition_queue_name ON queues (partition, queue_name)`,
-		// for yunikorn-core/pkg/webservice/dao/NodeDAOInfo struct
 		`DROP TABLE IF EXISTS nodes`,
 		`CREATE TABLE nodes(
 			id UUID,
@@ -124,7 +121,6 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			UNIQUE (id),
 			UNIQUE (node_id),
 			PRIMARY KEY (id))`,
-		// for yunikorn-core/pkg/webservice/dao/PartitionNodesUtilDAOInfo struct
 		`DROP TABLE IF EXISTS partition_nodes_util`,
 		`CREATE TABLE partition_nodes_util(
 			id UUID,
@@ -133,11 +129,8 @@ func (s *RepoPostgres) Setup(ctx context.Context) {
 			nodes_util_list JSONB,
 			UNIQUE (id),
 			PRIMARY KEY (id))`,
-		// for yunikorn-core/pkg/webservice/dao/ContainerHistoryDAOInfo and
-		// yunikorn-core/pkg/webservice/dao/ApplicationHistoryDAOInfo
 		`DROP TABLE IF EXISTS history`,
 		`DROP TYPE IF EXISTS history_type`,
-		// NOTE(mo-fatah): Is this the best way to do this?
 		`CREATE TYPE history_type AS ENUM ('container', 'application')`,
 		`CREATE TABLE history(
 			id UUID,
