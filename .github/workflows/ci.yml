@@ -73,7 +73,7 @@ jobs:
           key: golangci-lint-${{ steps.golangci-lint-cache-info.outputs.version }}-go-${{ steps.setup-go.outputs.go-version }}-mod-${{ hashFiles('go.sum') }}
 
       - name: Run golangci-lint
-        run: make go-lint
+        run: make go-lint || exit 1
 
   build:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
