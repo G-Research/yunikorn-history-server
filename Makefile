@@ -47,6 +47,7 @@ TOOLS_DIR=tools
 # Force Go modules even when checked out inside GOPATH
 GO111MODULE := on
 export GO111MODULE
+GO_LDFLAGS=-s -w -X github.com/G-Research/yunikorn-history-server/pkg/version.Version=$(VERSION)
 
 # Build the example binaries for dev and test
 .PHONY: commands
@@ -74,3 +75,34 @@ go-lint: ## run go linters.
 install-tools: ## install tools.
 	@echo '>>> Installing tools.'
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
+
+
+DOCKER_OUTPUT?=type=docker
+ifneq ($(origin DOCKER_METADATA), undefined)
+  # If DOCKER_METADATA is defined, use it to set the tags and labels.
+  # DOCKER_METADATA should be a JSON object with the following structure:
+  # {
+  #   "tags": ["image:tag1", "image:tag2"],
+  #   "labels": {
+  #     "label1": "value1",
+  #     "label2": "value2"
+  #   }
+  # }
+  DOCKER_TAGS=$(shell echo $$DOCKER_METADATA | jq -r '.tags | map("--tag \(.)") | join(" ")')
+  DOCKER_LABELS=$(shell echo $$DOCKER_METADATA | jq -r '.labels | to_entries | map("--label \(.key)=\"\(.value)\"") | join(" ")')
+else
+  # Otherwise, use DOCKER_TAGS if defined, otherwise use the default.
+  # DOCKER_TAGS should be a space-separated list of tags.
+  # e.g. DOCKER_TAGS="image:tag1 image:tag2"
+  # We do not set DOCKER_LABELS because of the way make handles spaces
+  # in variable values. Use DOCKER_METADATA if you need to set labels.
+  DOCKER_TAGS?=yunikorn-history-server:$(VERSION) yunikorn-history-server:latest
+  DOCKER_TAGS:=$(addprefix --tag ,$(DOCKER_TAGS))
+endif
+.PHONY: docker-dist
+docker-dist: build/event-collector ## build docker image.
+	@echo ">>> Building Docker image."
+	@docker buildx build --provenance false --sbom false --platform linux/$(shell go env GOARCH) --output $(DOCKER_OUTPUT) $(DOCKER_TAGS) $(DOCKER_LABELS) .
+
+.PHONY: dist
+dist: build/event-collector docker-dist ## build the software archives.
