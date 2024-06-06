@@ -2,14 +2,17 @@ package ykclient
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"github.com/google/uuid"
+
+	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/repository"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
@@ -36,50 +39,88 @@ func NewClient(httpProto string, ykHost string, ykPort int, repo *repository.Rep
 func (c *Client) Run(ctx context.Context) {
 	go c.startup(ctx)
 	streamURL := c.endPointURL(streamEndPt)
-	resp, err := http.Get(streamURL)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
+
+	evCounts, ok := ctx.Value(config.EventCounts).(config.EventTypeCounts)
+	if !ok || (evCounts == nil) {
+		fmt.Fprintf(os.Stderr, "could not get eventCounts map from context\n")
+		return
 	}
 
-	reader := bufio.NewReader(resp.Body)
 	go func() {
 		fmt.Println("Starting YuniKorn event stream client")
-		for {
-			select {
-			case <-ctx.Done():
-				// TODO: add logging here to indicate that the client is shutting down
-				return
-			default:
-				line, err := reader.ReadBytes('\n')
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error: could not read from http stream: %v", err)
-					break
-				}
+		c.FetchEventStream(ctx, streamURL, evCounts)
+	}()
+}
 
-				ev := si.EventRecord{}
-				err = json.Unmarshal(line, &ev)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
-					break
-				}
-				// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
-				// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
-				c.handleEvent(ctx, &ev)
+func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCounts config.EventTypeCounts) {
+	ctx, cancel := context.WithCancel(ctx)
 
-				if ev.Type == si.EventRecord_APP {
-					fmt.Printf("Application\n")
-					fmt.Printf("---------\n")
-					fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.Type)])
-					fmt.Printf("ObjectId     : %s\n", ev.ObjectID)
-					fmt.Printf("Message      : %s\n", ev.Message)
-					fmt.Printf("Change Type  : %s\n", ev.EventChangeType)
-					fmt.Printf("Change Detail: %s\n", ev.EventChangeDetail)
-					fmt.Printf("Reference ID:  %s\n", ev.ReferenceID)
-					fmt.Printf("Resource    : %+v\n", ev.Resource)
-				}
-			}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, streamURL, bytes.NewBuffer([]byte{}))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not create new HTTP request: %v\n", err)
+		cancel()
+		return
+	}
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not request from %s: %v", streamURL, err)
+		cancel()
+		return
+	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: could not close body of event stream connection: %v\n", err)
 		}
 	}()
+
+	reader := bufio.NewReader(resp.Body)
+
+	for {
+		select {
+		case <-ctx.Done():
+			// TODO: add logging here to indicate that the client is shutting down
+			cancel()
+			return
+		default:
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not read from http stream: %v", err)
+				break
+			}
+
+			ev := si.EventRecord{}
+			err = json.Unmarshal(line, &ev)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "could not unmarshal event from stream: %v\n", err)
+				break
+			}
+			// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
+			// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
+			c.handleEvent(ctx, &ev)
+
+			evKey := config.EventTypeKey{Type: ev.GetType(), ChangeType: ev.GetEventChangeType()}
+			if count, exists := evCounts[evKey]; exists {
+				evCounts[evKey] = count + 1
+			} else {
+				evCounts[evKey] = 1
+			}
+
+			if ev.GetType() == si.EventRecord_APP {
+				fmt.Printf("---------\n")
+				fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(ev.GetType())])
+				fmt.Printf("ObjectId     : %s\n", ev.GetObjectID())
+				fmt.Printf("Message      : %s\n", ev.GetMessage())
+				fmt.Printf("Change Type  : %s\n", ev.GetEventChangeType())
+				fmt.Printf("Change Detail: %s\n", ev.GetEventChangeDetail())
+				fmt.Printf("Reference ID:  %s\n", ev.GetReferenceID())
+				fmt.Printf("Resource    : %+v\n", ev.GetResource())
+			}
+		}
+	}
 }
 
 // startup performs all necessary steps to load up the current state of the cluster

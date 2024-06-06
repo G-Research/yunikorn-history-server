@@ -125,7 +125,9 @@ func (s *RepoPostgres) GetAllQueues(ctx context.Context) ([]*dao.PartitionQueueD
 	return queues, nil
 }
 
-func (s RepoPostgres) GetQueuesPerPartition(ctx context.Context, parition string) ([]*dao.PartitionQueueDAOInfo, error) {
+func (s RepoPostgres) GetQueuesPerPartition(ctx context.Context, parition string) (
+	[]*dao.PartitionQueueDAOInfo, error) {
+
 	selectSQL := `SELECT * FROM queues WHERE partition = $1`
 
 	var queues []*dao.PartitionQueueDAOInfo

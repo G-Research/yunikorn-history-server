@@ -76,6 +76,13 @@ install-tools: ## install tools.
 	@echo '>>> Installing tools.'
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
 
+.PHONY: test
+test: test-go-unit ## run all the tests.
+
+.PHONY: test-go-unit
+test-go-unit: ## run go unit tests.
+	@echo ">>> Running unit tests."
+	@go test ./internal/...
 
 DOCKER_OUTPUT?=type=docker
 ifneq ($(origin DOCKER_METADATA), undefined)

@@ -8,13 +8,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
+
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/ykclient"
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/knadh/koanf/v2"
 )
 
 var (
@@ -22,6 +23,7 @@ var (
 	ykHost        string
 	ykPort        int
 	yhsServerAddr string
+	eventCounts   config.EventTypeCounts
 )
 
 func main() {
@@ -68,6 +70,8 @@ func main() {
 		pgCfg.PoolMaxConnIdleTime = k.Duration("pool_max_conn_idletime")
 	}
 
+	eventCounts = config.EventTypeCounts{}
+
 	ecConfig := config.ECConfig{
 		PostgresConfig: pgCfg,
 	}
@@ -81,6 +85,8 @@ func main() {
 	}
 
 	repo.Setup(ctx)
+
+	ctx = context.WithValue(ctx, config.EventCounts, eventCounts)
 
 	client := ykclient.NewClient(httpProto, ykHost, ykPort, repo)
 	client.Run(ctx)

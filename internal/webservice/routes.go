@@ -10,4 +10,5 @@ const (
 	NODES_PER_PARTITION          = "/ws/v1/partition/:partition_name/nodes"
 	NODE_UTILIZATION             = "/ws/v1/scheduler/node-utilizations"
 	SCHEDULER_HEALTHCHECK        = "/ws/v1/scheduler/healthcheck"
+	EVENT_STATISTICS             = "/ws/v1/event-statistics"
 )
