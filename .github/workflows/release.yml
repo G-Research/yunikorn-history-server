@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-release:
+    name: Publish container image to DockerHub
+    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      # We need to checkout the repo in order to determine the latest tag.
+      - name: Checkout
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: 1
+
+      # The main branch is tagged as "main" and "edge".
+      # Tags are named after the version, e.g. "v0.1.0" -> "0.1.0".
+      # The latest non-prerelease version is also tagged as "latest".
+      # This is achieved by sorting the tags by version number, then filtering
+      # out prereleases and taking the last tag.
+      - name: Compute tags
+        id: tags
+        run: |
+          ref='${{ github.ref }}'
+          case $ref in
+            refs/heads/main)
+              tags=("main" "edge")
+              ;;
+            refs/tags/v*)
+              tags=("${ref#refs/tags/v}")
+              if [ "$(git -c 'versionsort.suffix=-' for-each-ref --sort=version:refname --format='%(refname)' 'refs/tags/v*' | grep -v -- - | tail -n1)" == "$ref" ]; then
+                tags+=("latest")
+              fi
+          esac
+          echo "ref=${ref#refs/*/}" >> $GITHUB_OUTPUT
+          echo "tags=${tags[@]}" >> $GITHUB_OUTPUT
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: yunikorn-history-server-oci-images-*
+          merge-multiple: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push to Docker Hub
+        run: |
+          tags=(${{ steps.tags.outputs.tags }})
+          for image in yunikorn-history-server-oci-*.tar
+          do
+            digest=$(tar -xOf $image index.json | jq -r '.manifests[0].digest')
+            digests+=($digest)
+            echo "::group::Pushing $image to ${{ vars.DOCKER_REPO }}@$digest"
+            skopeo copy oci-archive:$image:${{ steps.tags.outputs.ref }} docker://${{ vars.DOCKER_REPO }}@$digest
+            echo "::endgroup::"
+          done
+          echo "::group::Pushing merged manifest to ${{ vars.DOCKER_REPO }} for tags: ${tags[@]}"
+          docker buildx imagetools create \
+            $(printf -- "--tag ${{ vars.DOCKER_REPO }}:%s " ${tags[@]}) \
+            $(printf "${{ vars.DOCKER_REPO }}@%s " ${digests[@]})
+          echo "::endgroup::"
