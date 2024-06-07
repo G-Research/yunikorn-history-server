@@ -3,8 +3,6 @@ services:
     container_name: postgres
     image: postgres:15.2
     hostname: postgres
-    # Either "host" or "bridge"
-    network_mode: "bridge"
     # Either "linux/amd64" or "linux/arm64/v8" (e.g. Mac M1 systems)
     platform: linux/arm64/v8
     environment:
@@ -19,4 +17,22 @@ services:
       retries: 3
       start_period: 3s
       timeout: 10s
+    networks:
+      - pgnetwork
 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=yhs@pgadmin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5433:80"
+    depends_on:
+      - postgres
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    networks:
+      - pgnetwork
+
+networks:
+  pgnetwork:
