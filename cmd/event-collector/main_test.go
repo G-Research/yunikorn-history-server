@@ -13,7 +13,12 @@ func TestLoadConfigFromFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(tmpfile.Name())
+	defer func() {
+		err := os.Remove(tmpfile.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	// Write a test configuration to the temporary file
 	text := []byte("yunikorn:\n  protocol: http\n  host: localhost\n  port: 8080\nyhs:\n  serverAddr: localhost:8081")
@@ -25,7 +30,10 @@ func TestLoadConfigFromFile(t *testing.T) {
 	}
 
 	// Set some environment variables that should be ignored
-	os.Setenv("YHS_CONFIG_IGNORED", "IGNORED")
+	err = os.Setenv("YHS_CONFIG_IGNORED", "IGNORED")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	k, err := loadConfig(tmpfile.Name())
 	if err != nil {
@@ -41,9 +49,18 @@ func TestLoadConfigFromFile(t *testing.T) {
 
 func TestLoadConfigFromEnv(t *testing.T) {
 	// Set environment variables
-	os.Setenv("YHS_YUNIKORN_PROTOCOL", "http")
-	os.Setenv("YHS_YUNIKORN_HOST", "localhost")
-	os.Setenv("YHS_YUNIKORN_PORT", "8080")
+	err := os.Setenv("YHS_YUNIKORN_PROTOCOL", "http")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("YHS_YUNIKORN_HOST", "localhost")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("YHS_YUNIKORN_PORT", "8080")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Load with empty config file
 	configFile := "this_file_does_not_exist.yaml"
