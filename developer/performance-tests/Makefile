@@ -5,7 +5,7 @@ YHS_HOST ?= localhost
 YHS_PORT ?= 8989
 YHS_URL = http://$(YHS_HOST):$(YHS_PORT)
 K6 = ./k6
-LABEL = app=load-test-by-k6
+LABEL = app=performance-tests-by-k6
 
 # Phony Targets
 .PHONY: setup-env run cleanup
