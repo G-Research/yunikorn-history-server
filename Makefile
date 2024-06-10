@@ -25,7 +25,7 @@ GO := go
 endif
 
 GO_VERSION := $(shell "$(GO)" version | awk '{print substr($$3, 3, 4)}')
-MOD_VERSION := $(shell cat .go_version) 
+MOD_VERSION := $(shell cat .go_version)
 
 GM := $(word 1,$(subst ., ,$(GO_VERSION)))
 MM := $(word 1,$(subst ., ,$(MOD_VERSION)))
@@ -113,3 +113,15 @@ docker-dist: build/event-collector ## build docker image.
 
 .PHONY: dist
 dist: build/event-collector docker-dist ## build the software archives.
+
+generate-controllers: ## generate REST controllers from the OpenAPI schema
+	go generate ./...
+
+.PHONY: swagger
+swagger: ## run Swagger UI locally
+	docker run 								 \
+		--publish 8999:8080 				 \
+		--env SWAGGER_JSON=/api/openapi.yaml \
+		--volume $(shell pwd)/api:/api 		 \
+		--rm 								 \
+		swaggerapi/swagger-ui

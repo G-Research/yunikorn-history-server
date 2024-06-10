@@ -1,0 +1,269 @@
+openapi: 3.0.0
+info:
+  title: Yunicorn History Server API
+  version: 1.0.0
+  description: API for interacting with historical Yunicorn data.
+tags:
+  - name: partitions
+    description: Operations related to partitions
+  - name: history
+    description: Operations related to history
+paths:
+  /ws/v1/partitions:
+    get:
+      summary: Get all partitions
+      tags:
+        - partitions
+      operationId: getPartitions
+      responses:
+        '200':
+          description: A list of partitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartitionsResponse'
+        '500':
+          description: Internal server error
+  /ws/v1/partition/{partition_name}/queues:
+    get:
+      summary: Get queues for a partition
+      tags:
+        - partitions
+      operationId: getQueuesPerPartition
+      parameters:
+        - name: partition_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of queues for the specified partition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueuesResponse'
+        '500':
+          description: Internal server error
+  /ws/v1/partition/{partition_name}/queue/{queue_name}/applications:
+    get:
+      summary: Get applications for a queue in a partition
+      tags:
+        - partitions
+      operationId: getAppsPerPartitionPerQueue
+      parameters:
+        - name: partition_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: queue_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of applications for the specified queue and partition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppsResponse'
+        '500':
+          description: Internal server error
+  /ws/v1/partition/{partition_name}/nodes:
+    get:
+      summary: Get nodes for a partition
+      tags:
+        - partitions
+      operationId: getNodesPerPartition
+      parameters:
+        - name: partition_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of nodes for the specified partition
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
+        '500':
+          description: Internal server error
+  /ws/v1/history/apps:
+    get:
+      summary: Get applications history
+      tags:
+        - history
+      operationId: getAppsHistory
+      responses:
+        '200':
+          description: Applications history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppsHistory'
+        '500':
+          description: Internal server error
+  /ws/v1/history/containers:
+    get:
+      summary: Get containers history
+      tags:
+        - history
+      operationId: getContainersHistory
+      responses:
+        '200':
+          description: Containers history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainersHistory'
+        '500':
+          description: Internal server error
+  /ws/v1/scheduler/node-utilizations:
+    get:
+      summary: Get node utilizations
+      operationId: getNodeUtilizations
+      responses:
+        '200':
+          description: Node utilizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeUtilization'
+        '500':
+          description: Internal server error
+  /ws/v1/event-statistics:
+    get:
+      summary: Get event statistics
+      operationId: getEventStatistics
+      responses:
+        '200':
+          description: Event statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStatistics'
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    PartitionsResponse:
+      type: object
+      properties:
+        partitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Partition'
+    Partition:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+    QueuesResponse:
+      type: object
+      properties:
+        queues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Queue'
+    Queue:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+    AppsResponse:
+      type: object
+      properties:
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/App'
+    App:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+    Node:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+    AppsHistory:
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppHistory'
+    AppHistory:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    ContainersHistory:
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerHistory'
+    ContainerHistory:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    NodeUtilization:
+      type: object
+      properties:
+        utilization:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeUtilizationItem'
+    NodeUtilizationItem:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+        cpu:
+          type: number
+        memory:
+          type: number
+    EventStatistics:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    Event:
+      type: object
+      properties:
+        type:
+          type: string
+        count:
+          type: integer
