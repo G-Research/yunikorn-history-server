@@ -69,7 +69,7 @@ clean:
 .PHONY: go-lint
 go-lint: ## run go linters.
 	@echo '>>> Running go linters.'
-	@golangci-lint run -v --issues-exit-code 0 ## TODO: remove after fixing all lint issues
+	@golangci-lint run -v
 
 .PHONY: install-tools
 install-tools: ## install tools.
