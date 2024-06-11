@@ -1,7 +1,7 @@
 services:
   postgres:
     container_name: postgres
-    image: postgres:15.2
+    image: postgres:15.7
     hostname: postgres
     # Either "linux/amd64" or "linux/arm64/v8" (e.g. Mac M1 systems)
     platform: linux/arm64/v8
