@@ -75,6 +75,22 @@ jobs:
       - name: Run golangci-lint
         run: make go-lint
 
+  go-unit-tests:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
+    name: Go Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: ./.github/actions/setup-go
+        with:
+          cache-prefix: go-unit-tests
+
+      - name: Run Go Unit Tests
+        run: make test-go-unit
+
   build:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
     name: Build (${{ matrix.os }}/${{ matrix.arch }})
@@ -139,6 +155,7 @@ jobs:
     name: All required checks done
     needs:
       - go-lint
+      - go-unit-tests
       - build
     runs-on: ubuntu-latest
     steps:

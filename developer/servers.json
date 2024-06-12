@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "YHS_Local",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "yhs",
+      "Username": "yhs",
+      "Password": "yhs",
+      "SSLMode": "prefer",
+      "PassFile": "/pgadmin4/servers.json"
+    }
+  }
+}
