@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Create a local K8S cluster (using Kind) with a Yunikorn scheduler
+# Create a local K8S cluster (using 'kind' or 'minikube') with a Yunikorn scheduler
 
 # NOTE: change the following settings as appropriate for your situation
 
@@ -8,6 +8,8 @@
 registry=gresearch
 # The base directory which contains all the Yunikorn repo dirs below
 yk_repos_base=${1:-$HOME/src/yunikorn}
+# The K8S cluster manager to use - can be either 'kind' or 'minikube'
+k8s_mgr=kind
 
 # Settings below here should not need to be changed
 
@@ -21,8 +23,15 @@ elif [ $machine_arch = 'arm64' ]; then
     arch='arm64'
 fi
 
-echo 'Creating kind cluster ...'
-kind create cluster
+echo 'Creating cluster ...'
+if [ $k8s_mgr = 'kind' ]; then
+    kind create cluster
+elif [ $k8s_mgr = 'minikube' ]; then
+    minikube start
+else
+    echo "Invalid K8S cluster manager specified - please check 'k8s_mgr' setting"
+fi
+
 kubectl create namespace $ns
 
 echo ''
@@ -34,7 +43,7 @@ go mod edit -replace github.com/apache/yunikorn-core=${yk_repos_base}/yunikorn-c
 
 for file in admission-controller.yaml scheduler-load.yaml scheduler.yaml
 do
-    if [ $machine_os = "Darwin" ] ; then
+    if [ $machine_os = "Darwin" ]; then
         sed -e "s%apache/yunikorn%${registry}/yunikorn%" -e "s%-amd64-%-${arch}-%" -i '' deployments/scheduler/${file}
     else
         sed -e "s%apache/yunikorn%${registry}/yunikorn%" -e "s%-amd64-%-${arch}-%" -i deployments/scheduler/${file}
@@ -51,10 +60,14 @@ make image DOCKER_ARCH=${arch} REGISTRY=${registry} VERSION=latest
 docker image ls -a | grep yuni
 
 echo ''
-echo 'Loading Yunikorn images into Kind cluster...'
+echo 'Loading Yunikorn images into cluster...'
 for img in admission-${arch}-latest scheduler-plugin-${arch}-latest scheduler-${arch}-latest web-${arch}-latest
 do
-  kind load docker-image ${registry}/yunikorn:$img
+  if [ $k8s_mgr = 'kind' ]; then
+      kind load docker-image ${registry}/yunikorn:$img
+  elif [ $k8s_mgr = 'minikube' ]; then
+      minikube image load ${registry}/yunikorn:$img
+  fi
 done
 
 echo ''
@@ -79,6 +92,10 @@ then open your browser to http://127.0.0.1:9889/
 (Change 127.0.0.1 to a different IP or hostname if running on a different system.)
 
 To shut down everything, run
-    kind delete cluster
-
 USAGE
+
+if [ $k8s_mgr = 'kind' ]; then
+    echo '    kind delete cluster'
+elif [ $k8s_mgr = 'minikube' ]; then
+    echo '    minikube delete'
+fi
