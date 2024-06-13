@@ -12,12 +12,13 @@ import (
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
-	koanf "github.com/knadh/koanf/v2"
+	"github.com/knadh/koanf/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/ykclient"
+	"github.com/G-Research/yunikorn-history-server/log"
 )
 
 var (
@@ -70,6 +71,16 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+
+	// configure the logger
+	log.InitLogger(log.LogConfig{
+		LogFilePath: k.String("log.log_file_path"),
+		MaxSize:     k.Int("log.max_size"),
+		MaxBackups:  k.Int("log.max_backups"),
+		MaxAge:      k.Int("log.max_age"), // days
+		Compress:    k.Bool("log.compress"),
+		LogLevel:    k.String("log.log_level"),
+	})
 
 	httpProto = k.String("yunikorn.protocol")
 	ykHost = k.String("yunikorn.host")
