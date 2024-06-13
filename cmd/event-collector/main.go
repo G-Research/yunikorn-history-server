@@ -28,6 +28,17 @@ var (
 	eventCounts   config.EventTypeCounts
 )
 
+// Removes the prefix "YHS_" and replaces the first "_" with "."
+// YHS_PARENT1_CHILD1_NAME will be converted into "parent1.child1_name"
+func processEnvVar(s string) string {
+	s = strings.TrimPrefix(s, "YHS_")
+	firstIndex := strings.Index(s, "_")
+	if firstIndex > -1 {
+		s = s[:firstIndex] + "." + s[firstIndex+1:]
+	}
+	return strings.ToLower(s)
+}
+
 func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 	k := koanf.New(".")
 
@@ -40,13 +51,8 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 			}
 		}
 	}
-
 	// If there's no config file or there's an error reading it, default to env vars
-	// YHS_PARENT1_CHILD1_NAME will be converted into "parent1.child1.name"
-	if err := k.Load(env.Provider("YHS_", ".", func(s string) string {
-		return strings.Replace(strings.ToLower(
-			strings.TrimPrefix(s, "YHS_")), "_", ".", -1)
-	}), nil); err != nil {
+	if err := k.Load(env.Provider("YHS_", ".", processEnvVar), nil); err != nil {
 		return nil, fmt.Errorf("error loading environment variables: %v", err)
 	}
 
@@ -68,7 +74,7 @@ func main() {
 	httpProto = k.String("yunikorn.protocol")
 	ykHost = k.String("yunikorn.host")
 	ykPort = k.Int("yunikorn.port")
-	yhsServerAddr = k.String("yhs.serverAddr")
+	yhsServerAddr = k.String("yhs.server_addr")
 
 	pgCfg := config.PostgresConfig{
 		Host:     k.String("db.host"),
@@ -78,17 +84,17 @@ func main() {
 		DbName:   k.String("db.dbname"),
 	}
 
-	if k.Int("pool_max_conns") > 0 {
-		pgCfg.PoolMaxConns = k.Int("pool_max_conns")
+	if k.Int("db.pool_max_conns") > 0 {
+		pgCfg.PoolMaxConns = k.Int("db.pool_max_conns")
 	}
-	if k.Int("pool_min_conns") > 0 {
-		pgCfg.PoolMinConns = k.Int("pool_min_conns")
+	if k.Int("db.pool_min_conns") > 0 {
+		pgCfg.PoolMinConns = k.Int("db.pool_min_conns")
 	}
-	if k.Duration("pool_max_conn_lifetime") > time.Duration(0) {
-		pgCfg.PoolMaxConnLifetime = k.Duration("pool_max_conn_lifetime")
+	if k.Duration("db.pool_max_conn_lifetime") > time.Duration(0) {
+		pgCfg.PoolMaxConnLifetime = k.Duration("db.pool_max_conn_lifetime")
 	}
-	if k.Duration("pool_max_conn_idletime") > time.Duration(0) {
-		pgCfg.PoolMaxConnIdleTime = k.Duration("pool_max_conn_idletime")
+	if k.Duration("db.pool_max_conn_idletime") > time.Duration(0) {
+		pgCfg.PoolMaxConnIdleTime = k.Duration("db.pool_max_conn_idletime")
 	}
 
 	eventCounts = config.EventTypeCounts{}

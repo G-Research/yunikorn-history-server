@@ -53,16 +53,12 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("YHS_YUNIKORN_HOST", "localhost")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Setenv("YHS_YUNIKORN_PORT", "8080")
+	err = os.Setenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME", "120s")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Load with empty config file
+	// Load with empty config file, should ignore and default to env vars
 	configFile := "this_file_does_not_exist.yaml"
 	k, err := loadConfig(configFile)
 	if err != nil {
@@ -70,6 +66,5 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	}
 
 	assert.Equal(t, "http", k.String("yunikorn.protocol"))
-	assert.Equal(t, "localhost", k.String("yunikorn.host"))
-	assert.Equal(t, 8080, k.Int("yunikorn.port"))
+	assert.Equal(t, "120s", k.String("db.pool_max_conn_idle_time"))
 }
