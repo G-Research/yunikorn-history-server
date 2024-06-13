@@ -14,6 +14,8 @@ require (
 	github.com/knadh/koanf/v2 v2.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
+	go.uber.org/zap v1.26.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (
@@ -30,7 +32,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
