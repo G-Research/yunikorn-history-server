@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/G-Research/yunikorn-history-server/log"
+
 	"github.com/google/uuid"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
@@ -47,7 +49,7 @@ func (c *Client) Run(ctx context.Context) {
 	}
 
 	go func() {
-		fmt.Println("Starting YuniKorn event stream client")
+		log.Logger.Info("Starting YuniKorn event stream client")
 		c.FetchEventStream(ctx, streamURL, evCounts)
 	}()
 }

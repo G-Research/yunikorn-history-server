@@ -9,3 +9,5 @@
 .idea
 /coverage.txt
 /shellcheck
+temp
+*.log
