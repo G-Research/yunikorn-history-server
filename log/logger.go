@@ -12,7 +12,7 @@ import (
 
 // TODO: implement a mechanism to load this values from configuration
 const (
-	logFilePath = "temp/logs/yhs.log"
+	logFilePath = "yhs.log"
 	maxSize     = 5
 	maxBackups  = 10
 	maxAge      = 14
