@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/G-Research/yunikorn-history-server/log"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
@@ -65,7 +68,7 @@ func (ws *WebService) Start(ctx context.Context) {
 	})
 	ws.server.Handler = router
 	go func() {
-		fmt.Printf("Starting webservice on %s\n", ws.server.Addr)
+		log.Logger.Info(fmt.Sprintf("Starting webservice on %s", ws.server.Addr))
 		err := ws.server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "HTTP serving error: %v\n", err)
