@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/apache/yunikorn-core v1.5.1
-	github.com/apache/yunikorn-scheduler-interface v1.5.1-1
+	github.com/apache/yunikorn-scheduler-interface v1.5.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/julienschmidt/httprouter v1.3.0
