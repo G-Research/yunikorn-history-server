@@ -1,7 +1,7 @@
 github.com/apache/yunikorn-core v1.5.1 h1:+aiuCyju+f1ooeCd+9GLKi2ccU0y5U2FvSIaIOAFj4Q=
 github.com/apache/yunikorn-core v1.5.1/go.mod h1:49Kd4+44XRAWVdXzhtphnH6ctf5NthrHfRElSZNIiJo=
-github.com/apache/yunikorn-scheduler-interface v1.5.1-1 h1:8NXsCFSrQ6yBodZQYcJWfyQW7CoYn3MlODYUDdiLmpc=
-github.com/apache/yunikorn-scheduler-interface v1.5.1-1/go.mod h1:gk3BtbzoUH7T5lhNoLxp/8g9pw25S1/d7NbiypV/30Q=
+github.com/apache/yunikorn-scheduler-interface v1.5.1 h1:TxUqi0QVGV0uUXDLXIqNBt/DSHyQEpW98lwVq0bpnII=
+github.com/apache/yunikorn-scheduler-interface v1.5.1/go.mod h1:gk3BtbzoUH7T5lhNoLxp/8g9pw25S1/d7NbiypV/30Q=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
