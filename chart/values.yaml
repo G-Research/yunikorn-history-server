@@ -1,0 +1,36 @@
+replicaCount: 1
+
+common:
+  labels: {}
+  namespace: "yunikorn"
+
+image:
+  registry: "docker.io"
+  repository: "gresearch/yunikorn-history-server"
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: LoadBalancer
+  port: 8989
+  targetPort: 8989
+
+config:
+  yunikornHost: ""
+  yunikornPort: ""
+  yunikornProtocol: ""
+
+  dbHost: ""
+  dbPort: ""
+  dbName: ""
+  dbUser: ""
+  dbPoolMaxConns: 0
+  dbPoolMinConns: 0
+  dbPoolMaxConnLifetime: 1800
+  dbPoolMaxConnIdleTime: 120
+
+  yhsServerAddr: ":8989"
+
+secret:
+  createSecret: true
+  dbPassword: "yhs"

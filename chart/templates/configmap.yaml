@@ -1,0 +1,37 @@
+{{- $namespace := .Values.common.namespace | required "A valid .config.namespace is required!" -}}
+{{- $yunikornHost := .Values.config.yunikornHost | required "A valid .config.yunikornHost is required!" -}}
+{{- $yunikornPort := .Values.config.yunikornPort | required "A valid .config.yunikornPort is required!" -}}
+{{- $yunikornProtocol := .Values.config.yunikornProtocol | required "A valid .config.yunikornProtocol is required!" -}}
+{{- $dbHost := .Values.config.dbHost | required "A valid .config.dbHost is required!" -}}
+{{- $dbPort := .Values.config.dbPort | required "A valid .config.dbPort is required!" -}}
+{{- $dbName := .Values.config.dbName | required "A valid .config.dbName is required!" -}}
+{{- $dbUser := .Values.config.dbUser | required "A valid .config.dbUser is required!" -}}
+{{- $dbPoolMaxConns := .Values.config.dbPoolMaxConns | required "A valid .config.dbPoolMaxConns is required!" -}}
+{{- $dbPoolMinConns := .Values.config.dbPoolMinConns | required "A valid .config.dbPoolMinConns is required!" -}}
+{{- $dbPoolMaxConnLifetime := .Values.config.dbPoolMaxConnLifetime | required "A valid .config.dbPoolMaxConnLifetime is required!" -}}
+{{- $dbPoolMaxConnIdleTime := .Values.config.dbPoolMaxConnIdleTime | required "A valid .config.dbPoolMaxConnIdleTime is required!" -}}
+{{- $yhsServerAddr := .Values.config.yhsServerAddr | required "A valid .config.yhsServerAddr is required!" -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yhs-config
+  namespace: yunikorn
+  labels:
+    app: yunikorn-history-server
+    {{- with .Values.common.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  YHS_YUNIKORN_HOST: "{{ $yunikornHost }}"
+  YHS_YUNIKORN_PORT: "{{ $yunikornPort }}"
+  YHS_YUNIKORN_PROTOCOL: "{{ $yunikornProtocol }}"
+  YHS_DB_HOST: "{{ $dbHost }}"
+  YHS_DB_PORT: "{{ $dbPort }}"
+  YHS_DB_NAME: "{{ $dbName }}"
+  YHS_DB_USER: "{{ $dbUser }}"
+  YHS_DB_POOL_MAX_CONNS: "{{ $dbPoolMaxConns }}"
+  YHS_DB_POOL_MIN_CONNS: "{{ $dbPoolMinConns }}"
+  YHS_DB_POOL_MAX_CONN_LIFETIME: "{{ $dbPoolMaxConnLifetime }}"
+  YHS_DB_POOL_MAX_CONN_IDLE_TIME: "{{ $dbPoolMaxConnIdleTime }}"
+  YHS_YHS_SERVER_ADDR: "{{ $yhsServerAddr }}"
