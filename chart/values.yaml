@@ -1,36 +1,59 @@
+# -- Number of replicas for the deployment
 replicaCount: 1
 
 common:
+  # -- Labels to add to all deployed resources
   labels: {}
+  # -- Namespace to deploy the resources
   namespace: "yunikorn"
 
 image:
+  # -- Docker registry
   registry: "docker.io"
+  # -- Docker image repository
   repository: "gresearch/yunikorn-history-server"
+  # -- Docker image tag
   tag: "latest"
-  pullPolicy: Always
+  # -- Docker image pull policy
+  pullPolicy: "IfNotPresent"
 
 service:
+  # -- Service type
   type: LoadBalancer
+  # -- Service port
   port: 8989
+  # -- Service target port
   targetPort: 8989
 
 config:
+  # -- Yunikorn scheduler host
   yunikornHost: ""
+  # -- Yunikorn scheduler port
   yunikornPort: ""
-  yunikornProtocol: ""
-
+  # -- Yunikorn scheduler protocol
+  yunikornProtocol: "http"
+  # -- YHS database host
   dbHost: ""
+  # -- YHS database port
   dbPort: ""
+  # -- YHS database name
   dbName: ""
+  # -- YHS database user
   dbUser: ""
+  # -- Maximum number of connections in the database pool
   dbPoolMaxConns: 0
+  # -- Minimum number of connections in the database pool
   dbPoolMinConns: 0
+  # -- Maximum lifetime of a connection in the database pool
   dbPoolMaxConnLifetime: 1800
+  # -- Maximum idle time of a connection in the database pool
   dbPoolMaxConnIdleTime: 120
-
+  # -- YHS server address
   yhsServerAddr: ":8989"
 
+
 secret:
+  # -- Whether to create the secret
   createSecret: true
+  # -- Database password
   dbPassword: "yhs"
