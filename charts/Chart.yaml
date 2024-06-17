@@ -1,6 +1,6 @@
 apiVersion: v2
 name: yunikorn-history-server
-description: A Helm chart for Yunikorn History Server (YHS)
+description: A Helm charts for Yunikorn History Server (YHS)
 
 type: application
 
