@@ -1,22 +1,22 @@
-{{- $namespace := .Values.common.namespace | required "A valid .config.namespace is required!" -}}
-{{- $yunikornHost := .Values.config.yunikornHost | required "A valid .config.yunikornHost is required!" -}}
-{{- $yunikornPort := .Values.config.yunikornPort | required "A valid .config.yunikornPort is required!" -}}
-{{- $yunikornProtocol := .Values.config.yunikornProtocol | required "A valid .config.yunikornProtocol is required!" -}}
-{{- $dbHost := .Values.config.dbHost | required "A valid .config.dbHost is required!" -}}
-{{- $dbPort := .Values.config.dbPort | required "A valid .config.dbPort is required!" -}}
-{{- $dbName := .Values.config.dbName | required "A valid .config.dbName is required!" -}}
-{{- $dbUser := .Values.config.dbUser | required "A valid .config.dbUser is required!" -}}
-{{- $dbPoolMaxConns := .Values.config.dbPoolMaxConns | required "A valid .config.dbPoolMaxConns is required!" -}}
-{{- $dbPoolMinConns := .Values.config.dbPoolMinConns | required "A valid .config.dbPoolMinConns is required!" -}}
-{{- $dbPoolMaxConnLifetime := .Values.config.dbPoolMaxConnLifetime | required "A valid .config.dbPoolMaxConnLifetime is required!" -}}
-{{- $dbPoolMaxConnIdleTime := .Values.config.dbPoolMaxConnIdleTime | required "A valid .config.dbPoolMaxConnIdleTime is required!" -}}
-{{- $yhsServerAddr := .Values.config.yhsServerAddr | required "A valid .config.yhsServerAddr is required!" -}}
+{{- $namespace := .Values.common.namespace | required "A valid .common.namespace is required!" -}}
+{{- $yunikornHost := .Values.yunikorn.host | required "A valid .yunikorn.host is required!" -}}
+{{- $yunikornPort := .Values.yunikorn.port | required "A valid .yunikorn.port is required!" -}}
+{{- $yunikornProtocol := .Values.yunikorn.protocol | required "A valid .yunikorn.protocol is required!" -}}
+{{- $dbHost := .Values.db.host | required "A valid .db.host is required!" -}}
+{{- $dbPort := .Values.db.port | required "A valid .db.port is required!" -}}
+{{- $dbName := .Values.db.name | required "A valid .db.name is required!" -}}
+{{- $dbUser := .Values.db.user | required "A valid .db.user is required!" -}}
+{{- $dbPoolMaxConns := .Values.db.poolMaxConns | required "A valid .db.poolMaxConns is required!" -}}
+{{- $dbPoolMinConns := .Values.db.poolMinConns | required "A valid .db.poolMinConns is required!" -}}
+{{- $dbPoolMaxConnLifetime := .Values.db.poolMaxConnLifetime | required "A valid .db.poolMaxConnLifetime is required!" -}}
+{{- $dbPoolMaxConnIdleTime := .Values.db.poolMaxConnIdleTime | required "A valid .db.poolMaxConnIdleTime is required!" -}}
+{{- $yhsServerAddr := .Values.yhsServerAddr | required "A valid .yhsServerAddr is required!" -}}
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: yhs-config
-  namespace: yunikorn
+  namespace: {{ $namespace }}
   labels:
     app: yunikorn-history-server
     {{- with .Values.common.labels }}

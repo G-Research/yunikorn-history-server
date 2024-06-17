@@ -1,5 +1,7 @@
 # -- Number of replicas for the deployment
 replicaCount: 1
+# -- YHS server address
+yhsServerAddr: ":8989"
 
 common:
   # -- Labels to add to all deployed resources
@@ -25,31 +27,31 @@ service:
   # -- Service target port
   targetPort: 8989
 
-config:
-  # -- Yunikorn scheduler host
-  yunikornHost: ""
-  # -- Yunikorn scheduler port
-  yunikornPort: ""
-  # -- Yunikorn scheduler protocol
-  yunikornProtocol: "http"
+db:
   # -- YHS database host
-  dbHost: ""
+  host: ""
   # -- YHS database port
-  dbPort: ""
+  port: ""
   # -- YHS database name
-  dbName: ""
+  name: ""
   # -- YHS database user
-  dbUser: ""
+  user: ""
   # -- Maximum number of connections in the database pool
-  dbPoolMaxConns: 0
+  poolMaxConns: 0
   # -- Minimum number of connections in the database pool
-  dbPoolMinConns: 0
+  oolMinConns: 0
   # -- Maximum lifetime of a connection in the database pool
-  dbPoolMaxConnLifetime: 1800
+  poolMaxConnLifetime: 1800
   # -- Maximum idle time of a connection in the database pool
-  dbPoolMaxConnIdleTime: 120
-  # -- YHS server address
-  yhsServerAddr: ":8989"
+  poolMaxConnIdleTime: 120
+
+yunikorn:
+  # -- Yunikorn scheduler host
+  host: ""
+  # -- Yunikorn scheduler port
+  port: ""
+  # -- Yunikorn scheduler protocol
+  protocol: "http"
 
 
 secret:
