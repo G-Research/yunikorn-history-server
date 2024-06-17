@@ -1,3 +1,9 @@
+{{- $dbPassword := .Values.db.password -}}
+{{- $passwordSecretRef := .Values.db.passwordSecretRef -}}
+{{- if and (not $dbPassword) (not $passwordSecretRef) }}
+{{- fail "Either db.password or db.passwordSecretRef must be provided!" }}
+{{- end }}
+
 {{- $replicaCount := .Values.replicaCount | required "A valid .Values.replicaCount is required!" -}}
 {{- $imageRegistry := .Values.image.registry | required "A valid .Values.image.registry is required!" -}}
 {{- $imageRepository := .Values.image.repository | required "A valid .Values.image.repository is required!" -}}
@@ -36,7 +42,11 @@ spec:
                 name: yhs-config
           env:
             - name: YHS_DB_PASSWORD
+              {{- if $passwordSecretRef }}
               valueFrom:
                 secretKeyRef:
-                  name: yhs-secret
+                  name: {{ $passwordSecretRef }}
                   key: YHS_DB_PASSWORD
+              {{- else }}
+              value: {{ $dbPassword | quote }}
+              {{- end }}

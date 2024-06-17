@@ -36,6 +36,10 @@ db:
   name: ""
   # -- YHS database user
   user: ""
+  # -- YHS database password (insecure, use secrets)
+  password: ""
+  # -- YHS database password secret reference
+  passwordSecretRef: ""
   # -- Maximum number of connections in the database pool
   poolMaxConns: 0
   # -- Minimum number of connections in the database pool
@@ -52,10 +56,3 @@ yunikorn:
   port: ""
   # -- Yunikorn scheduler protocol
   protocol: "http"
-
-
-secret:
-  # -- Whether to create the secret
-  createSecret: true
-  # -- Database password
-  dbPassword: "yhs"

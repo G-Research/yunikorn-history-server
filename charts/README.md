@@ -13,6 +13,8 @@ A Helm charts for Yunikorn History Server (YHS)
 | db.host | string | `""` | YHS database host |
 | db.name | string | `""` | YHS database name |
 | db.oolMinConns | int | `0` | Minimum number of connections in the database pool |
+| db.password | string | `""` | YHS database password (insecure, use secrets) |
+| db.passwordSecretRef | string | `""` | YHS database password secret reference |
 | db.poolMaxConnIdleTime | int | `120` | Maximum idle time of a connection in the database pool |
 | db.poolMaxConnLifetime | int | `1800` | Maximum lifetime of a connection in the database pool |
 | db.poolMaxConns | int | `0` | Maximum number of connections in the database pool |
@@ -23,8 +25,6 @@ A Helm charts for Yunikorn History Server (YHS)
 | image.repository | string | `"gresearch/yunikorn-history-server"` | Docker image repository |
 | image.tag | string | `"latest"` | Docker image tag |
 | replicaCount | int | `1` | Number of replicas for the deployment |
-| secret.createSecret | bool | `true` | Whether to create the secret |
-| secret.dbPassword | string | `"yhs"` | Database password |
 | service.port | int | `8989` | Service port |
 | service.targetPort | int | `8989` | Service target port |
 | service.type | string | `"LoadBalancer"` | Service type |
