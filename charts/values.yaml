@@ -21,7 +21,7 @@ image:
 
 service:
   # -- Service type
-  type: LoadBalancer
+  type: ClusterIP
   # -- Service port
   port: 8989
   # -- Service target port

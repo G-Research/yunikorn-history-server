@@ -27,7 +27,7 @@ A Helm charts for Yunikorn History Server (YHS)
 | replicaCount | int | `1` | Number of replicas for the deployment |
 | service.port | int | `8989` | Service port |
 | service.targetPort | int | `8989` | Service target port |
-| service.type | string | `"LoadBalancer"` | Service type |
+| service.type | string | `"ClusterIP"` | Service type |
 | yhsServerAddr | string | `":8989"` | YHS server address |
 | yunikorn.host | string | `""` | Yunikorn scheduler host |
 | yunikorn.port | string | `""` | Yunikorn scheduler port |
