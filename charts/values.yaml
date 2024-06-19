@@ -6,8 +6,6 @@ yhsServerAddr: ":8989"
 common:
   # -- Labels to add to all deployed resources
   labels: {}
-  # -- Namespace to deploy the resources
-  namespace: "yunikorn"
 
 image:
   # -- Docker registry
