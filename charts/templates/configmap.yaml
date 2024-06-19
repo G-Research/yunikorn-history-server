@@ -10,6 +10,14 @@
 {{- $dbPoolMaxConnLifetime := .Values.db.poolMaxConnLifetime | required "A valid .db.poolMaxConnLifetime is required!" -}}
 {{- $dbPoolMaxConnIdleTime := .Values.db.poolMaxConnIdleTime | required "A valid .db.poolMaxConnIdleTime is required!" -}}
 {{- $yhsServerAddr := .Values.yhsServerAddr | required "A valid .yhsServerAddr is required!" -}}
+{{- $logFilePath := .Values.log.filePath | required "A valid .log.filePath is required!" -}}
+{{- $logMaxSize := .Values.log.maxSize | required "A valid .log.maxSize is required!" -}}
+{{- $logMaxBackups := .Values.log.maxBackups | required "A valid .log.maxBackups is required!" -}}
+{{- $logMaxAge := .Values.log.maxAge | required "A valid .log.maxAge is required!" -}}
+{{- $logCompress := .Values.log.compress | required "A valid .log.compress is required!" -}}
+{{- $logLevel := .Values.log.level | required "A valid .log.level is required!" -}}
+
+
 
 apiVersion: v1
 kind: ConfigMap
@@ -33,3 +41,9 @@ data:
   YHS_DB_POOL_MAX_CONN_LIFETIME: "{{ $dbPoolMaxConnLifetime }}"
   YHS_DB_POOL_MAX_CONN_IDLE_TIME: "{{ $dbPoolMaxConnIdleTime }}"
   YHS_YHS_SERVER_ADDR: "{{ $yhsServerAddr }}"
+  LOG_FILE_PATH: "{{ $logFilePath }}"
+  LOG_MAX_SIZE: "{{ $logMaxSize }}"
+  LOG_MAX_BACKUPS: "{{ $logMaxBackups }}"
+  LOG_MAX_AGE: "{{ $logMaxAge }}"
+  LOG_COMPRESS: "{{ $logCompress }}"
+  LOG_LEVEL: "{{ $logLevel }}"

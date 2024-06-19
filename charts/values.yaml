@@ -54,3 +54,17 @@ yunikorn:
   port: ""
   # -- Yunikorn scheduler protocol
   protocol: "http"
+
+log:
+    # -- Log file path
+    filePath: "yhs.log"
+    # -- Maximum log file size in megabytes
+    maxSize: 5
+    # -- Maximum number of log file backups
+    maxBackups: 10
+    # -- Maximum age of log files in days
+    maxAge: 30
+    # -- Compress log files
+    compress: true
+    # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
+    level: "INFO"

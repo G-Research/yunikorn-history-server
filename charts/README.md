@@ -23,6 +23,12 @@ A Helm charts for Yunikorn History Server (YHS)
 | image.registry | string | `"docker.io"` | Docker registry |
 | image.repository | string | `"gresearch/yunikorn-history-server"` | Docker image repository |
 | image.tag | string | `"latest"` | Docker image tag |
+| log.compress | bool | `true` | Compress log files |
+| log.filePath | string | `"yhs.log"` | Log file path |
+| log.level | string | `"INFO"` | Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL |
+| log.maxAge | int | `30` | Maximum age of log files in days |
+| log.maxBackups | int | `10` | Maximum number of log file backups |
+| log.maxSize | int | `5` | Maximum log file size in megabytes |
 | replicaCount | int | `1` | Number of replicas for the deployment |
 | service.port | int | `8989` | Service port |
 | service.targetPort | int | `8989` | Service target port |
