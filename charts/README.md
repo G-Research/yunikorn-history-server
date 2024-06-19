@@ -12,12 +12,12 @@ A Helm charts for Yunikorn History Server (YHS)
 | common.namespace | string | `"yunikorn"` | Namespace to deploy the resources |
 | db.host | string | `""` | YHS database host |
 | db.name | string | `""` | YHS database name |
-| db.oolMinConns | int | `0` | Minimum number of connections in the database pool |
 | db.password | string | `""` | YHS database password (insecure, use secrets) |
 | db.passwordSecretRef | string | `""` | YHS database password secret reference |
 | db.poolMaxConnIdleTime | int | `120` | Maximum idle time of a connection in the database pool |
 | db.poolMaxConnLifetime | int | `1800` | Maximum lifetime of a connection in the database pool |
 | db.poolMaxConns | int | `0` | Maximum number of connections in the database pool |
+| db.poolMinConns | int | `0` | Minimum number of connections in the database pool |
 | db.port | string | `""` | YHS database port |
 | db.user | string | `""` | YHS database user |
 | image.pullPolicy | string | `"IfNotPresent"` | Docker image pull policy |

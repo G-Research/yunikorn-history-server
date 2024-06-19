@@ -43,7 +43,7 @@ db:
   # -- Maximum number of connections in the database pool
   poolMaxConns: 0
   # -- Minimum number of connections in the database pool
-  oolMinConns: 0
+  poolMinConns: 0
   # -- Maximum lifetime of a connection in the database pool
   poolMaxConnLifetime: 1800
   # -- Maximum idle time of a connection in the database pool

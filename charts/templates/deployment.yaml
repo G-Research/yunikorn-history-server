@@ -14,7 +14,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "yunikorn-history-server"
-  namespace: "yunikorn"
+  namespace: {{ .Values.common.namespace }}
   labels:
     app: yunikorn-history-server
     {{- with .Values.common.labels }}
