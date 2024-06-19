@@ -13,10 +13,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "yunikorn-history-server"
+  name: {{ include "yunikorn-history-server.fullname" . }}
   namespace: {{ .Values.common.namespace }}
   labels:
-    app: yunikorn-history-server
+    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
     {{- with .Values.common.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -24,13 +24,13 @@ spec:
   replicas: {{ $replicaCount }}
   selector:
     matchLabels:
-      app: "yunikorn-history-server"
+      {{- include "yunikorn-history-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: yunikorn-history-server
+        {{- include "yunikorn-history-server.labels" . | nindent 8 }}
         {{- with .Values.common.labels }}
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
       containers:
@@ -39,7 +39,7 @@ spec:
           imagePullPolicy: "{{ $imagePullPolicy }}"
           envFrom:
             - configMapRef:
-                name: yhs-config
+                name: {{ include "yunikorn-history-server.fullname" . }}
           env:
             - name: YHS_DB_PASSWORD
               {{- if $passwordSecretRef }}

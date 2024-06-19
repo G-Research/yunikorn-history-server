@@ -5,10 +5,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: yunikorn-history-server
+  name: {{ include "yunikorn-history-server.fullname" . }}
   namespace: {{ .Values.common.namespace }}
   labels:
-    app: yunikorn-history-server
+    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
     {{- with .Values.common.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -22,4 +22,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: yunikorn-history-server
+    {{- include "yunikorn-history-server.selectorLabels" . | nindent 4 }}
