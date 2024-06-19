@@ -9,7 +9,6 @@ A Helm charts for Yunikorn History Server (YHS)
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | common.labels | object | `{}` | Labels to add to all deployed resources |
-| common.namespace | string | `"yunikorn"` | Namespace to deploy the resources |
 | db.host | string | `""` | YHS database host |
 | db.name | string | `""` | YHS database name |
 | db.password | string | `""` | YHS database password (insecure, use secrets) |
