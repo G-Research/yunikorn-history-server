@@ -7,16 +7,11 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type LogConfig struct {
-	LogFilePath string
-	MaxSize     int
-	MaxBackups  int
-	MaxAge      int
-	Compress    bool
-	LogLevel    string
+	IsProduction bool
+	LogLevel     string
 }
 
 var (
@@ -27,13 +22,6 @@ var (
 func InitLogger(config LogConfig) {
 	once.Do(func() {
 		stdout := zapcore.AddSync(os.Stdout)
-		file := zapcore.AddSync(&lumberjack.Logger{
-			Filename:   config.LogFilePath,
-			MaxSize:    config.MaxSize,
-			MaxBackups: config.MaxBackups,
-			MaxAge:     config.MaxAge,
-			Compress:   config.Compress,
-		})
 
 		productionCfg := zap.NewProductionEncoderConfig()
 		productionCfg.TimeKey = "timestamp"
@@ -42,13 +30,14 @@ func InitLogger(config LogConfig) {
 		developmentCfg := zap.NewDevelopmentEncoderConfig()
 		developmentCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
-		consoleEncoder := zapcore.NewConsoleEncoder(developmentCfg)
-		fileEncoder := zapcore.NewJSONEncoder(productionCfg)
+		var encoder zapcore.Encoder
+		if config.IsProduction {
+			encoder = zapcore.NewJSONEncoder(productionCfg)
+		} else {
+			encoder = zapcore.NewConsoleEncoder(developmentCfg)
+		}
 
-		core := zapcore.NewTee(
-			zapcore.NewCore(consoleEncoder, stdout, parseLevel(config.LogLevel)),
-			zapcore.NewCore(fileEncoder, file, parseLevel(config.LogLevel)),
-		)
+		core := zapcore.NewCore(encoder, stdout, parseLevel(config.LogLevel))
 
 		Logger = zap.New(core)
 	})

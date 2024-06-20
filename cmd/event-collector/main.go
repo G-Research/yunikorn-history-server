@@ -74,12 +74,8 @@ func main() {
 
 	// configure the logger
 	log.InitLogger(log.LogConfig{
-		LogFilePath: k.String("log.file_path"),
-		MaxSize:     k.Int("log.max_size"),
-		MaxBackups:  k.Int("log.max_backups"),
-		MaxAge:      k.Int("log.max_age"), // days
-		Compress:    k.Bool("log.compress"),
-		LogLevel:    k.String("log.level"),
+		IsProduction: k.Bool("log.production"),
+		LogLevel:     k.String("log.level"),
 	})
 
 	httpProto = k.String("yunikorn.protocol")

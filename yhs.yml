@@ -17,9 +17,5 @@ yhs:
   server_addr: ":8989"
 
 log:
-  file_path: "yhs.log"
-  max_size: 5
-  max_backups: 10
-  max_age: 30
-  compress: true
   level: "INFO"
+  production: false
