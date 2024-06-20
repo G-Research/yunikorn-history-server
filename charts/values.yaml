@@ -56,15 +56,7 @@ yunikorn:
   protocol: "http"
 
 log:
-    # -- Log file path
-    filePath: "yhs.log"
-    # -- Maximum log file size in megabytes
-    maxSize: 5
-    # -- Maximum number of log file backups
-    maxBackups: 10
-    # -- Maximum age of log files in days
-    maxAge: 30
-    # -- Compress log files
-    compress: true
+    # -- Output type of the log, if true, log will be output in json format
+    production: true
     # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
     level: "INFO"
