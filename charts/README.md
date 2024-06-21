@@ -24,7 +24,7 @@ A Helm charts for Yunikorn History Server (YHS)
 | image.repository | string | `"gresearch/yunikorn-history-server"` | Docker image repository |
 | image.tag | string | `"latest"` | Docker image tag |
 | log.level | string | `"INFO"` | Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL |
-| log.production | bool | `true` | Output type of the log, if true, log will be output in json format |
+| log.useJSONFormat | bool | `true` | Output type of the log, if true, log will be output in json format |
 | replicaCount | int | `1` | Number of replicas for the deployment |
 | service.port | int | `8989` | Service port |
 | service.targetPort | int | `8989` | Service target port |

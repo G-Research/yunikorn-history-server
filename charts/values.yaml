@@ -57,6 +57,6 @@ yunikorn:
 
 log:
     # -- Output type of the log, if true, log will be output in json format
-    production: true
+    useJSONFormat: true
     # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
     level: "INFO"

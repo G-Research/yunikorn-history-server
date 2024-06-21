@@ -10,8 +10,8 @@ import (
 )
 
 type LogConfig struct {
-	IsProduction bool
-	LogLevel     string
+	UseJSONFormat bool
+	LogLevel      string
 }
 
 var (
@@ -23,20 +23,16 @@ func InitLogger(config LogConfig) {
 	once.Do(func() {
 		stdout := zapcore.AddSync(os.Stdout)
 
-		productionCfg := zap.NewProductionEncoderConfig()
-		productionCfg.TimeKey = "timestamp"
-		productionCfg.EncodeTime = zapcore.ISO8601TimeEncoder
-
-		developmentCfg := zap.NewDevelopmentEncoderConfig()
-		developmentCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		cfg := zap.NewProductionEncoderConfig()
+		cfg.TimeKey = "timestamp"
+		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		cfg.EncodeLevel = zapcore.CapitalLevelEncoder
 
 		var encoder zapcore.Encoder
-		if config.IsProduction {
-			encoder = zapcore.NewJSONEncoder(productionCfg)
-		} else {
-			encoder = zapcore.NewConsoleEncoder(developmentCfg)
+		encoder = zapcore.NewConsoleEncoder(cfg)
+		if config.UseJSONFormat {
+			encoder = zapcore.NewJSONEncoder(cfg)
 		}
-
 		core := zapcore.NewCore(encoder, stdout, parseLevel(config.LogLevel))
 
 		Logger = zap.New(core)
