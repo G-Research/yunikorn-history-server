@@ -12,12 +12,13 @@ import (
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
-	koanf "github.com/knadh/koanf/v2"
+	"github.com/knadh/koanf/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/repository"
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/ykclient"
+	"github.com/G-Research/yunikorn-history-server/log"
 )
 
 var (
@@ -70,6 +71,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+
+	// configure the logger
+	log.InitLogger(log.LogConfig{
+		JSONFormat: k.Bool("log.json_format"),
+		LogLevel:   k.String("log.level"),
+	})
 
 	httpProto = k.String("yunikorn.protocol")
 	ykHost = k.String("yunikorn.host")

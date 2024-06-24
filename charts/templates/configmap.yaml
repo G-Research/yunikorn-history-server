@@ -10,6 +10,10 @@
 {{- $dbPoolMaxConnLifetime := .Values.db.poolMaxConnLifetime | required "A valid .db.poolMaxConnLifetime is required!" -}}
 {{- $dbPoolMaxConnIdleTime := .Values.db.poolMaxConnIdleTime | required "A valid .db.poolMaxConnIdleTime is required!" -}}
 {{- $yhsServerAddr := .Values.yhsServerAddr | required "A valid .yhsServerAddr is required!" -}}
+{{- $logJSONFormat := .Values.log.jsonFormat | required "A valid .log.useJSONFormat is required!" -}}
+{{- $logLevel := .Values.log.level | required "A valid .log.level is required!" -}}
+
+
 
 apiVersion: v1
 kind: ConfigMap
@@ -33,3 +37,5 @@ data:
   YHS_DB_POOL_MAX_CONN_LIFETIME: "{{ $dbPoolMaxConnLifetime }}"
   YHS_DB_POOL_MAX_CONN_IDLE_TIME: "{{ $dbPoolMaxConnIdleTime }}"
   YHS_YHS_SERVER_ADDR: "{{ $yhsServerAddr }}"
+  YHS_LOG_JSON_FORMAT: "{{ $logJSONFormat }}"
+  YHS_LOG_LEVEL: "{{ $logLevel }}"

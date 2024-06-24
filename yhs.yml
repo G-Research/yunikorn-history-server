@@ -15,3 +15,7 @@ db:
   pool_max_conn_idle_time: 120s
 yhs:
   server_addr: ":8989"
+
+log:
+  level: "INFO"
+  json_format: false

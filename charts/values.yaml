@@ -54,3 +54,9 @@ yunikorn:
   port: ""
   # -- Yunikorn scheduler protocol
   protocol: "http"
+
+log:
+    # -- Output type of the log, if true, log will be output in json format
+    jsonFormat: true
+    # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
+    level: "INFO"
