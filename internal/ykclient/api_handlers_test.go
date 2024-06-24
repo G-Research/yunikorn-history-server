@@ -628,3 +628,100 @@ func Test_GetNodeUtil(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetAppsHistory(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func() *httptest.Server
+		expected []*dao.ApplicationHistoryDAOInfo
+		wantErr  bool
+	}{
+		{
+			name: "200 OK Response",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					response := []*dao.ApplicationHistoryDAOInfo{
+						{
+							Timestamp:         1595939966153460000,
+							TotalApplications: "1",
+						},
+						{
+							Timestamp:         1595940206155187000,
+							TotalApplications: "2",
+						},
+					}
+					err := json.NewEncoder(w).Encode(response)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				}))
+			},
+			expected: []*dao.ApplicationHistoryDAOInfo{
+				{
+					Timestamp:         1595939966153460000,
+					TotalApplications: "1",
+				},
+				{
+					Timestamp:         1595940206155187000,
+					TotalApplications: "2",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Server Error",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					http.Error(w, "server error", http.StatusInternalServerError)
+				}))
+			},
+			expected: nil,
+			wantErr:  true,
+		},
+		{
+			name: "Unexpected JSON",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					type unexpected struct {
+						Unexpected string `json:"unexpected"`
+					}
+					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				}))
+			},
+			expected: nil,
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := tt.setup()
+			defer ts.Close()
+
+			serverURL, err := url.Parse(ts.URL)
+			require.NoError(t, err)
+
+			portNum, err := strconv.Atoi(serverURL.Port())
+			require.NoError(t, err)
+
+			ykclient := Client{
+				httpProto: serverURL.Scheme,
+				ykHost:    serverURL.Hostname(),
+				ykPort:    portNum,
+				repo:      nil,
+				appMap:    map[string]*dao.ApplicationDAOInfo{},
+			}
+
+			appsHistory, err := ykclient.GetAppsHistory(context.Background())
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, appsHistory)
+			}
+		})
+	}
+}
