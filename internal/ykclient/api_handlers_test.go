@@ -509,3 +509,122 @@ func Test_GetPartitionNodes(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetNodeUtil(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func() *httptest.Server
+		expected *[]dao.PartitionNodesUtilDAOInfo
+		wantErr  bool
+	}{
+		{
+			name: "200 OK Response",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					response := []*dao.PartitionNodesUtilDAOInfo{
+						{
+							NodesUtilList: []*dao.NodesUtilDAOInfo{
+								{
+									ResourceType: "vcore",
+									NodesUtil: []*dao.NodeUtilDAOInfo{
+										{
+											BucketName: "0-10%",
+											NumOfNodes: 1,
+											NodeNames:  []string{"aethergpu"},
+										},
+										{
+											BucketName: "10-20%",
+											NumOfNodes: 2,
+											NodeNames:  []string{"primary-node", "second-node"},
+										},
+									},
+								},
+							},
+						},
+					}
+					err := json.NewEncoder(w).Encode(response)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				}))
+			},
+			expected: &[]dao.PartitionNodesUtilDAOInfo{
+				{
+					NodesUtilList: []*dao.NodesUtilDAOInfo{
+						{
+							ResourceType: "vcore",
+							NodesUtil: []*dao.NodeUtilDAOInfo{
+								{
+									BucketName: "0-10%",
+									NumOfNodes: 1,
+									NodeNames:  []string{"aethergpu"},
+								},
+								{
+									BucketName: "10-20%",
+									NumOfNodes: 2,
+									NodeNames:  []string{"primary-node", "second-node"},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Server Error",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					http.Error(w, "server error", http.StatusInternalServerError)
+				}))
+			},
+			expected: nil,
+			wantErr:  true,
+		},
+		{
+			name: "Unexpected JSON",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					type unexpected struct {
+						Unexpected string `json:"unexpected"`
+					}
+					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				}))
+			},
+			expected: nil,
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := tt.setup()
+			defer ts.Close()
+
+			serverURL, err := url.Parse(ts.URL)
+			require.NoError(t, err)
+
+			portNum, err := strconv.Atoi(serverURL.Port())
+			require.NoError(t, err)
+
+			ykclient := Client{
+				httpProto: serverURL.Scheme,
+				ykHost:    serverURL.Hostname(),
+				ykPort:    portNum,
+				repo:      nil,
+				appMap:    map[string]*dao.ApplicationDAOInfo{},
+			}
+
+			nodeUtil, err := ykclient.GetNodeUtil(context.Background())
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, nodeUtil)
+			}
+		})
+	}
+}
