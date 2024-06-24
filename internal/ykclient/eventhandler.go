@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/G-Research/yunikorn-history-server/log"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+
+	"github.com/G-Research/yunikorn-history-server/log"
 )
 
 // TODO(mo-fatah):
@@ -73,8 +74,9 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 			return
 		}
 		if app == nil {
-			log.Logger.Error(fmt.Sprintf("received an new application event but the application was not found in the scheduler: %s",
-				ev.GetObjectID()))
+			log.Logger.Error(
+				fmt.Sprintf("received an new application event but the application was not found in the scheduler: %s",
+					ev.GetObjectID()))
 			return
 		}
 		c.appMap[ev.GetObjectID()] = app
@@ -102,7 +104,8 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(fmt.Sprintf("an allocation request event was received for an application without a previous ADD event: %s",
+			log.Logger.Warn(fmt.Sprintf(
+				"an allocation request event was received for an application without a previous ADD event: %s",
 				ev.GetObjectID()))
 			return
 		}
@@ -135,13 +138,16 @@ func (c *Client) handleAppSetEvent(ctx context.Context, ev *si.EventRecord) {
 	case si.EventRecord_APP_NEW:
 		app, err := c.GetApplication(ctx, "", "", ev.GetObjectID())
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not get application info %s from scheduler: %v\nReceived Event: %v",
+			log.Logger.Error(fmt.Sprintf(
+				"could not get application info %s from scheduler: %v\nReceived Event: %v",
 				ev.GetObjectID(), err, ev))
 			return
 		}
 		if app == nil {
-			log.Logger.Error(fmt.Sprintf("received an new application event but the application was not found in the scheduler: %s",
-				ev.GetObjectID()))
+			log.Logger.Error(
+				fmt.Sprintf(
+					"received an new application event but the application was not found in the scheduler: %s",
+					ev.GetObjectID()))
 			return
 		}
 		c.appMap[ev.GetObjectID()] = app
@@ -154,8 +160,10 @@ func (c *Client) handleAppSetEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(fmt.Sprintf("an application state change of type %s was received for an application without a previous ADD event: %s",
-				state, ev.GetObjectID()))
+			log.Logger.Warn(
+				fmt.Sprintf("an application state change of type %s was "+
+					"received for an application without a previous ADD event: %s",
+					state, ev.GetObjectID()))
 			return
 		}
 		app.StateLog = append(app.StateLog, &dao.StateDAOInfo{
@@ -188,7 +196,9 @@ func (c *Client) handleAppRemoveEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(fmt.Sprintf("an application rejection event was received for an application without a previous ADD event: %s",
+			log.Logger.Warn(fmt.Sprintf(
+				"an application rejection event was received for an "+
+					"application without a previous ADD event: %s",
 				ev.GetObjectID()))
 			return
 		}

@@ -8,8 +8,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/G-Research/yunikorn-history-server/log"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+
+	"github.com/G-Research/yunikorn-history-server/log"
 )
 
 var (

@@ -167,7 +167,8 @@ func (c *Client) startup(ctx context.Context) {
 	for _, q := range queues {
 		queueApps, err := c.GetApplications(ctx, q.Partition, q.QueueName)
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not get applications for partition %s, queue %s: %v", q.Partition, q.QueueName, err))
+			log.Logger.Error(fmt.Sprintf("could not get applications for partition %s, queue %s: %v",
+				q.Partition, q.QueueName, err))
 		} else {
 			apps = append(apps, queueApps...)
 		}
