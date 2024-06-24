@@ -18,4 +18,4 @@ yhs:
 
 log:
   level: "INFO"
-  use_json_format: true
+  json_format: false

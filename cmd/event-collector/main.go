@@ -74,8 +74,8 @@ func main() {
 
 	// configure the logger
 	log.InitLogger(log.LogConfig{
-		UseJSONFormat: k.Bool("log.use_json_format"),
-		LogLevel:      k.String("log.level"),
+		JsonFormat: k.Bool("log.json_format"),
+		LogLevel:   k.String("log.level"),
 	})
 
 	httpProto = k.String("yunikorn.protocol")

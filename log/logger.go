@@ -10,8 +10,8 @@ import (
 )
 
 type LogConfig struct {
-	UseJSONFormat bool
-	LogLevel      string
+	JsonFormat bool
+	LogLevel   string
 }
 
 var (
@@ -30,7 +30,7 @@ func InitLogger(config LogConfig) {
 
 		var encoder zapcore.Encoder
 		encoder = zapcore.NewConsoleEncoder(cfg)
-		if config.UseJSONFormat {
+		if config.JsonFormat {
 			encoder = zapcore.NewJSONEncoder(cfg)
 		}
 		core := zapcore.NewCore(encoder, stdout, parseLevel(config.LogLevel))
