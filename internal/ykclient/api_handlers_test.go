@@ -328,20 +328,16 @@ func Test_GetPartitionQueues(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
-		expected []*dao.PartitionQueueDAOInfo
+		expected []dao.PartitionQueueDAOInfo
 		wantErr  bool
 	}{
 		{
 			name: "200 OK Response",
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					response := []*dao.PartitionQueueDAOInfo{
-						{
-							QueueName: "queue1",
-						},
-						{
-							QueueName: "queue2",
-						},
+					response := dao.PartitionQueueDAOInfo{
+
+						QueueName: "queue1",
 					}
 					err := json.NewEncoder(w).Encode(response)
 					if err != nil {
@@ -349,14 +345,12 @@ func Test_GetPartitionQueues(t *testing.T) {
 					}
 				}))
 			},
-			expected: []*dao.PartitionQueueDAOInfo{
+			expected: []dao.PartitionQueueDAOInfo{
 				{
 					QueueName: "queue1",
 				},
-				{
-					QueueName: "queue2",
-				},
 			},
+
 			wantErr: false,
 		},
 		{
@@ -376,7 +370,7 @@ func Test_GetPartitionQueues(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
+					err := json.NewEncoder(w).Encode(&[]unexpected{{Unexpected: "unexpected"}})
 					if err != nil {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 					}
