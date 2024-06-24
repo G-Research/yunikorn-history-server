@@ -6,7 +6,7 @@ require (
 	github.com/apache/yunikorn-core v1.5.1
 	github.com/apache/yunikorn-scheduler-interface v1.5.1
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.5.5
+	github.com/jackc/pgx/v5 v5.6.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf/parsers/yaml v0.1.0
 	github.com/knadh/koanf/providers/env v0.1.0
