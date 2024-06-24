@@ -74,7 +74,7 @@ func main() {
 
 	// configure the logger
 	log.InitLogger(log.LogConfig{
-		JsonFormat: k.Bool("log.json_format"),
+		JSONFormat: k.Bool("log.json_format"),
 		LogLevel:   k.String("log.level"),
 	})
 
