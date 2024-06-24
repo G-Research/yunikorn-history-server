@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/G-Research/yunikorn-history-server/log"
@@ -71,17 +70,17 @@ func (ws *WebService) Start(ctx context.Context) {
 		log.Logger.Info(fmt.Sprintf("Starting webservice on %s", ws.server.Addr))
 		err := ws.server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "HTTP serving error: %v\n", err)
+			log.Logger.Error(fmt.Sprintf("HTTP serving error: %v", err))
 		}
 	}()
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
-		fmt.Println("Shutting down webservice...")
+		log.Logger.Info("Shutting down webservice...")
 		err := ws.server.Shutdown(shutdownCtx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "HTTP server shutdown error: %v\n", err)
+			log.Logger.Error(fmt.Sprintf("HTTP server shutdown error: %v", err))
 		}
 	}()
 }
@@ -172,7 +171,7 @@ func (ws *WebService) getNodeUtilizations(w http.ResponseWriter, r *http.Request
 func (ws *WebService) getEventStatistics(w http.ResponseWriter, r *http.Request) {
 	evCounts, ok := r.Context().Value(config.EventCounts).(config.EventTypeCounts)
 	if !ok || (evCounts == nil) {
-		fmt.Fprintf(os.Stderr, "getEventStatistics(): could not get eventCounts map from context\n")
+		log.Logger.Error("getEventStatistics(): could not get eventCounts map from context")
 		http.Error(w, "statistics unavailable", http.StatusInternalServerError)
 		return
 	}

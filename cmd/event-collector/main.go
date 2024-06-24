@@ -68,7 +68,7 @@ func main() {
 
 	k, err := loadConfig(cfgFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		log.Logger.Error(fmt.Sprintf("Error: %v", err))
 		os.Exit(1)
 	}
 
@@ -114,7 +114,7 @@ func main() {
 
 	repo, err := repository.NewECRepo(ctx, &ecConfig)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not create db repository: %v\n", err)
+		log.Logger.Error(fmt.Sprintf("could not create db repository: %v", err))
 		os.Exit(1)
 	}
 
@@ -132,5 +132,5 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT)
 	<-signalChan
 
-	fmt.Println("Received signal, YHS shutting down...")
+	log.Logger.Info("Received signal, YHS shutting down...")
 }
