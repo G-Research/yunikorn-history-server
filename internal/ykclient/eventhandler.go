@@ -59,7 +59,7 @@ func (c *Client) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 	case si.EventRecord_NONE:
 	default:
 		// should be warning
-		log.Logger.Warnf("Unknown event EventChangeType for an Event of type APP: %v", ev.GetEventChangeType())
+		log.Logger.Warnf("unknown event EventChangeType for an Event of type APP: %v", ev.GetEventChangeType())
 	}
 }
 
@@ -124,7 +124,7 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 		app.Requests = append(app.Requests, ask)
 	default:
 		// should be warning
-		log.Logger.Warnf("Unknown event EventChangeDetail type for an Event of type APP: %v",
+		log.Logger.Warnf("unknown event EventChangeDetail type for an Event of type APP: %v",
 			ev.GetEventChangeDetail())
 	}
 }
