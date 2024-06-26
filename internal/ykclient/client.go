@@ -58,7 +58,7 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, streamURL, bytes.NewBuffer([]byte{}))
 	if err != nil {
-		log.Logger.Errorf("Error: could not create new HTTP request: %v", err)
+		log.Logger.Errorf("could not create new HTTP request: %v", err)
 		cancel()
 		return
 	}
@@ -67,14 +67,14 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Logger.Errorf("Error: could not request from %s: %v", streamURL, err)
+		log.Logger.Errorf("could not request from %s: %v", streamURL, err)
 		cancel()
 		return
 	}
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Errorf("Error: could not close body of event stream connection: %v", err)
+			log.Logger.Errorf("could not close body of event stream connection: %v", err)
 		}
 	}()
 
@@ -89,7 +89,7 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 		default:
 			line, err := reader.ReadBytes('\n')
 			if err != nil {
-				log.Logger.Errorf("Error: could not read from http stream: %v", err)
+				log.Logger.Errorf("could not read from http stream: %v", err)
 				break
 			}
 
