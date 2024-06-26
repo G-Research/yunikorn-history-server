@@ -2,7 +2,6 @@ package ykclient
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
@@ -26,7 +25,7 @@ func (c *Client) handleEvent(ctx context.Context, ev *si.EventRecord) {
 	case si.EventRecord_QUEUE:
 	case si.EventRecord_USERGROUP:
 	default:
-		log.Logger.Error(fmt.Sprintf("Unknown event type: %v", ev.GetType()))
+		log.Logger.Errorf("unknown event type: %v", ev.GetType())
 	}
 }
 
@@ -60,7 +59,7 @@ func (c *Client) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 	case si.EventRecord_NONE:
 	default:
 		// should be warning
-		log.Logger.Warn(fmt.Sprintf("Unknown event EventChangeType for an Event of type APP: %v", ev.GetEventChangeType()))
+		log.Logger.Warnf("Unknown event EventChangeType for an Event of type APP: %v", ev.GetEventChangeType())
 	}
 }
 
@@ -69,14 +68,13 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 	case si.EventRecord_APP_NEW, si.EventRecord_DETAILS_NONE:
 		app, err := c.GetApplication(ctx, "", "", ev.GetObjectID())
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not get application info %s from scheduler: %v\nReceived Event: %v",
-				ev.GetObjectID(), err, ev))
+			log.Logger.Errorf("could not get application info %s from scheduler: %v\nReceived Event: %v",
+				ev.GetObjectID(), err, ev)
 			return
 		}
 		if app == nil {
-			log.Logger.Error(
-				fmt.Sprintf("received an new application event but the application was not found in the scheduler: %s",
-					ev.GetObjectID()))
+			log.Logger.Errorf("received an new application event but the application was not found in the scheduler: %s",
+				ev.GetObjectID())
 			return
 		}
 		c.appMap[ev.GetObjectID()] = app
@@ -84,8 +82,8 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(fmt.Sprintf("an allocation event was received for an application without a previous ADD event: %s",
-				ev.GetObjectID()))
+			log.Logger.Warnf("an allocation event was received for an application without a previous ADD event: %s",
+				ev.GetObjectID())
 			return
 		}
 		resources := make(map[string]int64)
@@ -104,9 +102,9 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(fmt.Sprintf(
+			log.Logger.Warnf(
 				"an allocation request event was received for an application without a previous ADD event: %s",
-				ev.GetObjectID()))
+				ev.GetObjectID())
 			return
 		}
 		requestedResources := make(map[string]int64)
@@ -126,8 +124,8 @@ func (c *Client) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 		app.Requests = append(app.Requests, ask)
 	default:
 		// should be warning
-		log.Logger.Warn(fmt.Sprintf("Unknown event EventChangeDetail type for an Event of type APP: %v",
-			ev.GetEventChangeDetail()))
+		log.Logger.Warnf("Unknown event EventChangeDetail type for an Event of type APP: %v",
+			ev.GetEventChangeDetail())
 	}
 }
 
@@ -138,16 +136,15 @@ func (c *Client) handleAppSetEvent(ctx context.Context, ev *si.EventRecord) {
 	case si.EventRecord_APP_NEW:
 		app, err := c.GetApplication(ctx, "", "", ev.GetObjectID())
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf(
+			log.Logger.Errorf(
 				"could not get application info %s from scheduler: %v\nReceived Event: %v",
-				ev.GetObjectID(), err, ev))
+				ev.GetObjectID(), err, ev)
 			return
 		}
 		if app == nil {
-			log.Logger.Error(
-				fmt.Sprintf(
-					"received an new application event but the application was not found in the scheduler: %s",
-					ev.GetObjectID()))
+			log.Logger.Errorf(
+				"received an new application event but the application was not found in the scheduler: %s",
+				ev.GetObjectID())
 			return
 		}
 		c.appMap[ev.GetObjectID()] = app
@@ -160,10 +157,9 @@ func (c *Client) handleAppSetEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(
-				fmt.Sprintf("an application state change of type %s was "+
-					"received for an application without a previous ADD event: %s",
-					state, ev.GetObjectID()))
+			log.Logger.Warnf("an application state change of type %s was "+
+				"received for an application without a previous ADD event: %s",
+				state, ev.GetObjectID())
 			return
 		}
 		app.StateLog = append(app.StateLog, &dao.StateDAOInfo{
@@ -177,13 +173,13 @@ func (c *Client) handleAppSetEvent(ctx context.Context, ev *si.EventRecord) {
 			ev.GetEventChangeDetail() == si.EventRecord_APP_FAILED {
 
 			if err := c.repo.UpsertApplications(ctx, []*dao.ApplicationDAOInfo{app}); err != nil {
-				log.Logger.Error(fmt.Sprintf("could not insert application into DB: %v", err))
+				log.Logger.Errorf("could not insert application into DB: %v", err)
 			}
 		}
 	default:
 		// should be warning
-		log.Logger.Warn(fmt.Sprintf("Unknown event EventChangeDetail type for an Event of type APP: %v",
-			ev.GetEventChangeDetail()))
+		log.Logger.Warnf("unknown event EventChangeDetail type for an Event of type APP: %v",
+			ev.GetEventChangeDetail())
 	}
 }
 
@@ -196,10 +192,10 @@ func (c *Client) handleAppRemoveEvent(ctx context.Context, ev *si.EventRecord) {
 		app, ok := c.appMap[ev.GetObjectID()]
 		if !ok || app == nil {
 			// should be warning
-			log.Logger.Warn(fmt.Sprintf(
+			log.Logger.Warnf(
 				"an application rejection event was received for an "+
 					"application without a previous ADD event: %s",
-				ev.GetObjectID()))
+				ev.GetObjectID())
 			return
 		}
 		state := si.EventRecord_ChangeDetail_name[int32(ev.GetEventChangeDetail())]
@@ -209,7 +205,7 @@ func (c *Client) handleAppRemoveEvent(ctx context.Context, ev *si.EventRecord) {
 		})
 		app.State = state
 		if err := c.repo.UpsertApplications(ctx, []*dao.ApplicationDAOInfo{app}); err != nil {
-			log.Logger.Error(fmt.Sprintf("could not insert application into DB: %v", err))
+			log.Logger.Errorf("could not insert application into DB: %v", err)
 		}
 		// should we delete the application from the cache or it is guaranteed to recieve a REMOVE with DETAILS_NONE event?
 	case si.EventRecord_ALLOC_CANCEL, si.EventRecord_ALLOC_TIMEOUT,
@@ -219,7 +215,7 @@ func (c *Client) handleAppRemoveEvent(ctx context.Context, ev *si.EventRecord) {
 		// Ignored for now
 	default:
 		// should be warning
-		log.Logger.Warn(fmt.Sprintf("Unknown event EventChangeDetail type for an Event of type APP: %v",
-			ev.GetEventChangeDetail()))
+		log.Logger.Warnf("unknown event EventChangeDetail type for an Event of type APP: %v",
+			ev.GetEventChangeDetail())
 	}
 }

@@ -3,8 +3,6 @@ package webservice
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
 	"net/http"
 	"time"
 
@@ -67,10 +65,10 @@ func (ws *WebService) Start(ctx context.Context) {
 	})
 	ws.server.Handler = router
 	go func() {
-		log.Logger.Info(fmt.Sprintf("Starting webservice on %s", ws.server.Addr))
+		log.Logger.Infof("Starting webservice on %s", ws.server.Addr)
 		err := ws.server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			log.Logger.Error(fmt.Sprintf("HTTP serving error: %v", err))
+			log.Logger.Errorf("HTTP server shutdown error: %v", err)
 		}
 	}()
 	go func() {
@@ -80,7 +78,7 @@ func (ws *WebService) Start(ctx context.Context) {
 		log.Logger.Info("Shutting down webservice...")
 		err := ws.server.Shutdown(shutdownCtx)
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("HTTP server shutdown error: %v", err))
+			log.Logger.Errorf("HTTP server shutdown error: %v", err)
 		}
 	}()
 }

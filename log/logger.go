@@ -16,7 +16,7 @@ type LogConfig struct {
 
 var (
 	once   sync.Once
-	Logger *zap.Logger
+	Logger *zap.SugaredLogger
 )
 
 func InitLogger(config LogConfig) {
@@ -35,7 +35,7 @@ func InitLogger(config LogConfig) {
 		}
 		core := zapcore.NewCore(encoder, stdout, parseLevel(config.LogLevel))
 
-		Logger = zap.New(core)
+		Logger = zap.New(core).Sugar()
 	})
 }
 

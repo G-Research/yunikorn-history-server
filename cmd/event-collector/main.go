@@ -68,8 +68,7 @@ func main() {
 
 	k, err := loadConfig(cfgFile)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("Error: %v", err))
-		os.Exit(1)
+		panic(err)
 	}
 
 	// configure the logger
@@ -114,8 +113,8 @@ func main() {
 
 	repo, err := repository.NewECRepo(ctx, &ecConfig)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("could not create db repository: %v", err))
-		os.Exit(1)
+		log.Logger.Error("could not create db repository")
+		panic(err)
 	}
 
 	repo.Setup(ctx)

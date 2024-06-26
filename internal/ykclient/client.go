@@ -58,7 +58,7 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, streamURL, bytes.NewBuffer([]byte{}))
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("Error: could not create new HTTP request: %v", err))
+		log.Logger.Errorf("Error: could not create new HTTP request: %v", err)
 		cancel()
 		return
 	}
@@ -67,14 +67,14 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("Error: could not request from %s: %v", streamURL, err))
+		log.Logger.Errorf("Error: could not request from %s: %v", streamURL, err)
 		cancel()
 		return
 	}
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("Error: could not close body of event stream connection: %v", err))
+			log.Logger.Errorf("Error: could not close body of event stream connection: %v", err)
 		}
 	}()
 
@@ -89,14 +89,14 @@ func (c *Client) FetchEventStream(ctx context.Context, streamURL string, evCount
 		default:
 			line, err := reader.ReadBytes('\n')
 			if err != nil {
-				log.Logger.Error(fmt.Sprintf("Error: could not read from http stream: %v", err))
+				log.Logger.Errorf("Error: could not read from http stream: %v", err)
 				break
 			}
 
 			ev := si.EventRecord{}
 			err = json.Unmarshal(line, &ev)
 			if err != nil {
-				log.Logger.Error(fmt.Sprintf("could not unmarshal event from stream: %v", err))
+				log.Logger.Errorf("could not unmarshal event from stream: %v", err)
 				break
 			}
 			// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
@@ -129,10 +129,10 @@ func (c *Client) startup(ctx context.Context) {
 	// Get partitions from YuniKorn API and upsert into DB
 	partitions, err := c.GetPartitions(ctx)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("could not get partitions: %v", err))
+		log.Logger.Errorf("could not get partitions: %v", err)
 	}
 	if err = c.repo.UpsertPartitions(ctx, partitions); err != nil {
-		log.Logger.Error(fmt.Sprintf("could not upsert partitions: %v", err))
+		log.Logger.Errorf("could not upsert partitions: %v", err)
 	}
 
 	// Get partition queues from YuniKorn API and upsert into DB
@@ -140,24 +140,24 @@ func (c *Client) startup(ctx context.Context) {
 	for _, part := range partitions {
 		qs, err := c.GetPartitionQueues(ctx, part.Name)
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not get queues for partition %s: %v", part.Name, err))
+			log.Logger.Errorf("could not get queues for partition %s: %v", part.Name, err)
 		} else if len(qs) > 0 {
 			queues = append(queues, qs...)
 		}
 	}
 	queues = flattenQueues(queues)
 	if err = c.repo.UpsertQueues(ctx, queues); err != nil {
-		log.Logger.Error(fmt.Sprintf("could not upsert queues: %v", err))
+		log.Logger.Errorf("could not upsert queues: %v", err)
 	}
 
 	// Get partition nodes from YuniKorn API and upsert into DB
 	for _, part := range partitions {
 		nodes, err := c.GetPartitionNodes(ctx, part.Name)
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not get nodes for partition %s: %v", part.Name, err))
+			log.Logger.Errorf("could not get nodes for partition %s: %v", part.Name, err)
 		} else {
 			if err = c.repo.UpsertNodes(ctx, nodes, part.Name); err != nil {
-				log.Logger.Error(fmt.Sprintf("could not upsert nodes: %v", err))
+				log.Logger.Errorf("could not upsert nodes: %v", err)
 			}
 		}
 	}
@@ -167,36 +167,36 @@ func (c *Client) startup(ctx context.Context) {
 	for _, q := range queues {
 		queueApps, err := c.GetApplications(ctx, q.Partition, q.QueueName)
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not get applications for partition %s, queue %s: %v",
-				q.Partition, q.QueueName, err))
+			log.Logger.Errorf("could not get applications for partition %s, queue %s: %v",
+				q.Partition, q.QueueName, err)
 		} else {
 			apps = append(apps, queueApps...)
 		}
 	}
 	if err = c.repo.UpsertApplications(ctx, apps); err != nil {
-		log.Logger.Error(fmt.Sprintf("could not upsert applications: %v", err))
+		log.Logger.Errorf("could not upsert applications: %v", err)
 	}
 
 	// Get node utilizations from YuniKorn API and insert into DB
 	nus, err := c.GetNodeUtil(ctx)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("could not get node utilizations: %v", err))
+		log.Logger.Errorf("could not get node utilizations: %v", err)
 	}
 	if err := c.repo.InsertNodeUtilizations(ctx, uuid.New(), nus); err != nil {
-		log.Logger.Error(fmt.Sprintf("could not insert node utilizations: %v", err))
+		log.Logger.Errorf("could not insert node utilizations: %v", err)
 	}
 
 	// Get apps history and containers history from YuniKorn API and update history in DB
 	appsHistory, err := c.GetAppsHistory(ctx)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("could not get apps history: %v", err))
+		log.Logger.Errorf("could not get apps history: %v", err)
 	}
 	containersHistory, err := c.GetContainersHistory(ctx)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("could not get containers history: %v", err))
+		log.Logger.Errorf("could not get containers history: %v", err)
 	}
 	if err = c.repo.UpdateHistory(ctx, appsHistory, containersHistory); err != nil {
-		log.Logger.Error(fmt.Sprintf("could not update history: %v", err))
+		log.Logger.Errorf("could not update history: %v", err)
 	}
 }
 

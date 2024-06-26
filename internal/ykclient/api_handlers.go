@@ -49,7 +49,7 @@ func (c *Client) GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 	reader := bufio.NewReader(resp.Body)
@@ -86,7 +86,7 @@ func (c *Client) GetPartitionQueues(ctx context.Context, partitionName string) (
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
@@ -132,7 +132,7 @@ func (c *Client) GetApplications(ctx context.Context, partitionName, queueName s
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
@@ -196,7 +196,7 @@ func (c *Client) GetApplication(ctx context.Context, partitionName, queueName, a
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
@@ -229,7 +229,7 @@ func (c *Client) GetPartitionNodes(ctx context.Context, partitionName string) ([
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
@@ -268,7 +268,7 @@ func (c *Client) GetNodeUtil(ctx context.Context) (*[]dao.PartitionNodesUtilDAOI
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
@@ -298,7 +298,7 @@ func (c *Client) GetAppsHistory(ctx context.Context) ([]*dao.ApplicationHistoryD
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
@@ -335,7 +335,7 @@ func (c *Client) GetContainersHistory(ctx context.Context) ([]*dao.ContainerHist
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Logger.Error(fmt.Sprintf("could not close response body: %v", err))
+			log.Logger.Errorf("could not close response body: %v", err)
 		}
 	}()
 
