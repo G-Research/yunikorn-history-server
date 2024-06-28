@@ -60,10 +60,10 @@ jobs:
         id: golangci-lint-cache-info
         run: |
           version_regex=" v([0-9]+\.[0-9]+\.[0-9]+) "
-          [[ "$(golangci-lint version)" =~ $version_regex ]]
+          [[ "$(bin/tooling/golangci-lint version)" =~ $version_regex ]]
           echo version=${BASH_REMATCH[1]} >> $GITHUB_OUTPUT
           cache_regex='Dir: (.*)\n'
-          [[ "$(golangci-lint cache status)" =~ $cache_regex ]]
+          [[ "$(bin/tooling/golangci-lint cache status)" =~ $cache_regex ]]
           echo path=${BASH_REMATCH[1]} >> $GITHUB_OUTPUT
 
       - name: Setup golangci-lint cache
@@ -130,18 +130,17 @@ jobs:
             type=edge
 
       - name: Build software distribution
-        run: make dist
+        run: make docker-build-tarball
         env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
+          OS: ${{ matrix.os }}
+          ARCH: ${{ matrix.arch }}
           DOCKER_METADATA: ${{ steps.docker-metadata.outputs.json }}
-          DOCKER_OUTPUT: type=oci,dest=yunikorn-history-server-oci-${{ matrix.arch }}.tar
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: yunikorn-history-server-archives-${{ matrix.os }}-${{ matrix.arch }}
-          path: build/*
+          path: build/docker/*
 
       - name: Upload Docker artifact
         uses: actions/upload-artifact@v4

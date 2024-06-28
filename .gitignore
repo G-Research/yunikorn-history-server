@@ -1,13 +1,30 @@
-*.tmp
+# IDE
+.idea/
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# OSX
 .DS_Store
-.build
-*.swp
-*.a
-/tools/
-/build/
-/_output/
-.idea
-/coverage.txt
-/shellcheck
-temp
-*.log
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Vendor directory
+vendor/
+
+# Test coverage.
+.test_coverage.txt
+
+# Binaries
+bin/
+
+# Build artifacts
+dist/
