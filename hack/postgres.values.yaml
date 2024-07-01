@@ -1,0 +1,8 @@
+auth:
+  postgresPassword: psw
+
+primary:
+  service:
+    type: NodePort
+    nodePorts:
+      postgresql: 30002
