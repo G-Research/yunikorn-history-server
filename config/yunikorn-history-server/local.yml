@@ -1,0 +1,22 @@
+yunikorn:
+  host: 127.0.0.1
+  port: 30001
+  secure: false
+
+db:
+  host: 127.0.0.1
+  port: 30002
+  dbname: postgres
+  user: postgres
+  password: psw
+  pool_max_conns: 0
+  pool_min_conns: 0
+  pool_max_conn_lifetime: 1800s
+  pool_max_conn_idle_time: 120s
+
+yhs:
+  port: 8989
+
+log:
+  level: "INFO"
+  json_format: false
