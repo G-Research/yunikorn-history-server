@@ -7,21 +7,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLoadConfigFromFile(t *testing.T) {
+const testConfig = `yunikorn:
+  protocol: http
+  host: localhost
+  port: 8080
+yhs:
+  serverAddr: localhost:8081
+`
+
+func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 	// Create a temporary configuration file
 	tmpfile, err := os.CreateTemp("", "example.*.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() {
-		err := os.Remove(tmpfile.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
+	t.Cleanup(func() { os.Remove(tmpfile.Name()) })
 
 	// Write a test configuration to the temporary file
-	text := []byte("yunikorn:\n  protocol: http\n  host: localhost\n  port: 8080\nyhs:\n  serverAddr: localhost:8081")
+	text := []byte(testConfig)
 	if _, err := tmpfile.Write(text); err != nil {
 		t.Fatal(err)
 	}
@@ -29,9 +32,39 @@ func TestLoadConfigFromFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Set some environment variables that should be ignored
-	err = os.Setenv("YHS_CONFIG_IGNORED", "IGNORED")
+	// Set environment variables
+	if err = os.Setenv("YHS_YUNIKORN_HOST", "example.com"); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Unsetenv("YHS_YUNIKORN_HOST") })
+
+	// Load the configuration
+	k, err := loadConfig(tmpfile.Name())
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "", k.String("config.ignored"))
+	assert.Equal(t, "http", k.String("yunikorn.protocol"))
+	assert.Equal(t, "example.com", k.String("yunikorn.host"))
+	assert.Equal(t, 8080, k.Int("yunikorn.port"))
+	assert.Equal(t, "localhost:8081", k.String("yhs.serverAddr"))
+}
+
+func TestLoadConfig_FromFile(t *testing.T) {
+	// Create a temporary configuration file
+	tmpfile, err := os.CreateTemp("", "example.*.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Remove(tmpfile.Name()) })
+
+	// Write a test configuration to the temporary file
+	text := []byte(testConfig)
+	if _, err := tmpfile.Write(text); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -47,16 +80,18 @@ func TestLoadConfigFromFile(t *testing.T) {
 	assert.Equal(t, "localhost:8081", k.String("yhs.serverAddr"))
 }
 
-func TestLoadConfigFromEnv(t *testing.T) {
+func TestLoadConfig_FromEnv(t *testing.T) {
 	// Set environment variables
 	err := os.Setenv("YHS_YUNIKORN_PROTOCOL", "http")
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { os.Unsetenv("YHS_YUNIKORN_PROTOCOL") })
 	err = os.Setenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME", "120s")
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { os.Unsetenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME") })
 
 	k, err := loadConfig("")
 	if err != nil {
