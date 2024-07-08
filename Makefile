@@ -117,7 +117,7 @@ define database_url
 endef
 
 .PHONY: migrate
-migrate: gomigrate ## run migrations.
+migrate: yq gomigrate ## run migrations.
 	$(GOMIGRATE) -path migrations -database $(call database_url) $(ARGS)
 
 .PHONY: migrate-up
@@ -164,10 +164,13 @@ integration-tests: ## start dependencies and run integration tests.
 
 .PHONY: test-go-unit
 test-go-unit: gotestsum ## run go unit tests.
-	$(GOTESTSUM) -- ./... -short -coverprofile operator.out
+	$(GOTESTSUM) -- ./cmd/... ./internal/... -short -coverprofile operator.out
 
 test-go-integration: gotestsum ## run go integration tests.
-	$(GOTESTSUM) -- ./... -run Integration -coverprofile operator.out
+	$(GOTESTSUM) -- ./cmd/... ./internal/... -run Integration -coverprofile operator.out
+
+test-go-e2e: gotestsum ## run go e2e tests.
+	$(GOTESTSUM) -- ./test/e2e/... -coverprofile operator.out
 
 ##@ Build
 
