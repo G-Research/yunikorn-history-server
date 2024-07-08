@@ -3,7 +3,9 @@ package yunikorn
 import (
 	"context"
 	"fmt"
+	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
+	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
 	"sync"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
@@ -17,25 +19,55 @@ func (s *Service) sync(ctx context.Context) error {
 		return fmt.Errorf("error getting and upserting partitions: %v", err)
 	}
 
-	queues, err := s.upsertPartitionQueues(ctx, partitions)
-	if err != nil {
-		return fmt.Errorf("error getting and upserting queues: %v", err)
+	var mu sync.Mutex
+	var allErrs []error
+	addErr := func(err error) {
+		mu.Lock()
+		defer mu.Unlock()
+		allErrs = append(allErrs, err)
 	}
 
-	if err = s.upsertPartitionNodes(ctx, partitions); err != nil {
-		return fmt.Errorf("error getting and upserting nodes: %v", err)
-	}
+	wg := sync.WaitGroup{}
+	wg.Add(4)
 
-	if err = s.upsertApplications(ctx, queues); err != nil {
-		return fmt.Errorf("error getting and upserting applications: %v", err)
-	}
+	go func() {
+		defer wg.Done()
+		queues, err := s.upsertPartitionQueues(ctx, partitions)
+		if err != nil {
+			addErr(fmt.Errorf("error getting and upserting queues: %v", err))
+			return
+		}
 
-	if err = s.upsertNodeUtilizations(ctx); err != nil {
-		return fmt.Errorf("error getting and upserting node utilizations: %v", err)
-	}
+		if err = s.upsertApplications(ctx, queues); err != nil {
+			addErr(fmt.Errorf("error getting and upserting applications: %v", err))
+		}
+	}()
 
-	if err = s.updateAppsHistory(ctx); err != nil {
-		return fmt.Errorf("error updating apps history: %v", err)
+	go func() {
+		defer wg.Done()
+		if err = s.upsertPartitionNodes(ctx, partitions); err != nil {
+			addErr(fmt.Errorf("error getting and upserting nodes: %v", err))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err = s.upsertNodeUtilizations(ctx); err != nil {
+			addErr(fmt.Errorf("error getting and upserting node utilizations: %v", err))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err = s.updateAppsHistory(ctx); err != nil {
+			addErr(fmt.Errorf("error updating apps history: %v", err))
+		}
+	}()
+
+	wg.Wait()
+
+	if len(allErrs) > 0 {
+		return fmt.Errorf("some errors encountered while syncing data: %v", allErrs)
 	}
 
 	return nil
@@ -43,19 +75,28 @@ func (s *Service) sync(ctx context.Context) error {
 
 // upsertPartitions fetches partitions from the Yunikorn API and upserts them into the database
 func (s *Service) upsertPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
+	logger := log.FromContext(ctx)
 	// Get partitions from Yunikorn API and upsert into DB
 	partitions, err := s.client.GetPartitions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions: %v", err)
 	}
-	if err = s.repo.UpsertPartitions(ctx, partitions); err != nil {
-		return nil, fmt.Errorf("could not upsert partitions: %v", err)
+
+	err = s.workqueue.Add(func(ctx context.Context) error {
+		logger.Infow("upserting partitions", "count", len(partitions))
+		return s.repo.UpsertPartitions(ctx, partitions)
+	}, workqueue.WithJobName("upsert_partitions"))
+	if err != nil {
+		logger.Errorf("could not add upsert partitions job to workqueue: %v", err)
 	}
+
 	return partitions, nil
 }
 
 // upsertPartitionQueues fetches queues for each partition and upserts them into the database
 func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
+	logger := log.FromContext(ctx)
+
 	// Create a wait group as a separate goroutine will be spawned for each partition
 	wg := sync.WaitGroup{}
 	wg.Add(len(partitions))
@@ -90,8 +131,12 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 	}
 
 	queues = flattenQueues(queues)
-	if err := s.repo.UpsertQueues(ctx, queues); err != nil {
-		return nil, fmt.Errorf("failed to upsert queues: %v", err)
+	err := s.workqueue.Add(func(ctx context.Context) error {
+		logger.Infow("upserting queues", "count", len(queues))
+		return s.repo.UpsertQueues(ctx, queues)
+	}, workqueue.WithJobName("upsert_queues"))
+	if err != nil {
+		logger.Errorf("could not add upsert queues job to workqueue: %v", err)
 	}
 
 	return queues, nil
@@ -113,6 +158,8 @@ func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo
 
 // upsertPartitionNodes fetches nodes for each partition and upserts them into the database
 func (s *Service) upsertPartitionNodes(ctx context.Context, partitions []*dao.PartitionInfo) error {
+	logger := log.FromContext(ctx)
+
 	// Create a wait group as a separate goroutine will be spawned for each partition
 	wg := sync.WaitGroup{}
 	wg.Add(len(partitions))
@@ -131,10 +178,12 @@ func (s *Service) upsertPartitionNodes(ctx context.Context, partitions []*dao.Pa
 			mutex.Unlock()
 			return
 		}
-		if err = s.repo.UpsertNodes(ctx, nodes, p.Name); err != nil {
-			mutex.Lock()
-			errs = append(errs, fmt.Errorf("could not upsert nodes: %v", err))
-			mutex.Unlock()
+		err = s.workqueue.Add(func(ctx context.Context) error {
+			logger.Infow("upserting nodes for partition", "count", len(nodes), "partition", p.Name)
+			return s.repo.UpsertNodes(ctx, nodes, p.Name)
+		}, workqueue.WithJobName(fmt.Sprintf("upsert_nodes_for_partition_%s", p.Name)))
+		if err != nil {
+			logger.Errorf("could not add upsert nodes for partition %s job to workqueue: %v", p.Name, err)
 		}
 	}
 
@@ -154,6 +203,8 @@ func (s *Service) upsertPartitionNodes(ctx context.Context, partitions []*dao.Pa
 
 // upsertApplications fetches applications for each queue and upserts them into the database
 func (s *Service) upsertApplications(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
+	logger := log.FromContext(ctx)
+
 	// Create a wait group as a separate goroutine will be spawned for each partition
 	wg := sync.WaitGroup{}
 	wg.Add(len(queues))
@@ -193,8 +244,12 @@ func (s *Service) upsertApplications(ctx context.Context, queues []*dao.Partitio
 		return fmt.Errorf("failed to get applications for some queues: %v", errs)
 	}
 
-	if err := s.repo.UpsertApplications(ctx, apps); err != nil {
-		return fmt.Errorf("could not upsert applications: %v", err)
+	err := s.workqueue.Add(func(ctx context.Context) error {
+		logger.Infow("upserting applications", "count", len(apps))
+		return s.repo.UpsertApplications(ctx, apps)
+	}, workqueue.WithJobName("upsert_applications"))
+	if err != nil {
+		logger.Errorf("could not add upsert applications job to workqueue: %v", err)
 	}
 
 	return nil
@@ -202,18 +257,28 @@ func (s *Service) upsertApplications(ctx context.Context, queues []*dao.Partitio
 
 // upsertNodeUtilizations fetches node utilizations from the Yunikorn API and inserts them into the database
 func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
+	logger := log.FromContext(ctx)
+
 	nus, err := s.client.GetNodeUtil(ctx)
 	if err != nil {
 		return fmt.Errorf("could not get node utilizations: %v", err)
 	}
-	if err := s.repo.InsertNodeUtilizations(ctx, uuid.New(), nus); err != nil {
-		return fmt.Errorf("could not insert node utilizations: %v", err)
+
+	err = s.workqueue.Add(func(ctx context.Context) error {
+		logger.Infow("upserting node utilizations", "count", len(nus))
+		return s.repo.InsertNodeUtilizations(ctx, uuid.New(), nus)
+	}, workqueue.WithJobName("upsert_node_utilizations"))
+	if err != nil {
+		logger.Errorf("could not add insert node utilizations job to workqueue: %v", err)
 	}
+
 	return nil
 }
 
 // updateAppsHistory fetches the history of applications and containers and updates the history in the database
 func (s *Service) updateAppsHistory(ctx context.Context) error {
+	logger := log.FromContext(ctx)
+
 	appsHistory, err := s.client.GetAppsHistory(ctx)
 	if err != nil {
 		return fmt.Errorf("could not get apps history: %v", err)
@@ -222,8 +287,13 @@ func (s *Service) updateAppsHistory(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not get containers history: %v", err)
 	}
-	if err = s.repo.UpdateHistory(ctx, appsHistory, containersHistory); err != nil {
-		return fmt.Errorf("could not update history: %v", err)
+
+	err = s.workqueue.Add(func(ctx context.Context) error {
+		logger.Infow("updating apps history", "count", len(appsHistory))
+		return s.repo.UpdateHistory(ctx, appsHistory, containersHistory)
+	}, workqueue.WithJobName("update_apps_history"))
+	if err != nil {
+		logger.Errorf("could not add update apps history job to workqueue: %v", err)
 	}
 
 	return nil

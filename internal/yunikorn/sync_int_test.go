@@ -5,7 +5,9 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 
 	"github.com/G-Research/yunikorn-history-server/test/database"
 
@@ -17,7 +19,8 @@ func TestClient_sync_Integration(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 
 	schema := database.CreateTestSchema(ctx, t)
 	t.Cleanup(func() {
@@ -40,19 +43,39 @@ func TestClient_sync_Integration(t *testing.T) {
 
 	pool, err := postgres.NewConnectionPool(ctx, cfg)
 	if err != nil {
-		t.Errorf("error creating postgres connection pool: %v", err)
+		t.Fatalf("error creating postgres connection pool: %v", err)
 	}
 	repo, err := repository.NewPostgresRepository(pool)
 	if err != nil {
-		t.Errorf("error creating postgres repository: %v", err)
+		t.Fatalf("error creating postgres repository: %v", err)
 	}
 	eventRepository := repository.NewInMemoryEventRepository()
 
 	c := NewRESTClient(config.GetTestYunikornConfig())
-	s := NewService(repo, eventRepository, c)
+	s := NewService(ctx, repo, eventRepository, c)
+
+	t.Cleanup(func() { s.workqueue.Shutdown() })
+
+	time.Sleep(100 * time.Millisecond)
 
 	err = s.sync(ctx)
 	if err != nil {
 		t.Errorf("error starting up client: %v", err)
 	}
+
+	assert.Eventually(t, func() bool {
+		partitions, err := repo.GetAllPartitions(ctx)
+		if err != nil {
+			t.Fatalf("error getting partitions: %v", err)
+		}
+		return len(partitions) > 0
+	}, 500*time.Millisecond, 50*time.Millisecond)
+
+	assert.Eventually(t, func() bool {
+		history, err := repo.GetApplicationsHistory(ctx)
+		if err != nil {
+			t.Fatalf("error getting applications history: %v", err)
+		}
+		return len(history) > 0
+	}, 500*time.Millisecond, 50*time.Millisecond)
 }

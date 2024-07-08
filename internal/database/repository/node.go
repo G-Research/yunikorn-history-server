@@ -54,13 +54,13 @@ func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeD
 func (s *PostgresRepository) InsertNodeUtilizations(
 	ctx context.Context,
 	u uuid.UUID,
-	nus *[]dao.PartitionNodesUtilDAOInfo,
+	nus []*dao.PartitionNodesUtilDAOInfo,
 ) error {
 
 	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
 		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
 
-	for _, nu := range *nus {
+	for _, nu := range nus {
 		_, err := s.dbpool.Exec(ctx, insertSQL,
 			pgx.NamedArgs{
 				"id":              u.String(),

@@ -64,20 +64,16 @@ func (s *Service) processStreamResponse(ctx context.Context, response []byte) er
 		logger.Errorf("error recording event: %v", err)
 	}
 
-	if eventRecord.GetType() == si.EventRecord_APP {
-		printAppEvent(&eventRecord)
-	}
+	logger.Infow(
+		"received event from yunikorn event stream",
+		"type", si.EventRecord_Type_name[int32(eventRecord.GetType())],
+		"objectId", eventRecord.GetObjectID(),
+		"message", eventRecord.GetMessage(),
+		"change_type", eventRecord.GetEventChangeType(),
+		"change_detail", eventRecord.GetEventChangeDetail(),
+		"reference_id", eventRecord.GetReferenceID(),
+		"resource", eventRecord.GetResource(),
+	)
 
 	return nil
-}
-
-func printAppEvent(er *si.EventRecord) {
-	fmt.Printf("---------\n")
-	fmt.Printf("Type         : %s\n", si.EventRecord_Type_name[int32(er.GetType())])
-	fmt.Printf("ObjectId     : %s\n", er.GetObjectID())
-	fmt.Printf("Message      : %s\n", er.GetMessage())
-	fmt.Printf("Change Type  : %s\n", er.GetEventChangeType())
-	fmt.Printf("Change Detail: %s\n", er.GetEventChangeDetail())
-	fmt.Printf("Reference ID:  %s\n", er.GetReferenceID())
-	fmt.Printf("Resource    : %+v\n", er.GetResource())
 }

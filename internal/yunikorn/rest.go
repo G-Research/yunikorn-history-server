@@ -184,7 +184,7 @@ func (c *RESTClient) GetPartitionNodes(ctx context.Context, partitionName string
 	return nodes, nil
 }
 
-func (c *RESTClient) GetNodeUtil(ctx context.Context) (*[]dao.PartitionNodesUtilDAOInfo, error) {
+func (c *RESTClient) GetNodeUtil(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
 	resp, err := c.get(ctx, endpointNodeUtil)
 	if err != nil {
 		return nil, err
@@ -195,12 +195,12 @@ func (c *RESTClient) GetNodeUtil(ctx context.Context) (*[]dao.PartitionNodesUtil
 		return nil, handleNonOKResponse(ctx, resp)
 	}
 
-	var nus []dao.PartitionNodesUtilDAOInfo
+	var nus []*dao.PartitionNodesUtilDAOInfo
 	if err = unmarshallBody(ctx, resp, &nus); err != nil {
 		return nil, err
 	}
 
-	return &nus, nil
+	return nus, nil
 }
 
 func (c *RESTClient) GetAppsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {

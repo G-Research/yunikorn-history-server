@@ -5,7 +5,7 @@ import (
 )
 
 // EventTypeCounts is a map of event types to their counts.
-type EventTypeCounts map[EventTypeKey]int
+type EventTypeCounts map[string]int
 
 // EventTypeKey is a key for the EventTypeCounts map and is a combination of the event type and the change type.
 type EventTypeKey struct {
