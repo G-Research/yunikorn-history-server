@@ -3,27 +3,14 @@
 
 # options for analysis running
 run:
-  # default concurrency is a available CPU number
-  concurrency: 4
-
   # timeout for analysis, e.g. 30s, 5m, default is 1m
-  deadline: 5m
+  timeout: 3m
 
   # exit code when at least one issue was found, default is 1
   issues-exit-code: 20
 
   # include test files or not, default is true
   tests: true
-
-  # creators of build tags, all linters use it. Default is empty creators.
-  build-tags: []
-
-  # which dirs to skip: they won't be analyzed;
-  # can use regexp here: generated.*, regexp is applied on full path;
-  # default value is empty creators, but next dirs are always skipped independently
-  # from this option's value:
-  #   vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
-  skip-dirs: []
 
 # output configuration options
 output:
@@ -68,12 +55,12 @@ linters-settings:
     local-prefixes: github.com/G-Research/yunikorn-history-server
 
   govet:
-    # report about shadowed variables
-    check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment
 
   lll:
-    # max line length, lines longer will be reported. Default is 120. '\t' is counted as 1 character.
-    line-length: 120
+    line-length: 140
 
   unparam:
     # Inspect exported functions, default is false. Set to true if no external program/library imports your code.
@@ -113,12 +100,13 @@ issues:
   # excluded by default patterns execute `golangci-lint run --help`
   exclude:
     - declaration of "err" shadows declaration at line
+    -
 
   # Independently from option `exclude` we use default exclude patterns,
   # it can be disabled by this option. To creators all
   # excluded by default patterns execute `golangci-lint run --help`.
   # Default value for this option is true.
-  exclude-use-default: false
+  exclude-use-default: true
 
   # Which files to skip: they will be analyzed, but issues from them
   # won't be reported. Default value is empty creators, but there is
@@ -127,12 +115,6 @@ issues:
   exclude-files:
     - ".*\\_mock.go$"
 
-  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
-  max-per-linter: 0
-
-  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
-  max-same: 0
-
   # Show only new issues: if there are unstaged changes or untracked files,
   # only those changes are analyzed, else only changes in HEAD~ are analyzed.
   # It's a super-useful option for integration of golangci-lint into existing
@@ -140,9 +122,3 @@ issues:
   # of integration: much better don't allow issues in new code.
   # Default is false.
   new: false
-
-  # Show only new issues created after git revision `REV`
-  new-from-rev: ""
-
-  # Show only new issues created in git patch with set file path.
-  new-from-patch: ""
