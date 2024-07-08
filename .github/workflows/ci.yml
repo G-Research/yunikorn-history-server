@@ -25,7 +25,7 @@ jobs:
       - name: Compute tools cache info
         id: tools-cache-info
         run: |
-          echo path=$(go env GOPATH)/bin >> $GITHUB_OUTPUT
+          echo path=bin/tooling >> $GITHUB_OUTPUT
           echo make-hash=$(make -n install-tools | sha256sum | cut -d' ' -f1) >> $GITHUB_OUTPUT
 
       - name: Setup tools cache
