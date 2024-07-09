@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		cfg, err := config.NewFromFile(ConfigFile)
+		cfg, err := config.New(ConfigFile)
 		if err != nil {
 			return err
 		}
@@ -86,7 +86,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 
 	healthService := health.New(info.Version, health.NewYunikornComponent(client), health.NewPostgresComponent(pool))
 
-	ws := webservice.NewWebService(cfg.Port, mainRepository, eventRepository, healthService)
+	ws := webservice.NewWebService(cfg.YHSConfig.Port, mainRepository, eventRepository, healthService)
 	g.Add(
 		func() error {
 			return ws.Start(ctx)

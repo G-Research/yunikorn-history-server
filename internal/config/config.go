@@ -14,14 +14,19 @@ import (
 )
 
 type Config struct {
-	// Port specifies the port on which the Yunikorn History Server listens for incoming requests.
-	Port int
+	// YHSConfig specifies the configuration for the Yunikorn History Server.
+	YHSConfig YHSConfig
 	// PostgresConfig specifies the configuration for the Postgres database.
 	PostgresConfig PostgresConfig
 	// YunikornConfig specifies the configuration for the Yunikorn API.
 	YunikornConfig YunikornConfig
 	// LogConfig specifies the configuration for the logger.
 	LogConfig LogConfig
+}
+
+type YHSConfig struct {
+	// Port specifies the port on which the Yunikorn History Server listens for incoming requests.
+	Port int
 }
 
 type PostgresConfig struct {
@@ -38,6 +43,7 @@ type PostgresConfig struct {
 	Schema              string
 }
 
+// YunikornConfig specifies the configuration for the Yunikorn API.
 type YunikornConfig struct {
 	Host string
 	Port int
@@ -50,10 +56,16 @@ type LogConfig struct {
 	JSONFormat bool
 }
 
-func NewFromFile(path string) (*Config, error) {
+// New creates a new Config object by loading the configuration from the provided path if provided,
+// then load the configuration from environment variables prefixed with YHS_, so that environment variables take precedence.
+func New(path string) (*Config, error) {
 	k, err := loadConfig(path)
 	if err != nil {
 		return nil, err
+	}
+
+	yhsConfig := YHSConfig{
+		Port: k.Int("yhs.port"),
 	}
 
 	yunikornConfig := YunikornConfig{
@@ -74,7 +86,6 @@ func NewFromFile(path string) (*Config, error) {
 		Password: k.String("db.password"),
 		DbName:   k.String("db.dbname"),
 	}
-
 	if k.Int("db.pool_max_conns") > 0 {
 		postgresConfig.PoolMaxConns = k.Int("db.pool_max_conns")
 	}
@@ -87,8 +98,9 @@ func NewFromFile(path string) (*Config, error) {
 	if k.Duration("db.pool_max_conn_idletime") > time.Duration(0) {
 		postgresConfig.PoolMaxConnIdleTime = k.Duration("db.pool_max_conn_idletime")
 	}
+
 	config := &Config{
-		Port:           k.Int("yhs.port"),
+		YHSConfig:      yhsConfig,
 		YunikornConfig: yunikornConfig,
 		PostgresConfig: postgresConfig,
 		LogConfig:      logConfig,
@@ -96,6 +108,8 @@ func NewFromFile(path string) (*Config, error) {
 	return config, nil
 }
 
+// loadConfig loads the configuration from a config file if provided,
+// otherwise it loads the configuration from environment variables prefixed with YHS_.
 func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 	k := koanf.New(".")
 
@@ -106,7 +120,6 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 		if err := k.Load(file.Provider(cfgFile), yaml.Parser()); err != nil {
 			return nil, fmt.Errorf("error loading config file: %v", err)
 		}
-		return k, nil
 	}
 
 	if err := k.Load(env.Provider("YHS_", ".", processEnvVar), nil); err != nil {

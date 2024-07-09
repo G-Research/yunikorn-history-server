@@ -20,7 +20,7 @@ var migrateCmd = &cobra.Command{
 			return err
 		}
 
-		cfg, err := config.NewFromFile(ConfigFile)
+		cfg, err := config.New(ConfigFile)
 		if err != nil {
 			return err
 		}
