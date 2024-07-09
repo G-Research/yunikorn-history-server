@@ -321,14 +321,14 @@ GOMIGRATE_VERSION ?= v4.17.1
 .PHONY: gomigrate
 gomigrate: $(GOMIGRATE) ## Download gomigrate locally if necessary.
 $(GOMIGRATE): bin/tooling
-	test -s $(GOMIGRATE) || curl -L https://github.com/golang-migrate/migrate/releases/download/$(GOMIGRATE_VERSION)/migrate.$(OS)-$(ARCH).tar.gz | tar xvz -C $(LOCALBIN_TOOLING)
+	test -s $(GOMIGRATE) || curl --silent -L https://github.com/golang-migrate/migrate/releases/download/$(GOMIGRATE_VERSION)/migrate.$(OS)-$(ARCH).tar.gz | tar xvz -C $(LOCALBIN_TOOLING)
 
 YQ ?= $(LOCALBIN_TOOLING)/yq
 YQ_VERSION ?= v4.44.2
 .PHONY: yq
 yq: $(YQ) ## Download gomigrate locally if necessary.
 $(YQ): bin/tooling
-	test -s $(YQ) || wget https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -O $(LOCALBIN_TOOLING)/yq
+	test -s $(YQ) || curl --silent -L https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -o $(LOCALBIN_TOOLING)/yq
 	chmod +x $(LOCALBIN_TOOLING)/yq
 
 GOMOCK ?= $(LOCALBIN_TOOLING)/gomock
