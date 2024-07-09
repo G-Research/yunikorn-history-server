@@ -24,7 +24,7 @@ Use the following `make` commands to build and run the Yunikorn History Server l
 ```bash
 # start all dependencies
 make kind-all
-# build and run THS
+# build and run YHS
 make run
 ```
 
