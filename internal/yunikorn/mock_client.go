@@ -117,10 +117,10 @@ func (mr *MockClientMockRecorder) GetEventStream(arg0 any) *gomock.Call {
 }
 
 // GetNodeUtil mocks base method.
-func (m *MockClient) GetNodeUtil(arg0 context.Context) (*[]dao.PartitionNodesUtilDAOInfo, error) {
+func (m *MockClient) GetNodeUtil(arg0 context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNodeUtil", arg0)
-	ret0, _ := ret[0].(*[]dao.PartitionNodesUtilDAOInfo)
+	ret0, _ := ret[0].([]*dao.PartitionNodesUtilDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

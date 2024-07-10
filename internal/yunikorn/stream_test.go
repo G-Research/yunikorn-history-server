@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 	"io"
 	"net/http"
@@ -11,8 +12,6 @@ import (
 	"time"
 
 	"go.uber.org/mock/gomock"
-
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
 
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/assert"
@@ -80,8 +79,8 @@ func TestFetchEventStream(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error getting event counts: %v", err)
 		}
-		expectedKey1 := model.EventTypeKey{Type: si.EventRecord_APP, ChangeType: si.EventRecord_ADD}
-		expectedKey2 := model.EventTypeKey{Type: si.EventRecord_APP, ChangeType: si.EventRecord_SET}
+		expectedKey1 := fmt.Sprintf("%s-%s", si.EventRecord_APP.String(), si.EventRecord_ADD.String())
+		expectedKey2 := fmt.Sprintf("%s-%s", si.EventRecord_APP.String(), si.EventRecord_SET.String())
 		return eventCounts[expectedKey1] == 2 && eventCounts[expectedKey2] == 1
 	}, 1*time.Second, 50*time.Millisecond)
 }
@@ -135,7 +134,7 @@ func TestProcessStreamResponse(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error getting event counts: %v", err)
 				}
-				expectedKey := model.EventTypeKey{Type: tt.expectedType, ChangeType: tt.expectedEvent}
+				expectedKey := fmt.Sprintf("%s-%s", tt.expectedType.String(), tt.expectedEvent.String())
 				assert.Equal(t, tt.expectedCount, eventCounts[expectedKey])
 			}
 		})

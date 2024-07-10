@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-//go:generate mockgen -destination=mock_repository.go -package=repository github.com/G-Research/yunikorn-history-server/internal/repository Repository
+//go:generate mockgen -destination=mock_repository.go -package=repository github.com/G-Research/yunikorn-history-server/internal/database/repository Repository
 type Repository interface {
 	UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error
 	GetAllApplications(ctx context.Context) ([]*dao.ApplicationDAOInfo, error)
@@ -20,7 +20,7 @@ type Repository interface {
 	GetApplicationsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error)
 	GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error)
 	UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error
-	InsertNodeUtilizations(ctx context.Context, uuid uuid.UUID, partitionNodesUtil *[]dao.PartitionNodesUtilDAOInfo) error
+	InsertNodeUtilizations(ctx context.Context, uuid uuid.UUID, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
 	GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error)
 	GetNodesPerPartition(ctx context.Context, partition string) ([]*dao.NodeDAOInfo, error)
 	UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
@@ -36,11 +37,16 @@ func (r *InMemoryEventRepository) Counts(ctx context.Context) (model.EventTypeCo
 func (r *InMemoryEventRepository) Record(ctx context.Context, event *si.EventRecord) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	key := model.EventTypeKey{Type: event.GetType(), ChangeType: event.GetEventChangeType()}
+	key := getKey(event)
 	if count, exists := r.counts[key]; exists {
 		r.counts[key] = count + 1
 	} else {
 		r.counts[key] = 1
 	}
 	return nil
+}
+
+// getKey returns a key for the given event record which is a combination of the event type and the change type.
+func getKey(e *si.EventRecord) string {
+	return fmt.Sprintf("%s-%s", e.GetType().String(), e.GetEventChangeType().String())
 }

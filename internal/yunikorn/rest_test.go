@@ -35,7 +35,7 @@ func TestRESTClient_GetPartitions_Integration(t *testing.T) {
 	fmt.Println(partitions)
 }
 
-func Test_GetApplication(t *testing.T) {
+func TestRESTClient_GetApplication(t *testing.T) {
 	tests := []struct {
 		name      string
 		partName  string
@@ -105,7 +105,6 @@ func Test_GetApplication(t *testing.T) {
 						QueueName:     fmt.Sprintf("%s.%s", matches[1], "default"),
 						ApplicationID: matches[2],
 					}
-
 				}
 				err := json.NewEncoder(w).Encode(&responseApp)
 				if err != nil {
@@ -115,17 +114,7 @@ func Test_GetApplication(t *testing.T) {
 			}))
 
 			defer ts.Close()
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			app, err := client.GetApplication(context.Background(), tt.partName, tt.queueName, tt.appId)
 			require.NoError(t, err)
@@ -134,5 +123,18 @@ func Test_GetApplication(t *testing.T) {
 			assert.Equal(t, tt.expected.QueueName, app.QueueName)
 			assert.Equal(t, tt.expected.ApplicationID, app.ApplicationID)
 		})
+	}
+}
+
+func getMockServerYunikornConfig(t *testing.T, serverURL string) *config.YunikornConfig {
+	parsedURL, err := url.Parse(serverURL)
+	require.NoError(t, err)
+
+	portNum, err := strconv.Atoi(parsedURL.Port())
+	require.NoError(t, err)
+
+	return &config.YunikornConfig{
+		Host: parsedURL.Hostname(),
+		Port: portNum,
 	}
 }
