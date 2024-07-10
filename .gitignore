@@ -8,6 +8,10 @@
 *.so
 *.dylib
 
+# UI build files
+assets/
+!assets/.gitkeep
+
 # OSX
 .DS_Store
 
