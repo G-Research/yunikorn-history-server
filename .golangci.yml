@@ -84,6 +84,7 @@ linters:
     - unconvert
     - unparam
     - unused
+    - gofmt
   enable-all: false
   disable:
     - errorlint

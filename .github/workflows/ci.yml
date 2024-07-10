@@ -42,9 +42,6 @@ jobs:
           GOMODCACHE: /tmp/tools/go-mod
         run: make install-tools
 
-      - name: Check formatting
-        run: gofmt -l . | wc -l | xargs -I {} test {} -eq 0 || (gofmt -l . && exit 1)
-
       - name: Check module files
         run: |
           go mod tidy
