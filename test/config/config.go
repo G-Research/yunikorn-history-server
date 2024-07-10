@@ -13,7 +13,7 @@ func GetTestLogConfig() *config.LogConfig {
 func GetTestPostgresConfig() *config.PostgresConfig {
 	return &config.PostgresConfig{
 		Host:     "localhost",
-		Port:     5432,
+		Port:     30002,
 		Username: "postgres",
 		Password: "psw",
 		DbName:   "postgres",
