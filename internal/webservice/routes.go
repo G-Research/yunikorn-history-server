@@ -4,9 +4,8 @@ import (
 	"context"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/google/uuid"
-	"net/http"
-
 	"github.com/julienschmidt/httprouter"
+	"net/http"
 )
 
 const (
@@ -34,6 +33,8 @@ const (
 func (ws *WebService) initRoutes(ctx context.Context) {
 	router := httprouter.New()
 
+	fs := http.Dir(ws.assetsDir)
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", http.FileServer(fs)))
 	router.Handle(http.MethodGet, routePartitions, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		enrichRequestContext(ctx, r)
 		ws.getPartitions(w, r, p)

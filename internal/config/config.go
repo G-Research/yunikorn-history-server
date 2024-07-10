@@ -27,6 +27,8 @@ type Config struct {
 type YHSConfig struct {
 	// Port specifies the port on which the Yunikorn History Server listens for incoming requests.
 	Port int
+	// AssetsDir specifies the directory where the static assets are stored.
+	AssetsDir string
 }
 
 type PostgresConfig struct {
@@ -64,8 +66,13 @@ func New(path string) (*Config, error) {
 		return nil, err
 	}
 
+	assetsDir := k.String("yhs.assets_dir")
+	if assetsDir == "" {
+		assetsDir = "assets"
+	}
 	yhsConfig := YHSConfig{
-		Port: k.Int("yhs.port"),
+		Port:      k.Int("yhs.port"),
+		AssetsDir: assetsDir,
 	}
 
 	yunikornConfig := YunikornConfig{
