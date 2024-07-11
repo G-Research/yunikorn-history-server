@@ -448,3 +448,7 @@ $(XK6): bin/tooling
 k6: xk6 $(K6) ## Download k6 locally if necessary.
 $(K6): bin/tooling
 	test -s $(K6) || $(XK6) build $(K6_VERSION) --with github.com/grafana/xk6-kubernetes --output $(K6)
+
+.PHONY: web-build
+web-build: ## Build the web components
+	npm run build --prefix web
