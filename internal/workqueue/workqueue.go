@@ -163,6 +163,11 @@ func (w *WorkQueue) Run(ctx context.Context) error {
 	}
 }
 
+// Started returns true if the workqueue is started.
+func (w *WorkQueue) Started() bool {
+	return w.started
+}
+
 // Shutdown stops the workqueue.
 func (w *WorkQueue) Shutdown() {
 	if w.started {

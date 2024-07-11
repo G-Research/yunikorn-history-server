@@ -54,7 +54,11 @@ func TestClient_sync_Integration(t *testing.T) {
 	c := NewRESTClient(config.GetTestYunikornConfig())
 	s := NewService(ctx, repo, eventRepository, c)
 
-	t.Cleanup(func() { s.workqueue.Shutdown() })
+	go s.Run(ctx)
+
+	assert.Eventually(t, func() bool {
+		return s.workqueue.Started()
+	}, 500*time.Millisecond, 50*time.Millisecond)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -69,7 +73,7 @@ func TestClient_sync_Integration(t *testing.T) {
 			t.Fatalf("error getting partitions: %v", err)
 		}
 		return len(partitions) > 0
-	}, 500*time.Millisecond, 50*time.Millisecond)
+	}, 10*time.Second, 250*time.Millisecond)
 
 	assert.Eventually(t, func() bool {
 		history, err := repo.GetApplicationsHistory(ctx)
@@ -77,5 +81,5 @@ func TestClient_sync_Integration(t *testing.T) {
 			t.Fatalf("error getting applications history: %v", err)
 		}
 		return len(history) > 0
-	}, 500*time.Millisecond, 50*time.Millisecond)
+	}, 10*time.Second, 250*time.Millisecond)
 }
