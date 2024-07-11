@@ -26,11 +26,11 @@ const (
 	testNamespacePrefix = "yunikorn-e2e-"
 )
 
-func TestE2E(t *testing.T) {
+func TestYunikornEventStream_E2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e test in short mode")
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 

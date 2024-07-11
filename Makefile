@@ -160,17 +160,22 @@ test: test-go-unit integration-tests ## run all tests.
 
 .PHONY: integration-tests
 integration-tests: ## start dependencies and run integration tests.
-	hack/run-integration-tests.sh
+	hack/run-tests.sh integration
+
+e2e-tests: ## start dependencies and run e2e tests.
+	hack/run-tests.sh e2e
+
+TEST_ARGS ?= --junitfile=test-reports/junit.xml --jsonfile=test-reports/report.json -- -coverprofile=test-reports/coverage.out -covermode=atomic
 
 .PHONY: test-go-unit
 test-go-unit: gotestsum ## run go unit tests.
-	$(GOTESTSUM) -- ./cmd/... ./internal/... -short -coverprofile operator.out
+	$(GOTESTSUM) $(TEST_ARGS) ./cmd/... ./internal/... -short
 
 test-go-integration: gotestsum ## run go integration tests.
-	$(GOTESTSUM) -- ./cmd/... ./internal/... -run Integration -coverprofile operator.out
+	$(GOTESTSUM) $(TEST_ARGS) ./cmd/... ./internal/... -run Integration
 
 test-go-e2e: gotestsum ## run go e2e tests.
-	$(GOTESTSUM) -- ./test/e2e/... -coverprofile operator.out
+	$(GOTESTSUM) $(TEST_ARGS) ./test/e2e/... -run E2E
 
 ##@ Build
 
