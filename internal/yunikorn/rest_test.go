@@ -127,20 +127,7 @@ func TestRESTClient_GetApplication(t *testing.T) {
 	}
 }
 
-func getMockServerYunikornConfig(t *testing.T, serverURL string) *config.YunikornConfig {
-	parsedURL, err := url.Parse(serverURL)
-	require.NoError(t, err)
-
-	portNum, err := strconv.Atoi(parsedURL.Port())
-	require.NoError(t, err)
-
-	return &config.YunikornConfig{
-		Host: parsedURL.Hostname(),
-		Port: portNum,
-	}
-}
-
-func Test_GetApplications(t *testing.T) {
+func TestRESTClient_GetApplications(t *testing.T) {
 	tests := []struct {
 		name      string
 		partName  string
@@ -226,17 +213,7 @@ func Test_GetApplications(t *testing.T) {
 			}))
 
 			defer ts.Close()
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			apps, err := client.GetApplications(context.Background(), tt.partName, tt.queueName)
 			require.NoError(t, err)
@@ -248,7 +225,7 @@ func Test_GetApplications(t *testing.T) {
 	}
 }
 
-func Test_GetPartitions(t *testing.T) {
+func TestRESTClient_GetPartitions(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
@@ -316,17 +293,7 @@ func Test_GetPartitions(t *testing.T) {
 			ts := tt.setup()
 			defer ts.Close()
 
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			partitions, err := client.GetPartitions(context.Background())
 			if tt.wantErr {
@@ -339,7 +306,7 @@ func Test_GetPartitions(t *testing.T) {
 	}
 }
 
-func Test_GetPartitionQueues(t *testing.T) {
+func TestRESTClient_GetPartitionQueues(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
@@ -399,17 +366,7 @@ func Test_GetPartitionQueues(t *testing.T) {
 			ts := tt.setup()
 			defer ts.Close()
 
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			queues, err := client.GetPartitionQueues(context.Background(), "testPartition")
 			if tt.wantErr {
@@ -422,7 +379,7 @@ func Test_GetPartitionQueues(t *testing.T) {
 	}
 }
 
-func Test_GetPartitionNodes(t *testing.T) {
+func TestRESTClient_GetPartitionNodes(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
@@ -490,17 +447,7 @@ func Test_GetPartitionNodes(t *testing.T) {
 			ts := tt.setup()
 			defer ts.Close()
 
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			nodes, err := client.GetPartitionNodes(context.Background(), "testPartition")
 			if tt.wantErr {
@@ -513,11 +460,11 @@ func Test_GetPartitionNodes(t *testing.T) {
 	}
 }
 
-func Test_GetNodeUtil(t *testing.T) {
+func TestRESTClient_GetNodeUtil(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
-		expected *[]dao.PartitionNodesUtilDAOInfo
+		expected []*dao.PartitionNodesUtilDAOInfo
 		wantErr  bool
 	}{
 		{
@@ -551,7 +498,7 @@ func Test_GetNodeUtil(t *testing.T) {
 					}
 				}))
 			},
-			expected: &[]dao.PartitionNodesUtilDAOInfo{
+			expected: []*dao.PartitionNodesUtilDAOInfo{
 				{
 					NodesUtilList: []*dao.NodesUtilDAOInfo{
 						{
@@ -607,17 +554,7 @@ func Test_GetNodeUtil(t *testing.T) {
 			ts := tt.setup()
 			defer ts.Close()
 
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			nodeUtil, err := client.GetNodeUtil(context.Background())
 			if tt.wantErr {
@@ -630,7 +567,7 @@ func Test_GetNodeUtil(t *testing.T) {
 	}
 }
 
-func Test_GetAppsHistory(t *testing.T) {
+func TestRESTClient_GetAppsHistory(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
@@ -702,17 +639,7 @@ func Test_GetAppsHistory(t *testing.T) {
 			ts := tt.setup()
 			defer ts.Close()
 
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			appsHistory, err := client.GetAppsHistory(context.Background())
 			if tt.wantErr {
@@ -725,7 +652,7 @@ func Test_GetAppsHistory(t *testing.T) {
 	}
 }
 
-func Test_GetContainersHistory(t *testing.T) {
+func TestRESTClient_GetContainersHistory(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() *httptest.Server
@@ -797,17 +724,7 @@ func Test_GetContainersHistory(t *testing.T) {
 			ts := tt.setup()
 			defer ts.Close()
 
-			serverURL, err := url.Parse(ts.URL)
-			require.NoError(t, err)
-
-			portNum, err := strconv.Atoi(serverURL.Port())
-			require.NoError(t, err)
-
-			cfg := config.YunikornConfig{
-				Host: serverURL.Hostname(),
-				Port: portNum,
-			}
-			client := NewRESTClient(&cfg)
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
 
 			containersHistory, err := client.GetContainersHistory(context.Background())
 			if tt.wantErr {
@@ -817,5 +734,18 @@ func Test_GetContainersHistory(t *testing.T) {
 				assert.Equal(t, tt.expected, containersHistory)
 			}
 		})
+	}
+}
+
+func getMockServerYunikornConfig(t *testing.T, serverURL string) *config.YunikornConfig {
+	parsedURL, err := url.Parse(serverURL)
+	require.NoError(t, err)
+
+	portNum, err := strconv.Atoi(parsedURL.Port())
+	require.NoError(t, err)
+
+	return &config.YunikornConfig{
+		Host: parsedURL.Hostname(),
+		Port: portNum,
 	}
 }
