@@ -227,10 +227,11 @@ func TestRESTClient_GetApplications(t *testing.T) {
 
 func TestRESTClient_GetPartitions(t *testing.T) {
 	tests := []struct {
-		name     string
-		setup    func() *httptest.Server
-		expected []*dao.PartitionInfo
-		wantErr  bool
+		name           string
+		setup          func() *httptest.Server
+		expected       []*dao.PartitionInfo
+		wantErr        bool
+		expectedErrMsg string
 	}{
 		{
 			name: "200 OK Response",
@@ -267,8 +268,9 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 					http.Error(w, "server error", http.StatusInternalServerError)
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "yunicorn api returned non-OK status code: 500",
 		},
 		{
 			name: "Unexpected JSON",
@@ -283,8 +285,9 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 					}
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "json: cannot unmarshal object into Go value of type []*dao.PartitionInfo",
 		},
 	}
 
@@ -298,6 +301,7 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 			partitions, err := client.GetPartitions(context.Background())
 			if tt.wantErr {
 				require.Error(t, err)
+				assert.Equal(t, tt.expectedErrMsg, err.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, partitions)
@@ -308,10 +312,11 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 
 func TestRESTClient_GetPartitionQueues(t *testing.T) {
 	tests := []struct {
-		name     string
-		setup    func() *httptest.Server
-		expected *dao.PartitionQueueDAOInfo
-		wantErr  bool
+		name           string
+		setup          func() *httptest.Server
+		expected       *dao.PartitionQueueDAOInfo
+		wantErr        bool
+		expectedErrMsg string
 	}{
 		{
 			name: "200 OK Response",
@@ -340,8 +345,9 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 					http.Error(w, "server error", http.StatusInternalServerError)
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "yunicorn api returned non-OK status code: 500",
 		},
 		{
 			name: "Unexpected JSON",
@@ -356,8 +362,9 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 					}
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "json: cannot unmarshal array into Go value of type dao.PartitionQueueDAOInfo",
 		},
 	}
 
@@ -371,6 +378,7 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 			queues, err := client.GetPartitionQueues(context.Background(), "testPartition")
 			if tt.wantErr {
 				require.Error(t, err)
+				assert.Equal(t, tt.expectedErrMsg, err.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, queues)
@@ -381,10 +389,11 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 
 func TestRESTClient_GetPartitionNodes(t *testing.T) {
 	tests := []struct {
-		name     string
-		setup    func() *httptest.Server
-		expected []*dao.NodeDAOInfo
-		wantErr  bool
+		name           string
+		setup          func() *httptest.Server
+		expected       []*dao.NodeDAOInfo
+		wantErr        bool
+		expectedErrMsg string
 	}{
 		{
 			name: "200 OK Response",
@@ -421,8 +430,9 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 					http.Error(w, "server error", http.StatusInternalServerError)
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "yunicorn api returned non-OK status code: 500",
 		},
 		{
 			name: "Unexpected JSON",
@@ -437,8 +447,9 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 					}
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "json: cannot unmarshal object into Go value of type []*dao.NodeDAOInfo",
 		},
 	}
 
@@ -452,6 +463,7 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 			nodes, err := client.GetPartitionNodes(context.Background(), "testPartition")
 			if tt.wantErr {
 				require.Error(t, err)
+				assert.Equal(t, tt.expectedErrMsg, err.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, nodes)
@@ -462,10 +474,11 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 
 func TestRESTClient_GetNodeUtil(t *testing.T) {
 	tests := []struct {
-		name     string
-		setup    func() *httptest.Server
-		expected []*dao.PartitionNodesUtilDAOInfo
-		wantErr  bool
+		name           string
+		setup          func() *httptest.Server
+		expected       []*dao.PartitionNodesUtilDAOInfo
+		wantErr        bool
+		expectedErrMsg string
 	}{
 		{
 			name: "200 OK Response",
@@ -528,8 +541,9 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 					http.Error(w, "server error", http.StatusInternalServerError)
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "yunicorn api returned non-OK status code: 500",
 		},
 		{
 			name: "Unexpected JSON",
@@ -544,8 +558,9 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 					}
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "json: cannot unmarshal object into Go value of type []*dao.PartitionNodesUtilDAOInfo",
 		},
 	}
 
@@ -559,6 +574,7 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 			nodeUtil, err := client.GetNodeUtil(context.Background())
 			if tt.wantErr {
 				require.Error(t, err)
+				assert.Equal(t, tt.expectedErrMsg, err.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, nodeUtil)
@@ -569,10 +585,11 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 
 func TestRESTClient_GetAppsHistory(t *testing.T) {
 	tests := []struct {
-		name     string
-		setup    func() *httptest.Server
-		expected []*dao.ApplicationHistoryDAOInfo
-		wantErr  bool
+		name           string
+		setup          func() *httptest.Server
+		expected       []*dao.ApplicationHistoryDAOInfo
+		wantErr        bool
+		expectedErrMsg string
 	}{
 		{
 			name: "200 OK Response",
@@ -613,8 +630,9 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 					http.Error(w, "server error", http.StatusInternalServerError)
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "yunicorn api returned non-OK status code: 500",
 		},
 		{
 			name: "Unexpected JSON",
@@ -629,8 +647,9 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 					}
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "json: cannot unmarshal object into Go value of type []*dao.ApplicationHistoryDAOInfo",
 		},
 	}
 
@@ -644,6 +663,7 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 			appsHistory, err := client.GetAppsHistory(context.Background())
 			if tt.wantErr {
 				require.Error(t, err)
+				assert.Equal(t, tt.expectedErrMsg, err.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, appsHistory)
@@ -654,10 +674,11 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 
 func TestRESTClient_GetContainersHistory(t *testing.T) {
 	tests := []struct {
-		name     string
-		setup    func() *httptest.Server
-		expected []*dao.ContainerHistoryDAOInfo
-		wantErr  bool
+		name           string
+		setup          func() *httptest.Server
+		expected       []*dao.ContainerHistoryDAOInfo
+		wantErr        bool
+		expectedErrMsg string
 	}{
 		{
 			name: "200 OK Response",
@@ -698,8 +719,9 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "yunicorn api returned non-OK status code: 500",
 		},
 		{
 			name: "Unexpected JSON",
@@ -714,8 +736,9 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 					}
 				}))
 			},
-			expected: nil,
-			wantErr:  true,
+			expected:       nil,
+			wantErr:        true,
+			expectedErrMsg: "json: cannot unmarshal object into Go value of type []*dao.ContainerHistoryDAOInfo",
 		},
 	}
 
@@ -729,6 +752,7 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 			containersHistory, err := client.GetContainersHistory(context.Background())
 			if tt.wantErr {
 				require.Error(t, err)
+				assert.Equal(t, tt.expectedErrMsg, err.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, containersHistory)
