@@ -36,7 +36,7 @@ CREATE TABLE applications(
     state_log JSONB,
     place_holder_data JSONB,
     has_reserved BOOLEAN,
-    reservations TEXT[],
+    reservations JSONB,
     max_request_priority INTEGER,
     UNIQUE (id),
     PRIMARY KEY (id)
