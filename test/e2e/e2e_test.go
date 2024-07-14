@@ -160,6 +160,49 @@ func TestYunikornQueueCreation_E2E(t *testing.T) {
 	}, 400*time.Second, 5*time.Second)
 }
 
+func TestYunikornApp_E2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e test in short mode")
+	}
+	ctx, cancel = context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	ns := createTestNamespace(ctx, t, k8s.GetTestK8sClient(t))
+	t.Cleanup(func() {
+		deleteTestNamespace(context.Background(), t, k8s.GetTestK8sClient(t), ns)
+	})
+
+	assert.Eventually(t, func() bool {
+		healthy, err := getReadinessStatus(serverURL)
+		return healthy && err == nil
+	}, 10*time.Second, 500*time.Millisecond)
+
+	// sleep for 2 seconds just in case so all goroutines are ready
+	time.Sleep(2 * time.Second)
+
+	k8sClient := k8s.GetTestK8sClient(t)
+	appID := "yunikorn-app-test-pod"
+
+	_, err := k8sClient.CoreV1().Pods(ns).Create(ctx, testApp(appID), metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("error creating test app: %v", err)
+	}
+	assert.Eventually(t, func() bool {
+		appsResponse, err := getApps(serverURL, ns)
+		if err != nil {
+			return false
+		}
+		for _, app := range appsResponse.Apps {
+			fmt.Println(app.ApplicationID)
+			if app.ApplicationID == appID {
+				return true
+			}
+		}
+		return false
+	}, 400*time.Second, 5*time.Second)
+
+}
+
 // createTestNamespace creates a test namespace for the e2e test and returns the name of the namespace.
 func createTestNamespace(ctx context.Context, t *testing.T, k8sClient kubernetes.Interface) string {
 	ns := &corev1.Namespace{
@@ -208,6 +251,15 @@ func getQueues(serverURL string) (webservice.QueuesResponse, error) {
 		return webservice.QueuesResponse{}, err
 	}
 	return queues, nil
+}
+
+func getApps(serverURL string, namespace string) (webservice.AppsResponse, error) {
+	var apps webservice.AppsResponse
+	url := fmt.Sprintf("%s/ws/v1/partition/default/queue/root.%s/applications", serverURL, namespace)
+	if err := httpGet(url, &apps); err != nil {
+		return webservice.AppsResponse{}, err
+	}
+	return apps, nil
 }
 
 // httpGet performs an HTTP GET request and decodes the response into the provided out parameter.
@@ -291,6 +343,37 @@ partitions:
         queues:
           - name: %s
 `, queue),
+		},
+	}
+}
+
+func testApp(appID string) *corev1.Pod {
+	return &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Pod",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "yunikorn-nginx-pod",
+			Labels: map[string]string{
+				"app":           "nginx",
+				"applicationId": appID,
+			},
+		},
+		Spec: corev1.PodSpec{
+			SchedulerName: "yunikorn",
+			Containers: []corev1.Container{
+				{
+					Name:  "nginx",
+					Image: "nginx:latest",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+							corev1.ResourceMemory: resource.MustParse("20M"),
+						},
+					},
+				},
+			},
 		},
 	}
 }
