@@ -245,10 +245,7 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 							Name: "partition2",
 						},
 					}
-					err := json.NewEncoder(w).Encode(response)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, response)
 				}))
 			},
 			expected: []*dao.PartitionInfo{
@@ -279,10 +276,7 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -326,10 +320,7 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 
 						QueueName: "queue1",
 					}
-					err := json.NewEncoder(w).Encode(response)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, response)
 				}))
 			},
 			expected: &dao.PartitionQueueDAOInfo{
@@ -356,10 +347,7 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&[]unexpected{{Unexpected: "unexpected"}})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, &[]unexpected{{Unexpected: "unexpected"}})
 				}))
 			},
 			expected:       nil,
@@ -407,10 +395,7 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 							NodeID: "node2",
 						},
 					}
-					err := json.NewEncoder(w).Encode(response)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, response)
 				}))
 			},
 			expected: []*dao.NodeDAOInfo{
@@ -441,10 +426,7 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -505,10 +487,7 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 							},
 						},
 					}
-					err := json.NewEncoder(w).Encode(response)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, response)
 				}))
 			},
 			expected: []*dao.PartitionNodesUtilDAOInfo{
@@ -552,10 +531,7 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -605,10 +581,7 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 							TotalApplications: "2",
 						},
 					}
-					err := json.NewEncoder(w).Encode(response)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, response)
 				}))
 			},
 			expected: []*dao.ApplicationHistoryDAOInfo{
@@ -641,10 +614,7 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -694,10 +664,7 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 							TotalContainers: "2",
 						},
 					}
-					err := json.NewEncoder(w).Encode(response)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, response)
 				}))
 			},
 			expected: []*dao.ContainerHistoryDAOInfo{
@@ -730,10 +697,7 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					err := json.NewEncoder(w).Encode(&unexpected{Unexpected: "unexpected"})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
+					writeResponse(w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -771,5 +735,12 @@ func getMockServerYunikornConfig(t *testing.T, serverURL string) *config.Yunikor
 	return &config.YunikornConfig{
 		Host: parsedURL.Hostname(),
 		Port: portNum,
+	}
+}
+
+func writeResponse(w http.ResponseWriter, response any) {
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
