@@ -165,6 +165,10 @@ integration-tests: ## start dependencies and run integration tests.
 e2e-tests: ## start dependencies and run e2e tests.
 	hack/run-tests.sh e2e
 
+.PHONY: performance-tests
+performance-tests: k6 ## start dependencies and run performance tests.
+	hack/run-tests.sh performance
+
 TEST_ARGS ?= --junitfile=test-reports/junit.xml --jsonfile=test-reports/report.json -- -coverprofile=test-reports/coverage.out -covermode=atomic
 
 .PHONY: test-go-unit
@@ -176,6 +180,11 @@ test-go-integration: gotestsum ## run go integration tests.
 
 test-go-e2e: gotestsum ## run go e2e tests.
 	$(GOTESTSUM) $(TEST_ARGS) ./test/e2e/... -run E2E
+
+test-k6-performance: ## run k6 performance tests.
+	mkdir -p test-reports/performance
+	touch test-reports/performance/report.json
+	$(K6) run -e NAMESPACE=$(NAMESPACE) test/performance/*_test.js --out json=test-reports/performance/report.json
 
 ##@ Build
 
@@ -352,3 +361,17 @@ KIND_VERSION ?= v0.23.0
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): bin/tooling
 	test -s $(KIND) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install sigs.k8s.io/kind@$(KIND_VERSION)
+
+XK6 ?= $(LOCALBIN_TOOLING)/xk6
+K6 ?= $(LOCALBIN_TOOLING)/k6
+K6_VERSION ?= v0.52.0
+
+.PHONY: xk6
+xk6: $(XK6) ## Download xk6 locally if necessary.
+$(XK6): bin/tooling
+	test -s $(XK6) || GOBIN=$(LOCALBIN_TOOLING) go install go.k6.io/xk6/cmd/xk6@latest
+
+.PHONY: k6
+k6: xk6 $(K6) ## Download k6 locally if necessary.
+$(K6): bin/tooling
+	test -s $(K6) || $(XK6) build $(K6_VERSION) --with github.com/grafana/xk6-kubernetes --output $(K6)
