@@ -8,5 +8,5 @@ COPY config.yml /app/config.yml
 
 WORKDIR /app
 
-ENTRYPOINT ["yunikorn-history-server"]
+ENTRYPOINT ["/app/yunikorn-history-server"]
 CMD ["--config", "config.yml"]
