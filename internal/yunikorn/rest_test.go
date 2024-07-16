@@ -245,7 +245,7 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 							Name: "partition2",
 						},
 					}
-					writeResponse(w, response)
+					writeResponse(t, w, response)
 				}))
 			},
 			expected: []*dao.PartitionInfo{
@@ -276,7 +276,7 @@ func TestRESTClient_GetPartitions(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					writeResponse(w, &unexpected{Unexpected: "unexpected"})
+					writeResponse(t, w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -320,7 +320,7 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 
 						QueueName: "queue1",
 					}
-					writeResponse(w, response)
+					writeResponse(t, w, response)
 				}))
 			},
 			expected: &dao.PartitionQueueDAOInfo{
@@ -347,7 +347,7 @@ func TestRESTClient_GetPartitionQueues(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					writeResponse(w, &[]unexpected{{Unexpected: "unexpected"}})
+					writeResponse(t, w, &[]unexpected{{Unexpected: "unexpected"}})
 				}))
 			},
 			expected:       nil,
@@ -395,7 +395,7 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 							NodeID: "node2",
 						},
 					}
-					writeResponse(w, response)
+					writeResponse(t, w, response)
 				}))
 			},
 			expected: []*dao.NodeDAOInfo{
@@ -426,7 +426,7 @@ func TestRESTClient_GetPartitionNodes(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					writeResponse(w, &unexpected{Unexpected: "unexpected"})
+					writeResponse(t, w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -487,7 +487,7 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 							},
 						},
 					}
-					writeResponse(w, response)
+					writeResponse(t, w, response)
 				}))
 			},
 			expected: []*dao.PartitionNodesUtilDAOInfo{
@@ -531,7 +531,7 @@ func TestRESTClient_GetNodeUtil(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					writeResponse(w, &unexpected{Unexpected: "unexpected"})
+					writeResponse(t, w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -581,7 +581,7 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 							TotalApplications: "2",
 						},
 					}
-					writeResponse(w, response)
+					writeResponse(t, w, response)
 				}))
 			},
 			expected: []*dao.ApplicationHistoryDAOInfo{
@@ -614,7 +614,7 @@ func TestRESTClient_GetAppsHistory(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					writeResponse(w, &unexpected{Unexpected: "unexpected"})
+					writeResponse(t, w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -664,7 +664,7 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 							TotalContainers: "2",
 						},
 					}
-					writeResponse(w, response)
+					writeResponse(t, w, response)
 				}))
 			},
 			expected: []*dao.ContainerHistoryDAOInfo{
@@ -697,7 +697,7 @@ func TestRESTClient_GetContainersHistory(t *testing.T) {
 					type unexpected struct {
 						Unexpected string `json:"unexpected"`
 					}
-					writeResponse(w, &unexpected{Unexpected: "unexpected"})
+					writeResponse(t, w, &unexpected{Unexpected: "unexpected"})
 				}))
 			},
 			expected:       nil,
@@ -738,9 +738,10 @@ func getMockServerYunikornConfig(t *testing.T, serverURL string) *config.Yunikor
 	}
 }
 
-func writeResponse(w http.ResponseWriter, response any) {
+func writeResponse(t *testing.T, w http.ResponseWriter, response any) {
+	t.Helper()
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		t.Fatalf("error writing response: %v", err)
 	}
 }
