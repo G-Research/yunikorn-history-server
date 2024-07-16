@@ -8,7 +8,7 @@ if [ "$TEST_TYPE" != "integration" ] && [ "$TEST_TYPE" != "e2e" ] && [ "$TEST_TY
     exit 1
 fi
 
-YHS_SERVER=$(YHS_SERVER:-http://localhost:8989}
+YHS_SERVER=${YHS_SERVER:-http://localhost:8989}
 
 # Cleanup the kind cluster and yunikorn-history-server process when the script exits
 cleanup () {
@@ -58,8 +58,9 @@ make install-dependencies migrate-up
 if [ "$TEST_TYPE" == "performance" ]; then
     echo "**********************************"
     echo "Run yunikorn history server"
+    mkdir -p test-reports/performance
     make clean build
-    make run &
+    bin/app/yunikorn-history-server --config config/yunikorn-history-server/local.yml > test-reports/performance/yhs.log &
 
     # Wait for yunikorn history server to start
     wait_for_yhs

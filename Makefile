@@ -182,7 +182,6 @@ test-go-e2e: gotestsum ## run go e2e tests.
 	$(GOTESTSUM) $(TEST_ARGS) ./test/e2e/... -run E2E
 
 test-k6-performance: ## run k6 performance tests.
-	mkdir -p test-reports/performance
 	touch test-reports/performance/report.json
 	$(K6) run -e NAMESPACE=$(NAMESPACE) test/performance/*_test.js --out json=test-reports/performance/report.json
 
@@ -369,7 +368,7 @@ K6_VERSION ?= v0.52.0
 .PHONY: xk6
 xk6: $(XK6) ## Download xk6 locally if necessary.
 $(XK6): bin/tooling
-	test -s $(XK6) || GOBIN=$(LOCALBIN_TOOLING) go install go.k6.io/xk6/cmd/xk6@latest
+	test -s $(XK6) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.k6.io/xk6/cmd/xk6@latest
 
 .PHONY: k6
 k6: xk6 $(K6) ## Download k6 locally if necessary.
