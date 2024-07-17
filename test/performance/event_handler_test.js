@@ -31,9 +31,9 @@ const podTemplate = {
 
 export const options = {
     stages: [
-        { duration: '5s', target: 5 },
-        { duration: '5s', target: 5 },
-        { duration: '5s', target: 0 },
+        { duration: '15s', target: 5 },
+        { duration: '15s', target: 5 },
+        { duration: '15s', target: 0 },
     ],
 };
 
