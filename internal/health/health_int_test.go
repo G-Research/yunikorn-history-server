@@ -42,9 +42,10 @@ func TestService_Readiness_Integration(t *testing.T) {
 			components: components,
 		}
 		status := service.Readiness(context.Background())
+		expectErrorPrefix := `Get "http://invalid-host:2212/ws/v1/scheduler/healthcheck": dial tcp: lookup invalid-host`
 		assert.False(t, status.Healthy)
 		assert.Equal(t, 2, len(status.ComponentStatuses))
-		assertStatus(t, status.ComponentStatuses, "yunikorn", false)
+		assertStatus(t, status.ComponentStatuses, "yunikorn", false, expectErrorPrefix)
 		assert.Equal(t, now, status.StartedAt)
 		assert.Equal(t, version, status.Version)
 	})
@@ -74,9 +75,7 @@ func TestService_Readiness_Integration(t *testing.T) {
 	})
 }
 
-func assertStatus(t *testing.T, statuses []*ComponentStatus, identifier string, expectedHealthy bool) {
-	expectedErrorPrefix := `Get "http://invalid-host:2212/ws/v1/scheduler/healthcheck": dial tcp: lookup invalid-host`
-
+func assertStatus(t *testing.T, statuses []*ComponentStatus, identifier string, expectedHealthy bool, expectedErrorPrefix string) {
 	for _, status := range statuses {
 		if status.Identifier == identifier {
 			assert.Equal(t, expectedHealthy, status.Healthy)
