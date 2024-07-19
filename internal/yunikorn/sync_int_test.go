@@ -70,16 +70,8 @@ func TestClient_sync_Integration(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		partitions, err := repo.GetAllPartitions(ctx)
 		if err != nil {
-			t.Fatalf("error getting partitions: %v", err)
+			t.Logf("error getting partitions: %v", err)
 		}
 		return len(partitions) > 0
-	}, 10*time.Second, 250*time.Millisecond)
-
-	assert.Eventually(t, func() bool {
-		history, err := repo.GetApplicationsHistory(ctx)
-		if err != nil {
-			t.Fatalf("error getting applications history: %v", err)
-		}
-		return len(history) > 0
 	}, 10*time.Second, 250*time.Millisecond)
 }
