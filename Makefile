@@ -163,14 +163,14 @@ go-lint-fix: golangci-lint ## lint Golang code using golangci-lint.
 ##@ Test
 
 define start-cluster
-	echo "**********************************"
-	echo "Creating kind cluster"
-	echo "**********************************"
-	KIND_CLUSTER=yhs-test $(MAKE) kind-create-cluster
+	@echo "**********************************"
+	@echo "Creating kind cluster"
+	@echo "**********************************"
+	@KIND_CLUSTER=yhs-test $(MAKE) kind-create-cluster
 
-	echo "**********************************"
-	echo "Install and configure dependencies"
-	echo "**********************************"
+	@echo "**********************************"
+	@echo "Install and configure dependencies"
+	@echo "**********************************"
 	$(MAKE) install-dependencies migrate-up
 endef
 
@@ -189,22 +189,22 @@ test: test-go-unit integration-tests ## run all tests.
 .PHONY: integration-tests
 .ONESHELL:
 integration-tests: ## start dependencies and run integration tests.
-	$(cleanup-cluster); trap cleanup EXIT
-	$(start-cluster)
+	@$(cleanup-cluster); trap cleanup EXIT
+	@$(start-cluster)
 	YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-integration
 
 .PHONY: e2e-tests
 .ONESHELL:
 e2e-tests: ## start dependencies and run e2e tests.
-	$(cleanup-cluster); trap cleanup EXIT
-	$(start-cluster)
+	@$(cleanup-cluster); trap cleanup EXIT
+	@$(start-cluster)
 	KIND_CLUSTER=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
 .ONESHELL:
 performance-tests: k6 ## start dependencies and run performance tests.
-	$(cleanup-cluster)
-	stop_perf_cluster() {
+	@$(cleanup-cluster)
+	@stop_perf_cluster() {
 	    yhs_pid=`ps ax | grep 'yunikorn-history-server' | grep -v grep | awk '{print $$1}'`
 		if [ "$${yhs_pid}" != "" ] ; then
 		    echo "**********************************"
@@ -214,18 +214,18 @@ performance-tests: k6 ## start dependencies and run performance tests.
 		fi
 		cleanup
 	}; trap stop_perf_cluster EXIT
-	$(start-cluster)
-	echo "**********************************"
-	echo "Run yunikorn history server"
-	mkdir -p test-reports/performance
+	@$(start-cluster)
+	@echo "**********************************"
+	@echo "Run yunikorn history server"
+	@mkdir -p test-reports/performance
 	$(MAKE) clean build
 	bin/app/yunikorn-history-server \
 		--config config/yunikorn-history-server/local.yml > test-reports/performance/yhs.log & disown
 	YHS_SERVER=$${YHS_SERVER:-http://localhost:8989}
-	echo "YHS_SERVER is $${YHS_SERVER}"
-	echo "**********************************"
-	echo "Waiting for yunikorn history server to start"
-	echo "**********************************"
+	@echo "YHS_SERVER is $${YHS_SERVER}"
+	@echo "**********************************"
+	@echo "Waiting for yunikorn history server to start"
+	@echo "**********************************"
 	while true; do
 		echo "Sending request to yunikorn history server..."
 		URL="$${YHS_SERVER}/ws/v1/health/readiness"
