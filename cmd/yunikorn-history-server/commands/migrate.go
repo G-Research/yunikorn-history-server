@@ -16,10 +16,6 @@ var migrateCmd = &cobra.Command{
 	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	ValidArgs: []string{"up", "down"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := validate(); err != nil {
-			return err
-		}
-
 		cfg, err := config.New(ConfigFile)
 		if err != nil {
 			return err

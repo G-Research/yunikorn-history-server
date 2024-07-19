@@ -27,10 +27,6 @@ var rootCmd = &cobra.Command{
 	Short: "Yunikorn History Server warehouses Yunikorn events.",
 	Long:  `Yunikorn History Server is a service that listens for events from the Yunikorn Scheduler and stores them in a database.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := validate(); err != nil {
-			return err
-		}
-
 		cfg, err := config.New(ConfigFile)
 		if err != nil {
 			return err

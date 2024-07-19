@@ -1,8 +1,11 @@
 package config
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,6 +17,215 @@ const testConfig = `yunikorn:
 yhs:
   serverAddr: localhost:8081
 `
+
+func TestNew(t *testing.T) {
+	tests := []struct {
+		name    string
+		path    string
+		want    *Config
+		wantErr bool
+	}{
+		{
+			name: "valid config file",
+			path: filepath.Join("testdata", "config.yml"),
+			want: &Config{
+				YHSConfig: YHSConfig{
+					Port:      8080,
+					AssetsDir: "assets",
+				},
+				YunikornConfig: YunikornConfig{
+					Host:   "localhost",
+					Port:   9090,
+					Secure: false,
+				},
+				LogConfig: LogConfig{
+					LogLevel:   "info",
+					JSONFormat: false,
+				},
+				PostgresConfig: PostgresConfig{
+					Host:                "localhost",
+					DbName:              "testdb",
+					Username:            "user",
+					Password:            "password",
+					Port:                5432,
+					PoolMaxConnLifetime: 30 * time.Minute,
+					PoolMaxConnIdleTime: 10 * time.Minute,
+					PoolMaxConns:        10,
+					PoolMinConns:        1,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "missing config file",
+			path:    filepath.Join("testdata", "missing_config.yml"),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := New(tt.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			diff := cmp.Diff(tt.want, got)
+			if diff != "" {
+				t.Errorf("New() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestYHSConfigValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  YHSConfig
+		wantErr bool
+	}{
+		{
+			name: "valid config",
+			config: YHSConfig{
+				Port: 8080,
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid config - port missing",
+			config: YHSConfig{
+				Port: 0,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.config.Validate(); (err != nil) != tt.wantErr {
+				t.Errorf("YHSConfig.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestPostgresConfigValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  PostgresConfig
+		wantErr bool
+	}{
+		{
+			name: "valid config",
+			config: PostgresConfig{
+				Host:     "localhost",
+				DbName:   "testdb",
+				Username: "user",
+				Password: "password",
+				Port:     5432,
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid config - missing host",
+			config: PostgresConfig{
+				DbName:   "testdb",
+				Username: "user",
+				Password: "password",
+				Port:     5432,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid config - missing db name",
+			config: PostgresConfig{
+				Host:     "localhost",
+				Username: "user",
+				Password: "password",
+				Port:     5432,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid config - missing username",
+			config: PostgresConfig{
+				Host:     "localhost",
+				DbName:   "testdb",
+				Password: "password",
+				Port:     5432,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid config - missing password",
+			config: PostgresConfig{
+				Host:     "localhost",
+				DbName:   "testdb",
+				Username: "user",
+				Port:     5432,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid config - missing port",
+			config: PostgresConfig{
+				Host:     "localhost",
+				DbName:   "testdb",
+				Username: "user",
+				Password: "password",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.config.Validate(); (err != nil) != tt.wantErr {
+				t.Errorf("PostgresConfig.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestYunikornConfigValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  YunikornConfig
+		wantErr bool
+	}{
+		{
+			name: "valid config",
+			config: YunikornConfig{
+				Host: "localhost",
+				Port: 8080,
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid config - missing host",
+			config: YunikornConfig{
+				Port: 8080,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid config - missing port",
+			config: YunikornConfig{
+				Host: "localhost",
+				Port: 0,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.config.Validate(); (err != nil) != tt.wantErr {
+				t.Errorf("YunikornConfig.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
 
 func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 	// Create a temporary configuration file
