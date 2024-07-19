@@ -14,6 +14,7 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
 	"github.com/G-Research/yunikorn-history-server/test/k8s"
+	"github.com/G-Research/yunikorn-history-server/test/util"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
@@ -100,7 +101,7 @@ func TestYunikornQueueCreation_E2E(t *testing.T) {
 		t.Skip("skipping e2e test in short mode")
 	}
 	ns := "yunikorn"
-	queueName := "tenant" // a random name
+	queueName := util.GenerateRandomAlphanum(t, 8) + "test-queue"
 	configMap := testQueueConfigMap(queueName)
 
 	ctx, cancel = context.WithCancel(context.Background())
