@@ -15,6 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Check Make version (we need at least GNU Make 3.82).
+ifeq ($(filter undefine,$(value .FEATURES)),)
+$(error Unsupported Make version. \
+    The build system does not work properly with GNU Make $(MAKE_VERSION), \
+    please use GNU Make 3.82 or above, version 4.3 or higher works best)
+endif
+
 # Check if this GO tools version used is at least the version of go specified in
 # the go.mod file. The version in go.mod should be in sync with other repos.
 
@@ -155,19 +162,86 @@ go-lint-fix: golangci-lint ## lint Golang code using golangci-lint.
 
 ##@ Test
 
+define start-cluster
+	@echo "**********************************"
+	@echo "Creating kind cluster"
+	@echo "**********************************"
+	@KIND_CLUSTER=yhs-test $(MAKE) kind-create-cluster
+
+	@echo "**********************************"
+	@echo "Install and configure dependencies"
+	@echo "**********************************"
+	$(MAKE) install-dependencies migrate-up
+endef
+
+define cleanup-cluster
+	cleanup() {
+	    echo "**********************************"
+	    echo "Deleting kind cluster"
+	    echo "**********************************"
+	    KIND_CLUSTER=yhs-test $(MAKE) kind-delete-cluster
+    }
+endef
+
 .PHONY: test
 test: test-go-unit integration-tests ## run all tests.
 
 .PHONY: integration-tests
+.ONESHELL:
 integration-tests: ## start dependencies and run integration tests.
-	hack/run-tests.sh integration
+	@$(cleanup-cluster); trap cleanup EXIT
+	@$(start-cluster)
+	YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-integration
 
+.PHONY: e2e-tests
+.ONESHELL:
 e2e-tests: ## start dependencies and run e2e tests.
-	hack/run-tests.sh e2e
+	@$(cleanup-cluster); trap cleanup EXIT
+	@$(start-cluster)
+	KIND_CLUSTER=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
+.ONESHELL:
 performance-tests: k6 ## start dependencies and run performance tests.
-	hack/run-tests.sh performance
+	@$(cleanup-cluster)
+	@stop_perf_cluster() {
+	    yhs_pid=`ps ax | grep 'yunikorn-history-server' | grep -v grep | awk '{print $$1}'`
+		if [ "$${yhs_pid}" != "" ] ; then
+		    echo "**********************************"
+		    echo "Terminating yunikorn-history-server"
+		    echo "**********************************"
+		    kill -TERM $${yhs_pid}
+		fi
+		cleanup
+	}; trap stop_perf_cluster EXIT
+	@$(start-cluster)
+	@echo "**********************************"
+	@echo "Run yunikorn history server"
+	@mkdir -p test-reports/performance
+	$(MAKE) clean build
+	bin/app/yunikorn-history-server \
+		--config config/yunikorn-history-server/local.yml > test-reports/performance/yhs.log & disown
+	YHS_SERVER=$${YHS_SERVER:-http://localhost:8989}
+	@echo "YHS_SERVER is $${YHS_SERVER}"
+	@echo "**********************************"
+	@echo "Waiting for yunikorn history server to start"
+	@echo "**********************************"
+	while true; do
+		echo "Sending request to yunikorn history server..."
+		URL="$${YHS_SERVER}/ws/v1/health/readiness"
+		http_status=`curl --write-out %{http_code} --silent --output /dev/null $${URL} || true`
+		if [ $$http_status -eq 200 ] ; then
+			echo "Yunikorn history server is up and running."
+			break
+		else
+			echo "Waiting for yunikorn history server to start..."
+			sleep 10
+		fi
+	done
+	echo "**********************************"
+	echo "Running performance tests"
+	echo "**********************************"
+	$(MAKE) test-k6-performance
 
 TEST_ARGS ?= --junitfile=test-reports/junit.xml --jsonfile=test-reports/report.json -- -coverprofile=test-reports/coverage.out -covermode=atomic
 
@@ -194,7 +268,7 @@ build: bin/app ## build the yunikorn-history-server binary for current OS and ar
 
 .PHONY: build-linux-amd64
 build-linux-amd64: ## build the yunikorn-history-server binary for linux/amd64.
-	OS=linux ARCH=amd64 make build
+	OS=linux ARCH=amd64 $(MAKE) build
 
 .PHONY: clean
 clean: ## remove generated build artifacts.
@@ -245,7 +319,7 @@ docker-build-tarball: docker-build ## build docker images and save them as tarba
 
 .PHONY: docker-build-amd64
 docker-build-amd64: ## build docker image for linux/amd64.
-	OS=linux ARCH=amd64 make docker-build
+	OS=linux ARCH=amd64 $(MAKE) docker-build
 
 .PHONY: copy-build-files
 copy-build-files: ## copy required build files to local bin directory.
