@@ -4,10 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
 	"github.com/G-Research/yunikorn-history-server/internal/health"
+	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
 	"github.com/G-Research/yunikorn-history-server/test/k8s"
+	"github.com/G-Research/yunikorn-history-server/test/util"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
@@ -16,31 +23,41 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
-	"net/http"
-	"os"
-	"testing"
-	"time"
 )
 
 const (
 	testNamespacePrefix = "yunikorn-e2e-"
+	serverURL           = "http://localhost:8989"
 )
+
+var ctx context.Context
+var cancel context.CancelFunc
+
+func TestMain(m *testing.M) {
+	// Setup
+	ctx, cancel = context.WithCancel(context.Background())
+	go runApp(ctx)
+
+	// Run the tests
+	code := m.Run()
+
+	// Teardown
+	cancel()
+	os.Exit(code)
+}
 
 func TestYunikornEventStream_E2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e test in short mode")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
 	ns := createTestNamespace(ctx, t, k8s.GetTestK8sClient(t))
 	t.Cleanup(func() {
 		deleteTestNamespace(context.Background(), t, k8s.GetTestK8sClient(t), ns)
 	})
-
-	serverURL := "http://localhost:8989"
-	go runApp(ctx)
 
 	assert.Eventually(t, func() bool {
 		healthy, err := getReadinessStatus(serverURL)
@@ -77,6 +94,69 @@ func TestYunikornEventStream_E2E(t *testing.T) {
 		diff := cmp.Diff(expectedCounts, counts)
 		return diff == ""
 	}, 100*time.Second, 5*time.Second)
+}
+
+func TestYunikornQueueCreation_E2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e test in short mode")
+	}
+	ns := "yunikorn"
+	queueName := util.GenerateRandomAlphanum(t, 8) + "test-queue"
+	configMap := testQueueConfigMap(queueName)
+
+	ctx, cancel = context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	t.Cleanup(func() {
+		k8sClient := k8s.GetTestK8sClient(t)
+		err := k8sClient.CoreV1().ConfigMaps(ns).Delete(ctx, configMap.Name, metav1.DeleteOptions{})
+		if err != nil {
+			t.Fatalf("error deleting configmap: %v", err)
+		}
+	})
+
+	assert.Eventually(t, func() bool {
+		healthy, err := getReadinessStatus(serverURL)
+		return healthy && err == nil
+	}, 10*time.Second, 500*time.Millisecond)
+
+	// sleep for 2 seconds just in case so all goroutines are ready
+	time.Sleep(2 * time.Second)
+
+	k8sClient := k8s.GetTestK8sClient(t)
+
+	// create the configmap which has the queue definition
+	_, err := k8sClient.CoreV1().ConfigMaps(ns).Create(ctx, configMap, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("error creating test queue: %v", err)
+	}
+
+	expectedCount := 5
+	assert.Eventually(t, func() bool {
+		counts, err := getEventStatistics(serverURL)
+		if err != nil {
+			return false
+		}
+		actualCount, ok := counts["QUEUE-ADD"]
+		return ok && actualCount == expectedCount
+	}, 100*time.Second, 5*time.Second)
+
+	assert.Eventually(t, func() bool {
+		queuesResponse, err := getQueues(serverURL)
+		if err != nil {
+			return false
+		}
+		for _, queue := range queuesResponse.Queues {
+			if queue.QueueName == "root" {
+				for _, childQueue := range queue.Children {
+					if childQueue.QueueName == "root."+queueName {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}, 400*time.Second, 5*time.Second)
 }
 
 // createTestNamespace creates a test namespace for the e2e test and returns the name of the namespace.
@@ -117,8 +197,16 @@ func getEventStatistics(serverURL string) (model.EventTypeCounts, error) {
 	if err := httpGet(url, &counts); err != nil {
 		return nil, err
 	}
-
 	return counts, nil
+}
+
+func getQueues(serverURL string) (webservice.QueuesResponse, error) {
+	var queues webservice.QueuesResponse
+	url := fmt.Sprintf("%s/ws/v1/partition/default/queues", serverURL)
+	if err := httpGet(url, &queues); err != nil {
+		return webservice.QueuesResponse{}, err
+	}
+	return queues, nil
 }
 
 // httpGet performs an HTTP GET request and decodes the response into the provided out parameter.
@@ -184,6 +272,24 @@ func testJob() *batchv1.Job {
 					},
 				},
 			},
+		},
+	}
+}
+
+func testQueueConfigMap(queue string) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "yunikorn-configs",
+		},
+		Data: map[string]string{
+			"queues.yaml": fmt.Sprintf(`
+partitions:
+  - name: default
+    queues:
+      - name: root
+        queues:
+          - name: %s
+`, queue),
 		},
 	}
 }
