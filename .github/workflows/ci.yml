@@ -88,6 +88,22 @@ jobs:
       - name: Run Go Unit Tests
         run: make test-go-unit
 
+  go-integration-tests:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
+    name: Go Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: ./.github/actions/setup-go
+        with:
+          cache-prefix: go-unit-tests
+
+      - name: Run Go Integration Tests
+        run: make integration-tests
+
   build:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
     name: Build (${{ matrix.os }}/${{ matrix.arch }})
@@ -146,6 +162,7 @@ jobs:
     needs:
       - go-lint
       - go-unit-tests
+      - go-integration-tests
       - build
     runs-on: ubuntu-latest
     steps:
