@@ -2,12 +2,14 @@ package yunikorn
 
 import (
 	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 
 	"github.com/G-Research/yunikorn-history-server/test/database"
 
@@ -54,7 +56,7 @@ func TestClient_sync_Integration(t *testing.T) {
 	c := NewRESTClient(config.GetTestYunikornConfig())
 	s := NewService(ctx, repo, eventRepository, c)
 
-	go s.Run(ctx)
+	go func() { _ = s.Run(ctx) }()
 
 	assert.Eventually(t, func() bool {
 		return s.workqueue.Started()

@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/google/go-cmp/cmp"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -233,7 +234,7 @@ func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Remove(tmpfile.Name()) })
+	t.Cleanup(func() { _ = os.Remove(tmpfile.Name()) })
 
 	// Write a test configuration to the temporary file
 	text := []byte(testConfig)
@@ -248,7 +249,7 @@ func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 	if err = os.Setenv("YHS_YUNIKORN_HOST", "example.com"); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Unsetenv("YHS_YUNIKORN_HOST") })
+	t.Cleanup(func() { _ = os.Unsetenv("YHS_YUNIKORN_HOST") })
 
 	// Load the configuration
 	k, err := loadConfig(tmpfile.Name())
@@ -269,7 +270,7 @@ func TestLoadConfig_FromFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Remove(tmpfile.Name()) })
+	t.Cleanup(func() { _ = os.Remove(tmpfile.Name()) })
 
 	// Write a test configuration to the temporary file
 	text := []byte(testConfig)
@@ -298,12 +299,12 @@ func TestLoadConfig_FromEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Unsetenv("YHS_YUNIKORN_PROTOCOL") })
+	t.Cleanup(func() { _ = os.Unsetenv("YHS_YUNIKORN_PROTOCOL") })
 	err = os.Setenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME", "120s")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Unsetenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME") })
+	t.Cleanup(func() { _ = os.Unsetenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME") })
 
 	k, err := loadConfig("")
 	if err != nil {

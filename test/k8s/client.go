@@ -2,12 +2,13 @@ package k8s
 
 import (
 	"errors"
+	"path/filepath"
+	"testing"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
-	"testing"
 )
 
 func GetTestK8sClient(t *testing.T) kubernetes.Interface {

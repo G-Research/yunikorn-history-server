@@ -1,8 +1,9 @@
 package commands
 
 import (
-	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 	"github.com/spf13/cobra"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/log"

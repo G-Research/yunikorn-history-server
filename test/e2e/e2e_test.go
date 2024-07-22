@@ -9,12 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/webservice"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
-	"github.com/G-Research/yunikorn-history-server/test/k8s"
-	"github.com/G-Research/yunikorn-history-server/test/util"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
@@ -23,6 +17,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
+
+	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
+	"github.com/G-Research/yunikorn-history-server/internal/health"
+	"github.com/G-Research/yunikorn-history-server/internal/webservice"
+	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/yunikorn-history-server/test/k8s"
+	"github.com/G-Research/yunikorn-history-server/test/util"
 )
 
 const (

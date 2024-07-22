@@ -2,11 +2,13 @@ package health
 
 import (
 	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
 	"github.com/G-Research/yunikorn-history-server/test/config"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewComponent_Integration(t *testing.T) {

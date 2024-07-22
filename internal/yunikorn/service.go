@@ -3,10 +3,12 @@ package yunikorn
 import (
 	"context"
 	"errors"
+	"time"
+
+	"github.com/oklog/run"
+
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
-	"github.com/oklog/run"
-	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 

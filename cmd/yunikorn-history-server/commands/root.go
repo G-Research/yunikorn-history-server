@@ -2,12 +2,15 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+
 	"github.com/G-Research/yunikorn-history-server/internal/health"
+
+	"fmt"
 	"os/signal"
 	"syscall"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 
 	"github.com/oklog/run"
 
