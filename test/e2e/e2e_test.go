@@ -43,8 +43,51 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Teardown
-	cancel()
+	defer cancel()
 	os.Exit(code)
+}
+
+func TestYunikornApp_E2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e test in short mode")
+	}
+	ctx, cancel = context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	ns := createTestNamespace(ctx, t, k8s.GetTestK8sClient(t))
+	t.Cleanup(func() {
+		deleteTestNamespace(context.Background(), t, k8s.GetTestK8sClient(t), ns)
+	})
+
+	assert.Eventually(t, func() bool {
+		healthy, err := getReadinessStatus(serverURL)
+		return healthy && err == nil
+	}, 10*time.Second, 500*time.Millisecond)
+
+	// sleep for 2 seconds just in case so all goroutines are ready
+	time.Sleep(2 * time.Second)
+
+	k8sClient := k8s.GetTestK8sClient(t)
+	appID := "yunikorn-app-test-pod"
+
+	_, err := k8sClient.CoreV1().Pods(ns).Create(ctx, testApp(appID), metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("error creating test app: %v", err)
+	}
+	assert.Eventually(t, func() bool {
+		appsResponse, err := getApps(serverURL, ns)
+		if err != nil {
+			return false
+		}
+		for _, app := range appsResponse.Apps {
+			fmt.Println(app.ApplicationID)
+			if app.ApplicationID == appID {
+				return true
+			}
+		}
+		return false
+	}, 400*time.Second, 5*time.Second)
+
 }
 
 func TestYunikornEventStream_E2E(t *testing.T) {
@@ -158,49 +201,6 @@ func TestYunikornQueueCreation_E2E(t *testing.T) {
 		}
 		return false
 	}, 400*time.Second, 5*time.Second)
-}
-
-func TestYunikornApp_E2E(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
-	}
-	ctx, cancel = context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-
-	ns := createTestNamespace(ctx, t, k8s.GetTestK8sClient(t))
-	t.Cleanup(func() {
-		deleteTestNamespace(context.Background(), t, k8s.GetTestK8sClient(t), ns)
-	})
-
-	assert.Eventually(t, func() bool {
-		healthy, err := getReadinessStatus(serverURL)
-		return healthy && err == nil
-	}, 10*time.Second, 500*time.Millisecond)
-
-	// sleep for 2 seconds just in case so all goroutines are ready
-	time.Sleep(2 * time.Second)
-
-	k8sClient := k8s.GetTestK8sClient(t)
-	appID := "yunikorn-app-test-pod"
-
-	_, err := k8sClient.CoreV1().Pods(ns).Create(ctx, testApp(appID), metav1.CreateOptions{})
-	if err != nil {
-		t.Fatalf("error creating test app: %v", err)
-	}
-	assert.Eventually(t, func() bool {
-		appsResponse, err := getApps(serverURL, ns)
-		if err != nil {
-			return false
-		}
-		for _, app := range appsResponse.Apps {
-			fmt.Println(app.ApplicationID)
-			if app.ApplicationID == appID {
-				return true
-			}
-		}
-		return false
-	}, 400*time.Second, 5*time.Second)
-
 }
 
 // createTestNamespace creates a test namespace for the e2e test and returns the name of the namespace.
