@@ -9,7 +9,7 @@
 {{- $dbPoolMinConns := .Values.db.poolMinConns | required "A valid .db.poolMinConns is required!" -}}
 {{- $dbPoolMaxConnLifetime := .Values.db.poolMaxConnLifetime | required "A valid .db.poolMaxConnLifetime is required!" -}}
 {{- $dbPoolMaxConnIdleTime := .Values.db.poolMaxConnIdleTime | required "A valid .db.poolMaxConnIdleTime is required!" -}}
-{{- $yhsServerAddr := .Values.yhsServerAddr | required "A valid .yhsServerAddr is required!" -}}
+{{- $yhsPort := .Values.yhs.port | required "A valid .yhs.port is required!" -}}
 {{- $logJSONFormat := .Values.log.jsonFormat | required "A valid .log.jsonFormat is required!" -}}
 {{- $logLevel := .Values.log.level | required "A valid .log.level is required!" -}}
 
@@ -19,21 +19,30 @@ metadata:
   name: {{ include "yunikorn-history-server.fullname" . }}
   labels:
     {{- include "yunikorn-history-server.labels" . | nindent 4 }}
-    {{- with .Values.common.labels }}
+    {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.global.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
-  YHS_YUNIKORN_HOST: "{{ $yunikornHost }}"
-  YHS_YUNIKORN_PORT: "{{ $yunikornPort }}"
-  YHS_YUNIKORN_PROTOCOL: "{{ $yunikornProtocol }}"
-  YHS_DB_HOST: "{{ $dbHost }}"
-  YHS_DB_PORT: "{{ $dbPort }}"
-  YHS_DB_NAME: "{{ $dbName }}"
-  YHS_DB_USER: "{{ $dbUser }}"
-  YHS_DB_POOL_MAX_CONNS: "{{ $dbPoolMaxConns }}"
-  YHS_DB_POOL_MIN_CONNS: "{{ $dbPoolMinConns }}"
-  YHS_DB_POOL_MAX_CONN_LIFETIME: "{{ $dbPoolMaxConnLifetime }}"
-  YHS_DB_POOL_MAX_CONN_IDLE_TIME: "{{ $dbPoolMaxConnIdleTime }}"
-  YHS_YHS_SERVER_ADDR: "{{ $yhsServerAddr }}"
-  YHS_LOG_JSON_FORMAT: "{{ $logJSONFormat }}"
-  YHS_LOG_LEVEL: "{{ $logLevel }}"
+  config.yaml: |
+    yunikorn:
+      host: "{{ $yunikornHost }}"
+      port: {{ $yunikornPort }}
+      secure: {{ $yunikornProtocol }}
+    db:
+      host: "{{ $dbHost }}"
+      port: {{ $dbPort }}
+      dbname: "{{ $dbName }}"
+      user: "{{ $dbUser }}"
+      pool_max_conns: {{ $dbPoolMaxConns }}
+      pool_min_conns: {{ $dbPoolMinConns }}
+      pool_max_conn_lifetime: {{ $dbPoolMaxConnLifetime }}
+      pool_max_conn_idle_time: {{ $dbPoolMaxConnIdleTime }}
+    yhs:
+      server_addr: ":{{ $yhsPort }}"
+    log:
+      json_format: {{ $logJSONFormat }}
+      level: "{{ $logLevel }}"
