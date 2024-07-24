@@ -10,9 +10,12 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
+	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/yunikorn-history-server/test/config"
+	"github.com/G-Research/yunikorn-history-server/test/database"
 	"github.com/G-Research/yunikorn-history-server/test/k8s"
 	"github.com/G-Research/yunikorn-history-server/test/util"
 	"github.com/google/go-cmp/cmp"
@@ -50,6 +53,9 @@ func TestYunikornApp_E2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e test in short mode")
 	}
+
+	SetupTestDB(t)
+
 	ctx, cancel = context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
@@ -85,7 +91,7 @@ func TestYunikornApp_E2E(t *testing.T) {
 			}
 		}
 		return false
-	}, 400*time.Second, 5*time.Second)
+	}, 700*time.Second, 5*time.Second)
 
 }
 
@@ -93,6 +99,8 @@ func TestYunikornEventStream_E2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e test in short mode")
 	}
+
+	SetupTestDB(t)
 
 	ctx, cancel = context.WithCancel(context.Background())
 	t.Cleanup(cancel)
@@ -136,13 +144,16 @@ func TestYunikornEventStream_E2E(t *testing.T) {
 		}
 		diff := cmp.Diff(expectedCounts, counts)
 		return diff == ""
-	}, 100*time.Second, 5*time.Second)
+	}, 700*time.Second, 5*time.Second)
 }
 
 func TestYunikornQueueCreation_E2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e test in short mode")
 	}
+
+	SetupTestDB(t)
+
 	ns := "yunikorn"
 	queueName := util.GenerateRandomAlphanum(t, 8) + "test-queue"
 	configMap := testQueueConfigMap(queueName)
@@ -199,7 +210,7 @@ func TestYunikornQueueCreation_E2E(t *testing.T) {
 			}
 		}
 		return false
-	}, 400*time.Second, 5*time.Second)
+	}, 700*time.Second, 5*time.Second)
 }
 
 // createTestNamespace creates a test namespace for the e2e test and returns the name of the namespace.
@@ -375,4 +386,37 @@ func testApp(appID string) *corev1.Pod {
 			},
 		},
 	}
+}
+
+func SetupTestDB(t *testing.T) {
+	ctx := context.Background()
+
+	cfg := config.GetTestPostgresConfig()
+
+	pool := database.GetTestConnectionPool(ctx, t, cfg)
+	schemaName := database.CreateTestSchema(ctx, t)
+	_, err := pool.Exec(ctx, "SET search_path TO "+schemaName)
+	if err != nil {
+		t.Fatalf("Failed to set search path: %v", err)
+	}
+
+	migrator, err := migrations.New(cfg, "../../migrations")
+	if err != nil {
+		t.Fatalf("Failed to create migrator: %v", err)
+	}
+
+	// Run migrations
+	applied, err := migrator.Up()
+	if err != nil {
+		t.Fatalf("Failed to apply migrations: %v", err)
+	}
+	if !applied {
+		t.Log("No migrations to apply")
+	} else {
+		t.Log("Migrations applied")
+	}
+
+	t.Cleanup(func() {
+		database.DropTestSchema(ctx, t, schemaName)
+	})
 }

@@ -171,7 +171,7 @@ define start-cluster
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
 	@echo "**********************************"
-	$(MAKE) install-dependencies migrate-up
+	$(MAKE) install-dependencies
 endef
 
 define cleanup-cluster
