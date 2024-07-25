@@ -32,14 +32,10 @@ module.exports = {
         name: "yhsComponents",
         filename: "remoteEntry.js",
         exposes: {
-            './Component': './/src/app/yhs-hello-world/yhs-hello-world.module.ts',
-            './TestComponent': './/src/app/test/test.module.ts',
-        },        
-        
-        // For hosts (please adjust)
-        // remotes: {
-            // "mfe1": "http://localhost:3000/remoteEntry.js",
-        // },
+            './HelloWorldModule': './/src/app/yhs-hello-world/yhs-hello-world.module.ts',
+            './TestModule': './/src/app/test/test.module.ts',
+            './TestComponent': './/src/app/test/test.component.ts',
+        },
 
         shared: share({
           "@angular/core": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
@@ -47,7 +43,7 @@ module.exports = {
           "@angular/common/http": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
           "@angular/router": { singleton: true, strictVersion: true, requiredVersion: 'auto' },
 
-          ...sharedMappings.getDescriptors()
+          ...sharedMappings.getDescriptors(),
         })
         
     }),
