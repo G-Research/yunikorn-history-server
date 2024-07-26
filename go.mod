@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/apache/yunikorn-core v1.5.1
-	github.com/apache/yunikorn-scheduler-interface v1.5.1
+	github.com/apache/yunikorn-scheduler-interface v1.5.2
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
