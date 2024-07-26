@@ -2,10 +2,10 @@ github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
-github.com/apache/yunikorn-core v1.5.1 h1:+aiuCyju+f1ooeCd+9GLKi2ccU0y5U2FvSIaIOAFj4Q=
-github.com/apache/yunikorn-core v1.5.1/go.mod h1:49Kd4+44XRAWVdXzhtphnH6ctf5NthrHfRElSZNIiJo=
-github.com/apache/yunikorn-scheduler-interface v1.5.1 h1:TxUqi0QVGV0uUXDLXIqNBt/DSHyQEpW98lwVq0bpnII=
-github.com/apache/yunikorn-scheduler-interface v1.5.1/go.mod h1:gk3BtbzoUH7T5lhNoLxp/8g9pw25S1/d7NbiypV/30Q=
+github.com/apache/yunikorn-core v1.5.2 h1:I71p6pfvRe5JLqvr5ORhorXV72r7aPgEX2wkC2foWpI=
+github.com/apache/yunikorn-core v1.5.2/go.mod h1:AacQklgeS5zF5B3fXtwYiQvwp3cEXIQyrF1K0tDH8HM=
+github.com/apache/yunikorn-scheduler-interface v1.5.2-1 h1:wf0rrrY7MZJE2g3/Z1tiCbOi8XBk3jBaid1uUliqaZk=
+github.com/apache/yunikorn-scheduler-interface v1.5.2-1/go.mod h1:gk3BtbzoUH7T5lhNoLxp/8g9pw25S1/d7NbiypV/30Q=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
