@@ -36,6 +36,7 @@ module.exports = {
             './TestModule': './/src/app/test/test.module.ts',
             './TestComponent': './/src/app/test/test.component.ts',
             './AllocationsDrawerComponent': './/src/app/allocations-drawer-with-logs/allocations-drawer-with-logs.component.ts',
+            './AllocationsDrawerModule': './/src/app/allocations-drawer-with-logs/allocations-drawer-with-logs.module.ts',
         },
 
         shared: share({
