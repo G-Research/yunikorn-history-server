@@ -10,7 +10,7 @@ import (
 )
 
 func (s *PostgresRepository) GetResourceUsage(ctx context.Context, partition string) ([]*dao.UserResourceUsageDAOInfo, error) {
-	appQuery := `SELECT user, groups, queue_name FROM applications WHERE partition = $1`
+	appQuery := `SELECT distinct user, groups FROM applications WHERE partition = $1`
 	rows, err := s.dbpool.Query(ctx, appQuery, partition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
@@ -19,24 +19,39 @@ func (s *PostgresRepository) GetResourceUsage(ctx context.Context, partition str
 
 	var userResourceUsages []*dao.UserResourceUsageDAOInfo
 	for rows.Next() {
-		var user, queueName string
+		var user string
 		var groups []string
-		err = rows.Scan(&user, &groups, &queueName)
+		err = rows.Scan(&user, &groups)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan applications from DB: %v", err)
 		}
 
-		ru, err := s.getResourceUsageByQueue(ctx, queueName)
+		// get all queues for the user
+		queuesQuery := `SELECT distinct queue_name FROM applications WHERE partition = $1 AND user = $2`
+		queuesRows, err := s.dbpool.Query(ctx, queuesQuery, partition, user)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not get queues from DB: %v", err)
 		}
+		defer queuesRows.Close()
 
-		userResourceUsages = append(userResourceUsages, &dao.UserResourceUsageDAOInfo{
-			UserName: user,
-			Groups:   convertGroupsToMap(groups),
-			Queues:   ru,
-		})
+		var queueName string
+		for queuesRows.Next() {
+			err = queuesRows.Scan(&queueName)
+			if err != nil {
+				return nil, fmt.Errorf("could not scan queues from DB: %v", err)
+			}
 
+			ru, err := s.getResourceUsageByQueue(ctx, queueName)
+			if err != nil {
+				return nil, err
+			}
+
+			userResourceUsages = append(userResourceUsages, &dao.UserResourceUsageDAOInfo{
+				UserName: user,
+				Groups:   convertGroupsToMap(groups),
+				Queues:   ru,
+			})
+		}
 	}
 	return userResourceUsages, nil
 
