@@ -3,11 +3,12 @@ package webservice
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	repository2 "github.com/G-Research/yunikorn-history-server/internal/database/repository"
 	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"net/http"
-	"time"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
@@ -20,7 +21,12 @@ type WebService struct {
 	assetsDir       string
 }
 
-func NewWebService(cfg *config.YHSConfig, repository repository2.Repository, eventRepository repository2.EventRepository, healthService health.Interface) *WebService {
+func NewWebService(
+	cfg *config.YHSConfig,
+	repository repository2.Repository,
+	eventRepository repository2.EventRepository,
+	healthService health.Interface,
+) *WebService {
 	return &WebService{
 		server: &http.Server{
 			Addr:        fmt.Sprintf(":%d", cfg.Port),

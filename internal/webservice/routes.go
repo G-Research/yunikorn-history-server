@@ -2,10 +2,12 @@ package webservice
 
 import (
 	"context"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
+
+	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 const (
