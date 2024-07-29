@@ -7,7 +7,6 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-
 )
 
 const (
