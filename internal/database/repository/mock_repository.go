@@ -176,6 +176,21 @@ func (mr *MockRepositoryMockRecorder) GetQueuesPerPartition(arg0, arg1 any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueuesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetQueuesPerPartition), arg0, arg1)
 }
 
+// GetResourceUsage mocks base method.
+func (m *MockRepository) GetResourceUsage(arg0 context.Context, arg1 string) ([]*dao.UserResourceUsageDAOInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetResourceUsage", arg0, arg1)
+	ret0, _ := ret[0].([]*dao.UserResourceUsageDAOInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetResourceUsage indicates an expected call of GetResourceUsage.
+func (mr *MockRepositoryMockRecorder) GetResourceUsage(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResourceUsage", reflect.TypeOf((*MockRepository)(nil).GetResourceUsage), arg0, arg1)
+}
+
 // InsertNodeUtilizations mocks base method.
 func (m *MockRepository) InsertNodeUtilizations(arg0 context.Context, arg1 uuid.UUID, arg2 []*dao.PartitionNodesUtilDAOInfo) error {
 	m.ctrl.T.Helper()
