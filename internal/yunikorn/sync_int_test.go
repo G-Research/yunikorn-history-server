@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
+
 	"github.com/stretchr/testify/assert"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 
