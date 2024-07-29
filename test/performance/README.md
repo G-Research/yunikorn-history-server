@@ -13,10 +13,12 @@ different components of the Yunikorn History Server.
 it in the database. This test is used to test the
 performance of the event handler when multiple events are generated in the cluster.
 
-## Running the Tests
-
-1. Run the tests using the `performance-tests` target in the Makefile.
+### Running the Tests
+Run the tests using the `performance-tests` target in the Makefile.
 
 ```bash
 make performance-tests
 ```
+
+### Reports
+Reports are generated in the [test-reports/performance](`test-reports/performance`) directory. The reports are generated in the form of `json` and `html` files.
