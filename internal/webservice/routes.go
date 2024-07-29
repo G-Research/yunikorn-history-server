@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
-
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+
 )
 
 const (
@@ -25,6 +25,7 @@ const (
 	routeEventStatistics          = "/ws/v1/event-statistics"
 	routeHealthLiveness           = "/ws/v1/health/liveness"
 	routeHealthReadiness          = "/ws/v1/health/readiness"
+	routeResourceUsage            = "/ws/v1/partition/:partition_name/usage/users"
 
 	// params
 
@@ -77,6 +78,10 @@ func (ws *WebService) initRoutes(ctx context.Context) {
 		enrichRequestContext(ctx, r)
 		ws.ReadinessHealthcheck(w, r)
 	})
+	router.Handle(http.MethodGet, routeResourceUsage, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		enrichRequestContext(ctx, r)
+		ws.getResourceUsage(w, r, p)
+	})
 
 	ws.server.Handler = router
 }
@@ -90,7 +95,6 @@ func enrichRequestContext(ctx context.Context, r *http.Request) {
 }
 
 func (ws *WebService) getPartitions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	r.URL.Query().Get("test")
 	partitions, err := ws.repository.GetAllPartitions(r.Context())
 	if err != nil {
 		errorResponse(w, r, err)
@@ -179,4 +183,14 @@ func (ws *WebService) LivenessHealthcheck(w http.ResponseWriter, r *http.Request
 
 func (ws *WebService) ReadinessHealthcheck(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, ws.healthService.Readiness(r.Context()))
+}
+
+func (ws *WebService) getResourceUsage(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	partition := params.ByName(paramsPartitionName)
+	resourceUsage, err := ws.repository.GetResourceUsage(r.Context(), partition)
+	if err != nil {
+		errorResponse(w, r, err)
+		return
+	}
+	jsonResponse(w, resourceUsage)
 }
