@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+import { Component, EventEmitter, Injectable, Input, OnInit, Output, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatDrawer } from "@angular/material/sidenav";
 import { MatSort } from "@angular/material/sort";
@@ -26,6 +26,7 @@ import { AppInfo } from "@app/models/app-info.model";
 import { ColumnDef } from "@app/models/column-def.model";
 import { CommonUtil } from "@app/utils/common.util";
 
+@Injectable()
 @Component({
   selector: "app-allocations-drawer-with-logs",
   templateUrl: "./allocations-drawer-with-logs.component.html",

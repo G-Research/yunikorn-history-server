@@ -44,6 +44,12 @@ module.exports = {
           "@angular/common": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
           "@angular/common/http": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
           "@angular/router": { singleton: true, strictVersion: true, requiredVersion: 'auto' },
+          "@angular/material/paginator": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/sidenav": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/sort":  {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/table": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/tooltip": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/platform-browser": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
 
           ...sharedMappings.getDescriptors(),
         })
