@@ -256,8 +256,7 @@ test-go-e2e: gotestsum ## run go e2e tests.
 	$(GOTESTSUM) $(TEST_ARGS) ./test/e2e/... -run E2E
 
 test-k6-performance: ## run k6 performance tests.
-	touch test-reports/performance/report.json
-	$(K6) run -e NAMESPACE=$(NAMESPACE) test/performance/*_test.js --out json=test-reports/performance/report.json
+	K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=test-reports/performance/report.html $(K6) run -e NAMESPACE=$(NAMESPACE) --out json=test-reports/performance/report.json test/performance/*_test.js
 
 ##@ Build
 
@@ -448,3 +447,7 @@ $(XK6): bin/tooling
 k6: xk6 $(K6) ## Download k6 locally if necessary.
 $(K6): bin/tooling
 	test -s $(K6) || $(XK6) build $(K6_VERSION) --with github.com/grafana/xk6-kubernetes --output $(K6)
+
+.PHONY: web-build
+web-build: ## Build the web components
+	npm run build --prefix web

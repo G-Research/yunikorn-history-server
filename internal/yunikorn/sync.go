@@ -3,10 +3,11 @@ package yunikorn
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
-	"sync"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/uuid"

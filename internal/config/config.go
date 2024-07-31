@@ -31,6 +31,18 @@ type YHSConfig struct {
 	AssetsDir string
 }
 
+func (c *YHSConfig) Validate() error {
+	var errorMessages []string
+	if c.Port < 1 {
+		errorMessages = append(errorMessages, "yhs config validation error: port is required")
+	}
+	if len(errorMessages) > 0 {
+		return fmt.Errorf("yhs config validation errors: %v", errorMessages)
+	}
+	return nil
+
+}
+
 type PostgresConfig struct {
 	Host                string
 	DbName              string
@@ -45,12 +57,49 @@ type PostgresConfig struct {
 	Schema              string
 }
 
+func (c *PostgresConfig) Validate() error {
+	var errorMessages []string
+	if c.Host == "" {
+		errorMessages = append(errorMessages, "db host is required")
+	}
+	if c.DbName == "" {
+		errorMessages = append(errorMessages, "db name is required")
+	}
+	if c.Username == "" {
+		errorMessages = append(errorMessages, "db user is required")
+	}
+	if c.Password == "" {
+		errorMessages = append(errorMessages, "db password is required")
+	}
+	if c.Port < 1 {
+		errorMessages = append(errorMessages, "db port is required")
+	}
+	if len(errorMessages) > 0 {
+		return fmt.Errorf("postgres config validation errors: %v", errorMessages)
+	}
+	return nil
+}
+
 // YunikornConfig specifies the configuration for the Yunikorn API.
 type YunikornConfig struct {
 	Host string
 	Port int
 	// Secure indicates whether the connection to the Yunikorn API is using encryption or not.
 	Secure bool
+}
+
+func (c *YunikornConfig) Validate() error {
+	var errorMessages []string
+	if c.Host == "" {
+		errorMessages = append(errorMessages, "yunikorn host is required")
+	}
+	if c.Port < 1 {
+		errorMessages = append(errorMessages, "yunikorn port is required")
+	}
+	if len(errorMessages) > 0 {
+		return fmt.Errorf("yunikorn config validation errors: %v", errorMessages)
+	}
+	return nil
 }
 
 type LogConfig struct {
@@ -73,6 +122,9 @@ func New(path string) (*Config, error) {
 	yhsConfig := YHSConfig{
 		Port:      k.Int("yhs.port"),
 		AssetsDir: assetsDir,
+	}
+	if err := yhsConfig.Validate(); err != nil {
+		return nil, err
 	}
 
 	yunikornConfig := YunikornConfig{

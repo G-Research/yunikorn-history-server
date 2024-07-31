@@ -3,11 +3,13 @@ package workqueue
 import (
 	"context"
 	"errors"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/google/uuid"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 var ErrNotStarted = errors.New("workqueue not started")
@@ -210,12 +212,10 @@ func (w *WorkQueue) executeWithRetry(ctx context.Context, item *item) {
 			} else if backoff < maxBackoff {
 				backoff *= 2
 			}
-			if err != nil {
-				logger.Errorw(
-					"workqueue failed to process job, retrying after exponential backoff...",
-					"error", err, "retryCount", retries, "backoff", backoff.String(),
-				)
-			}
+			logger.Errorw(
+				"workqueue failed to process job, retrying after exponential backoff...",
+				"error", err, "retryCount", retries, "backoff", backoff.String(),
+			)
 			retries++
 		}
 	}

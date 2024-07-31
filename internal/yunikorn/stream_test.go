@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 	"io"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 
 	"go.uber.org/mock/gomock"
 
@@ -31,7 +32,7 @@ func TestFetchEventStream(t *testing.T) {
 
 			// Write events to the writer in a separate goroutine
 			go func() {
-				defer writer.Close()
+				defer func() { _ = writer.Close() }()
 				time.Sleep(50 * time.Millisecond) // Simulate streaming delay
 				events := []*si.EventRecord{
 					{Type: si.EventRecord_APP, EventChangeType: si.EventRecord_ADD},

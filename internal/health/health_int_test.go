@@ -2,13 +2,15 @@ package health
 
 import (
 	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
 	testconfig "github.com/G-Research/yunikorn-history-server/test/config"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestService_Readiness_Integration(t *testing.T) {

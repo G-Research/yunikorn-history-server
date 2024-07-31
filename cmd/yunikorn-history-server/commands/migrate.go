@@ -1,8 +1,9 @@
 package commands
 
 import (
-	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 	"github.com/spf13/cobra"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
@@ -16,10 +17,6 @@ var migrateCmd = &cobra.Command{
 	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	ValidArgs: []string{"up", "down"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := validate(); err != nil {
-			return err
-		}
-
 		cfg, err := config.New(ConfigFile)
 		if err != nil {
 			return err

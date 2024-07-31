@@ -2,8 +2,10 @@ package health
 
 import (
 	"context"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
+
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
 )
 
 type ComponentStatus struct {

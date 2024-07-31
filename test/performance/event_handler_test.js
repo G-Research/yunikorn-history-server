@@ -1,58 +1,82 @@
-import { Kubernetes } from 'k6/x/kubernetes';
+import { sleep } from 'k6';
 import http from 'k6/http';
-import { Trend } from 'k6/metrics';
+import { Counter } from 'k6/metrics';
+import { Kubernetes } from 'k6/x/kubernetes';
 
-let podsSubmitted = new Trend('pods_submitted');
-let eventsProcessed = new Trend('events_processed');
+const jobCounter = new Counter('job_counter');
+const jobErrorCounter = new Counter('job_error_counter');
+const appAddCounter = new Counter('app_add_counter');
 
 const namespace = __ENV.NAMESPACE || 'default';
 const yhsServer = __ENV.YHS_SERVER || 'http://localhost:8989';
 
-const podTemplate = {
-    apiVersion: 'v1',
-    kind: 'Pod',
+const EVENT_STATISTICS_PATH = '/ws/v1/event-statistics';
+const jobTemplate = {
+    apiVersion: 'batch/v1',
+    kind: 'Job',
     metadata: {
-        generateName: 'test-pod-',
-        labels: {
-            app: 'performance-by-k6'
-        },
-        namespace: namespace
+        generateName: 'batch-sleep-job-',
+        namespace: namespace,
     },
     spec: {
-        containers: [
-            {
-                name: 'test-container',
-                image: 'nginx:latest',
-                ports: [{ containerPort: 80 }]
-            }
-        ]
-    }
+        ttlSecondsAfterFinished: 15,
+        template: {
+            metadata: {
+                labels: {
+                    app: 'sleep',
+                    applicationId: 'batch-sleep-job-1',
+                    queue: 'root.sandbox',
+                },
+            },
+            spec: {
+                schedulerName: 'yunikorn',
+                restartPolicy: 'Never',
+                containers: [{
+                    name: 'sleep',
+                    image: 'alpine:latest',
+                    command: ['sleep', '10'],
+                }],
+            },
+        },
+    },
 };
 
+// Function to create a Job in Kubernetes
+function createJob(kubernetes) {
+    try {
+        kubernetes.create(jobTemplate);
+        jobCounter.add(1);
+    } catch (error) {
+        jobErrorCounter.add(1);
+        console.error(`Failed to create job: ${error}`);
+    }
+}
+
+// Function to get statistics from YHS server
+function getStats() {
+    const res = http.get(`${yhsServer}${EVENT_STATISTICS_PATH}`);
+    if (res.status !== 200) {
+        console.error(`Failed to fetch statistics: ${res.status} ${res.statusText}`);
+        return null;
+    }
+    return JSON.parse(res.body);
+}
+
+// Test setup
 export const options = {
     stages: [
-        { duration: '5s', target: 5 },
-        { duration: '5s', target: 5 },
-        { duration: '5s', target: 0 },
+        { duration: '120s', target: 100 },
+        { duration: '360s', target: 350 },
+        { duration: '120s', target: 0 },
     ],
 };
 
-const getStat = () => {
-    const res = http.get(`${yhsServer}/ws/v1/event-statistics`);
-    return JSON.parse(res.body);
-};
-
+// Test execution
 export default function () {
     const kubernetes = new Kubernetes();
-    try {
-        kubernetes.create(podTemplate);
-    } catch (error) {
-        console.log(`Failed to create pod: ${error}`);
-    }
-    const json = getStat();
-    const eventProcessedByYHS = json["APP-ADD"]
-    const pods = kubernetes.list("Pod", namespace);
-    // Add the number of pods submitted and the number of events processed to the metrics
-    podsSubmitted.add(pods.length);
-    eventsProcessed.add(eventProcessedByYHS);
+    createJob(kubernetes);
+    sleep(5)
+    const stat = getStats();
+    appAddCounter.add(stat["APP-ADD"])
+    sleep(5)
 }
