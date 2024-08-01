@@ -1,0 +1,23 @@
+{{- $serviceType := .Values.service.type | required "A valid .Values.service.type is required!" -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "yunikorn-history-server.fullname" . }}
+  labels:
+    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
+    {{- with .Values.global.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.global.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      name: http
+  selector:
+    {{- include "yunikorn-history-server.selectorLabels" . | nindent 4 }}

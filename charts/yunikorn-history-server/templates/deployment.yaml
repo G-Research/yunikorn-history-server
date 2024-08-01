@@ -16,9 +16,13 @@ metadata:
   name: {{ include "yunikorn-history-server.fullname" . }}
   labels:
     {{- include "yunikorn-history-server.labels" . | nindent 4 }}
-    {{- with .Values.common.labels }}
+    {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.global.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ $replicaCount }}
   selector:
@@ -28,7 +32,7 @@ spec:
     metadata:
       labels:
         {{- include "yunikorn-history-server.labels" . | nindent 8 }}
-        {{- with .Values.common.labels }}
+        {{- with .Values.global.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
@@ -36,9 +40,12 @@ spec:
         - name: "yunikorn-history-server"
           image: "{{ $imageRegistry }}/{{ $imageRepository }}:{{ $imageTag }}"
           imagePullPolicy: "{{ $imagePullPolicy }}"
-          envFrom:
-            - configMapRef:
-                name: {{ include "yunikorn-history-server.fullname" . }}
+          args:
+            - "--config"
+            - "/app/config/config.yaml"
+          volumeMounts:
+            - mountPath: /app/config
+              name: config
           env:
             - name: YHS_DB_PASSWORD
               {{- if $passwordSecretRef }}
@@ -49,3 +56,11 @@ spec:
               {{- else }}
               value: {{ $dbPassword | quote }}
               {{- end }}
+          ports:
+            - containerPort: {{ .Values.yhs.port }}
+              name: http
+              protocol: TCP
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "yunikorn-history-server.fullname" . }}

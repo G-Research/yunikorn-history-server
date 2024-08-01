@@ -1,11 +1,11 @@
 # -- Number of replicas for the deployment
 replicaCount: 1
-# -- YHS server address
-yhsServerAddr: ":8989"
 
-common:
+global:
   # -- Labels to add to all deployed resources
   labels: {}
+  # -- Annotations to add to all deployed resources
+  annotations: {}
 
 image:
   # -- Docker registry
@@ -13,7 +13,7 @@ image:
   # -- Docker image repository
   repository: "gresearch/yunikorn-history-server"
   # -- Docker image tag
-  tag: "latest"
+  tag: "main"
   # -- Docker image pull policy
   pullPolicy: "IfNotPresent"
 
@@ -23,19 +23,23 @@ service:
   # -- Service port
   port: 8989
   # -- Service target port
-  targetPort: 8989
+  targetPort: http
+
+yhs:
+  # -- YHS port
+  port: 8989
 
 db:
   # -- YHS database host
-  host: ""
+  host: "postgresql"
   # -- YHS database port
-  port: ""
+  port: "5432"
   # -- YHS database name
-  name: ""
+  name: "postgres"
   # -- YHS database user
-  user: ""
+  user: "postgres"
   # -- YHS database password (insecure, use secrets)
-  password: ""
+  password: "psw"
   # -- YHS database password secret reference
   passwordSecretRef: ""
   # -- Maximum number of connections in the database pool
@@ -49,9 +53,9 @@ db:
 
 yunikorn:
   # -- Yunikorn scheduler host
-  host: ""
+  host: "yunikorn-service"
   # -- Yunikorn scheduler port
-  port: ""
+  port: "9889"
   # -- Yunikorn scheduler protocol
   protocol: "http"
 
