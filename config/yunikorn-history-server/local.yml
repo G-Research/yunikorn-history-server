@@ -16,6 +16,7 @@ db:
 
 yhs:
   port: 8989
+  data_sync_interval: 20s
 
 log:
   level: "INFO"

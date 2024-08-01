@@ -29,7 +29,15 @@ type Service struct {
 	workqueue *workqueue.WorkQueue
 }
 
-func NewService(ctx context.Context, repository repository.Repository, eventRepository repository.EventRepository, client Client) *Service {
+type Option func(*Service)
+
+func WithSyncInterval(interval time.Duration) Option {
+	return func(s *Service) {
+		s.syncInterval = interval
+	}
+}
+
+func NewService(repository repository.Repository, eventRepository repository.EventRepository, client Client, opts ...Option) *Service {
 	s := &Service{
 		repo:            repository,
 		eventRepository: eventRepository,
@@ -39,6 +47,9 @@ func NewService(ctx context.Context, repository repository.Repository, eventRepo
 		workqueue:       workqueue.NewWorkQueue(workqueue.WithName("yunikorn_data_sync")),
 	}
 	s.eventHandler = s.handleEvent
+	for _, opt := range opts {
+		opt(s)
+	}
 
 	return s
 }
