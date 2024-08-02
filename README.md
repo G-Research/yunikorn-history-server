@@ -50,7 +50,9 @@ The Yunikorn History Server (YHS) is a standalone service that enhances the capa
 Yunikorn Scheduler by providing long-term persistence of cluster operational data.
 It achieves this by listening for events from the Yunikorn Scheduler and persisting them to a database.
 
-<div style="text-align:center"><img src="yhs-architecture.png" height="250"></div>
+<p align="center">
+  <img src="yhs-architecture.png" height="300">
+</p>
 
 YHS is composed of three main components:
 
