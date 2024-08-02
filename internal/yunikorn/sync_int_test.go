@@ -54,7 +54,7 @@ func TestClient_sync_Integration(t *testing.T) {
 	eventRepository := repository.NewInMemoryEventRepository()
 
 	c := NewRESTClient(config.GetTestYunikornConfig())
-	s := NewService(ctx, repo, eventRepository, c)
+	s := NewService(repo, eventRepository, c)
 
 	go func() { _ = s.Run(ctx) }()
 
