@@ -6,11 +6,11 @@ import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { BrowserModule } from "@angular/platform-browser";
-import { AllocationsDrawerWithLogsComponent } from "./allocations-drawer-with-logs.component";
+import { AllocationsDrawerComponent } from "./allocations-drawer.component";
 
 @NgModule({
-  declarations: [AllocationsDrawerWithLogsComponent],
+  declarations: [AllocationsDrawerComponent],
   imports: [CommonModule, MatSortModule, MatSidenavModule, MatPaginatorModule, MatTableModule, MatTooltipModule, BrowserModule],
-  exports: [AllocationsDrawerWithLogsComponent],
+  exports: [AllocationsDrawerComponent],
 })
-export class AllocationsDrawerWithLogsModule {}
+export class AllocationsDrawerModule {}

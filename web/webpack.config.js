@@ -32,11 +32,8 @@ module.exports = {
         name: "yhsComponents",
         filename: "remoteEntry.js",
         exposes: {
-            './HelloWorldModule': './/src/app/yhs-hello-world/yhs-hello-world.module.ts',
-            './TestModule': './/src/app/test/test.module.ts',
-            './TestComponent': './/src/app/test/test.component.ts',
-            './AllocationsDrawerComponent': './/src/app/allocations-drawer-with-logs/allocations-drawer-with-logs.component.ts',
-            './AllocationsDrawerModule': './/src/app/allocations-drawer-with-logs/allocations-drawer-with-logs.module.ts',
+            './AllocationsDrawerComponent': './/src/app/allocations-drawer/allocations-drawer.component.ts',
+            './AllocationsDrawerModule': './/src/app/allocations-drawer/allocations-drawer.module.ts',
         },
 
         shared: share({
