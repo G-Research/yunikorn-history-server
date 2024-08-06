@@ -368,25 +368,26 @@ install-and-patch-yunikorn: helm-install-yunikorn patch-yunikorn-service ## inst
 
 .PHONY: helm-install-yunikorn
 helm-install-yunikorn: ## install yunikorn using helm.
-	helm upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace
+	$(HELM) upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace
 
 .PHONY: helm-uninstall-yunikorn
 helm-uninstall-yunikorn: ## uninstall yunikorn using helm.
-	helm uninstall yunikorn --namespace $(NAMESPACE)
+	$(HELM) uninstall yunikorn --namespace $(NAMESPACE)
 
 .PHONY: helm-install-postgres
 helm-install-postgres: ## install postgres using helm.
-	helm upgrade --install postgresql bitnami/postgresql --values hack/postgres.values.yaml --namespace $(NAMESPACE) --create-namespace
+	$(HELM) upgrade --install postgresql bitnami/postgresql --values hack/postgres.values.yaml \
+		--namespace $(NAMESPACE) --create-namespace
 
 .PHONY: helm-uninstall-postgres
 helm-uninstall-postgres: ## uninstall postgres using helm.
-	helm uninstall postgres --namespace $(NAMESPACE)
+	$(HELM) uninstall postgres --namespace $(NAMESPACE)
 
 .PHONY: helm-repos
-helm-repos:
-	helm repo add yunikorn https://apache.github.io/yunikorn-release
-	helm repo add bitnami https://charts.bitnami.com/bitnami
-	helm repo update
+helm-repos: helm
+	$(HELM) add yunikorn https://apache.github.io/yunikorn-release
+	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami
+	$(HELM) repo update
 
 ##@ Utils
 
@@ -397,7 +398,7 @@ patch-yunikorn-service: ## patch yunikorn service to expose it as NodePort (yuni
 ##@ Build Dependencies
 
 .PHONY: install-tools
-install-tools: golangci-lint gotestsum $(CLUSTER_MGR) yq ## install development tools.
+install-tools: golangci-lint gotestsum $(CLUSTER_MGR) helm yq ## install development tools.
 
 GOTESTSUM ?= $(LOCALBIN_TOOLING)/gotestsum
 GOTESTSUM_VERSION ?= v1.11.0
@@ -426,6 +427,18 @@ GOMIGRATE_VERSION ?= v4.17.1
 gomigrate: $(GOMIGRATE) ## Download gomigrate locally if necessary.
 $(GOMIGRATE): bin/tooling
 	test -s $(GOMIGRATE) || curl --silent -L https://github.com/golang-migrate/migrate/releases/download/$(GOMIGRATE_VERSION)/migrate.$(OS)-$(ARCH).tar.gz | tar xvz -C $(LOCALBIN_TOOLING)
+
+HELM ?= $(LOCALBIN_TOOLING)/helm
+HELM_VERSION ?= v3.15.3
+.PHONY: helm
+.ONESHELL:
+helm: $(HELM) ## Download helm locally if necessary.
+$(HELM): bin/tooling
+	if [ ! -s $(HELM) ]; then \
+		curl --silent -L https://get.helm.sh/helm-$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | tar xvzf - ; \
+		mv $(OS)-$(ARCH)/helm $(LOCALBIN_TOOLING) ; \
+		rm -r $(OS)-$(ARCH) ; \
+	fi
 
 YQ ?= $(LOCALBIN_TOOLING)/yq
 YQ_VERSION ?= v4.44.2
