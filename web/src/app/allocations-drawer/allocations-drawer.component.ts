@@ -35,7 +35,6 @@ export class AllocationsDrawerComponent implements OnInit {
       this.allocDataSource.paginator = this.allocPaginator;
       this.allocDataSource.sort = this.allocSort;
     }
-    console.log("!", this.externalLogsBaseUrl);
   }
 
   ngOnInit(): void {
@@ -84,7 +83,6 @@ export class AllocationsDrawerComponent implements OnInit {
   }
 
   allocationsDetailToggle(row: number) {
-    console.log({ row, selectedAllocationsRow: this.selectedAllocationsRow });
     if (this.selectedAllocationsRow !== -1) {
       if (this.selectedAllocationsRow !== row) {
         this.allocDataSource.data[this.selectedAllocationsRow].expanded = false;
