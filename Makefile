@@ -87,8 +87,15 @@ BASE_IMAGE ?= alpine
 BASE_IMAGE_TAG ?= 3.20
 
 # Local Development
-KIND_CLUSTER ?= yhs
+CLUSTER_MGR ?= kind     # either 'kind' or 'minikube'
+CLUSTER_NAME ?= yhs
 NAMESPACE ?= yunikorn
+
+KIND ?= $(LOCALBIN_TOOLING)/kind
+KIND_VERSION ?= v0.23.0
+
+MINIKUBE ?= $(LOCALBIN_TOOLING)/minikube
+MINIKUBE_VERSION ?= latest
 
 ##@ General
 
@@ -164,9 +171,9 @@ go-lint-fix: golangci-lint ## lint Golang code using golangci-lint.
 
 define start-cluster
 	@echo "**********************************"
-	@echo "Creating kind cluster"
+	@echo "Creating cluster"
 	@echo "**********************************"
-	@KIND_CLUSTER=yhs-test $(MAKE) kind-create-cluster
+	@CLUSTER_NAME=yhs-test $(MAKE) create-cluster
 
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
@@ -177,9 +184,9 @@ endef
 define cleanup-cluster
 	cleanup() {
 	    echo "**********************************"
-	    echo "Deleting kind cluster"
+	    echo "Deleting cluster"
 	    echo "**********************************"
-	    KIND_CLUSTER=yhs-test $(MAKE) kind-delete-cluster
+	    CLUSTER_NAME=yhs-test $(MAKE) delete-cluster
     }
 endef
 
@@ -198,7 +205,7 @@ integration-tests: ## start dependencies and run integration tests.
 e2e-tests: ## start dependencies and run e2e tests.
 	@$(cleanup-cluster); trap cleanup EXIT
 	@$(start-cluster)
-	KIND_CLUSTER=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
+	CLUSTER_NAME=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
 .ONESHELL:
@@ -331,15 +338,23 @@ docker-push: docker-build-amd64 ## push linux/amd64 docker image to registry usi
 
 ##@ External Dependencies
 
-kind-all: kind-create-cluster install-dependencies migrate-up ## create kind cluster and install dependencies
+$(CLUSTER_MGR)-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies
 
-.PHONY: kind-create-cluster
-kind-create-cluster: kind ## create a kind cluster.
-	$(KIND) create cluster --name $(KIND_CLUSTER) --config hack/kind-config.yml
+.PHONY: create-cluster
+create-cluster: $(KIND) $(MINIKUBE) ## create a cluster.
+ifeq ($(strip $(CLUSTER_MGR)),kind)
+	$(KIND) create cluster --name $(CLUSTER_NAME) --config hack/kind-config.yml
+else
+	$(MINIKUBE) start --ports=30000:30000 --ports=30001:30001 --ports=30002:30002 --ports=30003:30003
+endif
 
-.PHONY: kind-delete-cluster
-kind-delete-cluster: kind ## delete the kind cluster.
-	$(KIND) delete cluster --name $(KIND_CLUSTER)
+.PHONY: delete-cluster
+delete-cluster: $(KIND) $(MINIKUBE) ## delete the cluster.
+ifeq ($(strip $(CLUSTER_MGR)),kind)
+	$(KIND) delete cluster --name $(CLUSTER_NAME)
+else
+	$(MINIKUBE) delete
+endif
 
 .PHONY: install-dependencies
 install-dependencies: helm-repos install-and-patch-yunikorn helm-install-postgres wait-for-dependencies ## install dependencies.
@@ -382,7 +397,7 @@ patch-yunikorn-service: ## patch yunikorn service to expose it as NodePort (yuni
 ##@ Build Dependencies
 
 .PHONY: install-tools
-install-tools: golangci-lint gotestsum kind yq ## install development tools.
+install-tools: golangci-lint gotestsum $(CLUSTER_MGR) yq ## install development tools.
 
 GOTESTSUM ?= $(LOCALBIN_TOOLING)/gotestsum
 GOTESTSUM_VERSION ?= v1.11.0
@@ -427,12 +442,18 @@ gomock: $(GOMOCK) ## Download uber-go/gomock locally if necessary.
 $(GOMOCK): bin/tooling
 	test -s $(YQ) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(GOMOCK_VERSION)
 
-KIND ?= $(LOCALBIN_TOOLING)/kind
-KIND_VERSION ?= v0.23.0
 .PHONY: kind
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): bin/tooling
 	test -s $(KIND) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install sigs.k8s.io/kind@$(KIND_VERSION)
+
+.PHONY: minikube
+minikube: $(MINIKUBE) ## Download minikube locally if necessary.
+$(MINIKUBE): bin/tooling
+	test -s $(MINIKUBE) || \
+	curl --silent -L https://storage.googleapis.com/minikube/releases/$(MINIKUBE_VERSION)/minikube-$(OS)-$(ARCH) \
+		-o $(LOCALBIN_TOOLING)/minikube
+	chmod +x $(LOCALBIN_TOOLING)/minikube
 
 XK6 ?= $(LOCALBIN_TOOLING)/xk6
 K6 ?= $(LOCALBIN_TOOLING)/k6
