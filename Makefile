@@ -385,7 +385,7 @@ helm-uninstall-postgres: ## uninstall postgres using helm.
 
 .PHONY: helm-repos
 helm-repos: helm
-	$(HELM) add yunikorn https://apache.github.io/yunikorn-release
+	$(HELM) repo add yunikorn https://apache.github.io/yunikorn-release
 	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami
 	$(HELM) repo update
 
