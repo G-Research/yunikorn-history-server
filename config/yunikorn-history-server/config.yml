@@ -1,5 +1,5 @@
 yunikorn:
-  host: yunicorn-service
+  host: yunikorn-service
   port: 9889
   secure: false
 
@@ -16,6 +16,7 @@ db:
 
 yhs:
   port: 8989
+  data_sync_interval: 5m
 
 log:
   level: "INFO"

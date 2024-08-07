@@ -31,8 +31,9 @@ func TestNew(t *testing.T) {
 			path: filepath.Join("testdata", "config.yml"),
 			want: &Config{
 				YHSConfig: YHSConfig{
-					Port:      8080,
-					AssetsDir: "assets",
+					Port:             8080,
+					AssetsDir:        "assets",
+					DataSyncInterval: 5 * time.Minute,
 				},
 				YunikornConfig: YunikornConfig{
 					Host:   "localhost",

@@ -29,6 +29,8 @@ type YHSConfig struct {
 	Port int
 	// AssetsDir specifies the directory where the static assets are stored.
 	AssetsDir string
+	// DataSyncInterval specifies the interval at which the data is synced from the Yunikorn API.
+	DataSyncInterval time.Duration
 }
 
 func (c *YHSConfig) Validate() error {
@@ -119,9 +121,14 @@ func New(path string) (*Config, error) {
 	if assetsDir == "" {
 		assetsDir = "assets"
 	}
+	dataSyncInterval := k.Duration("yhs.data_sync_interval")
+	if dataSyncInterval == 0 {
+		dataSyncInterval = 5 * time.Minute
+	}
 	yhsConfig := YHSConfig{
-		Port:      k.Int("yhs.port"),
-		AssetsDir: assetsDir,
+		Port:             k.Int("yhs.port"),
+		AssetsDir:        assetsDir,
+		DataSyncInterval: dataSyncInterval,
 	}
 	if err := yhsConfig.Validate(); err != nil {
 		return nil, err
