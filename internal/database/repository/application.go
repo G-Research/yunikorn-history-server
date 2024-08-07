@@ -3,11 +3,51 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/G-Research/yunikorn-history-server/internal/util"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
+
+type ApplicationFilters struct {
+	SubmissionStartTime *time.Time
+	SubmissionEndTime   *time.Time
+	FinishedStartTime   *time.Time
+	FinishedEndTime     *time.Time
+	User                *string
+	Groups              []string
+	Offset              *int
+	Limit               *int
+}
+
+// applyApplicationFilters adds application filters to the sql query using positional arguments and
+// returns the arguments in the same order.
+func applyApplicationFilters(builder *sql.Builder, filters ApplicationFilters) {
+	if filters.SubmissionStartTime != nil {
+		builder.Conditionp("submission_time", ">=", filters.SubmissionStartTime.UnixMilli())
+	}
+	if filters.SubmissionEndTime != nil {
+		builder.Conditionp("submission_time", "<=", filters.SubmissionEndTime.UnixMilli())
+	}
+	if filters.FinishedStartTime != nil {
+		builder.Conditionp("finished_time", ">=", filters.FinishedStartTime.UnixMilli())
+	}
+	if filters.FinishedEndTime != nil {
+		builder.Conditionp("finished_time", "<=", filters.FinishedEndTime.UnixMilli())
+	}
+	if len(filters.Groups) > 0 {
+		builder.Conditionf("groups && ARRAY[%s]", util.SliceToCommaSeparated(filters.Groups, true))
+	}
+	if filters.User != nil {
+		builder.Conditionp("\"user\"", "=", *filters.User)
+	}
+	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
+}
 
 func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error {
 	upsertSQL := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
@@ -63,12 +103,15 @@ func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao
 	return nil
 }
 
-func (s *PostgresRepository) GetAllApplications(ctx context.Context) ([]*dao.ApplicationDAOInfo, error) {
-	selectSQL := `SELECT * FROM applications`
+func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*dao.ApplicationDAOInfo, error) {
+	queryBuilder := sql.NewBuilder().SelectAll("applications", "a").OrderBy("a.submission_time", sql.OrderByDescending)
+	applyApplicationFilters(queryBuilder, filters)
 
 	var apps []*dao.ApplicationDAOInfo
 
-	rows, err := s.dbpool.Query(ctx, selectSQL)
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
 	}
@@ -88,14 +131,20 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context) ([]*dao.App
 	return apps, nil
 }
 
-func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string) (
+func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) (
 	[]*dao.ApplicationDAOInfo, error) {
-
-	selectSQL := `SELECT * FROM applications WHERE queue_name = $1 AND partition = $2`
+	queryBuilder := sql.NewBuilder().
+		SelectAll("applications", "").
+		Conditionp("queue_name", "=", queue).
+		Conditionp("partition", "=", partition).
+		OrderBy("submission_time", sql.OrderByDescending)
+	applyApplicationFilters(queryBuilder, filters)
 
 	var apps []*dao.ApplicationDAOInfo
 
-	rows, err := s.dbpool.Query(ctx, selectSQL, queue, partition)
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
 	}

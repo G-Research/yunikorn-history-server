@@ -22,8 +22,11 @@ Make sure you have the following dependencies installed:
 
 Use the following `make` commands to build and run the Yunikorn History Server locally:
 ```bash
-# start all dependencies
+# start all dependencies - if you are using kind as your K8S cluster manager:
 make kind-all
+# otherwise, if you want to use minikube for your cluster:
+env CLUSTER_MGR=minikube make minikube-all
+
 # build and run YHS
 make run
 ```
@@ -43,8 +46,10 @@ Please test contributions thoroughly before requesting reviews. At a minimum:
 ```bash
 # Lint code
 make lint
-# Run tests
+# Run tests using `kind` for cluster manager:
 make tests
+# Run tests using `minikube` for cluster manager:
+env CLUSTER_MGR=minikube make tests
 ```
 should all succeed without error.
 
