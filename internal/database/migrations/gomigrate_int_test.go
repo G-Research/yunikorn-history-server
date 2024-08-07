@@ -10,7 +10,7 @@ import (
 	"github.com/G-Research/yunikorn-history-server/test/database"
 )
 
-func TestMigrator_Integration(t *testing.T) {
+func TestGoMigrate_Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}

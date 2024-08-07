@@ -2,8 +2,13 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	testconfig "github.com/G-Research/yunikorn-history-server/test/config"
@@ -15,15 +20,50 @@ import (
 	"github.com/G-Research/yunikorn-history-server/test/util"
 )
 
+// NewTestConnectionPool creates a new test schema, applies migrations and returns a connection pool to the test database.
+// This function also automatically registers a cleanup function to drop the test schema after the test has run.
+func NewTestConnectionPool(ctx context.Context, t *testing.T) *pgxpool.Pool {
+	t.Helper()
+
+	schema := CreateTestSchema(ctx, t)
+	t.Cleanup(func() {
+		DropTestSchema(ctx, t, schema)
+	})
+
+	cfg := testconfig.GetTestPostgresConfig()
+	cfg.Schema = schema
+
+	ApplyMigrations(t, cfg)
+
+	return GetTestConnectionPool(ctx, t, cfg)
+}
+
+// ApplyMigrations applies the migrations to the test database.
+func ApplyMigrations(t *testing.T, cfg *config.PostgresConfig) {
+	source := "file://../../../migrations"
+	connString := postgres.BuildConnectionStringFromConfig(cfg)
+	m, err := migrate.New(source, connString)
+	if err != nil {
+		t.Fatalf("could not create migrator: %v", err)
+	}
+
+	if err := m.Up(); err != nil {
+		if !errors.Is(err, migrate.ErrNoChange) {
+			t.Fatalf("could not apply migrations: %v", err)
+		}
+	}
+}
+
+// GetTestConnectionPool creates a new connection pool to the test database.
 func GetTestConnectionPool(ctx context.Context, t *testing.T, cfg *config.PostgresConfig) *pgxpool.Pool {
 	pool, err := postgres.NewConnectionPool(ctx, cfg)
 	if err != nil {
 		t.Fatalf("could not create connection pool: %v", err)
 	}
 	return pool
-
 }
 
+// CreateTestSchema creates a new test schema in the database.
 func CreateTestSchema(ctx context.Context, t *testing.T) (schema string) {
 	logger := log.Init(testconfig.GetTestLogConfig())
 
@@ -47,6 +87,7 @@ func CreateTestSchema(ctx context.Context, t *testing.T) (schema string) {
 	return
 }
 
+// DropTestSchema drops the test schema from the database.
 func DropTestSchema(ctx context.Context, t *testing.T, schema string) {
 	logger := log.Init(testconfig.GetTestLogConfig())
 

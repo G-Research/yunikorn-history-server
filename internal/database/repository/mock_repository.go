@@ -42,18 +42,18 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetAllApplications mocks base method.
-func (m *MockRepository) GetAllApplications(arg0 context.Context) ([]*dao.ApplicationDAOInfo, error) {
+func (m *MockRepository) GetAllApplications(arg0 context.Context, arg1 ApplicationFilters) ([]*dao.ApplicationDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllApplications", arg0)
+	ret := m.ctrl.Call(m, "GetAllApplications", arg0, arg1)
 	ret0, _ := ret[0].([]*dao.ApplicationDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllApplications indicates an expected call of GetAllApplications.
-func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllApplications", reflect.TypeOf((*MockRepository)(nil).GetAllApplications), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllApplications", reflect.TypeOf((*MockRepository)(nil).GetAllApplications), arg0, arg1)
 }
 
 // GetAllPartitions mocks base method.
@@ -102,18 +102,18 @@ func (mr *MockRepositoryMockRecorder) GetApplicationsHistory(arg0 any) *gomock.C
 }
 
 // GetAppsPerPartitionPerQueue mocks base method.
-func (m *MockRepository) GetAppsPerPartitionPerQueue(arg0 context.Context, arg1, arg2 string) ([]*dao.ApplicationDAOInfo, error) {
+func (m *MockRepository) GetAppsPerPartitionPerQueue(arg0 context.Context, arg1, arg2 string, arg3 ApplicationFilters) ([]*dao.ApplicationDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAppsPerPartitionPerQueue", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetAppsPerPartitionPerQueue", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]*dao.ApplicationDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAppsPerPartitionPerQueue indicates an expected call of GetAppsPerPartitionPerQueue.
-func (mr *MockRepositoryMockRecorder) GetAppsPerPartitionPerQueue(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetAppsPerPartitionPerQueue(arg0, arg1, arg2, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppsPerPartitionPerQueue", reflect.TypeOf((*MockRepository)(nil).GetAppsPerPartitionPerQueue), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppsPerPartitionPerQueue", reflect.TypeOf((*MockRepository)(nil).GetAppsPerPartitionPerQueue), arg0, arg1, arg2, arg3)
 }
 
 // GetContainersHistory mocks base method.

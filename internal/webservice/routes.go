@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/G-Research/yunikorn-history-server/internal/log"
+
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-
-	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 const (
@@ -90,6 +90,7 @@ func enrichRequestContext(ctx context.Context, r *http.Request) {
 }
 
 func (ws *WebService) getPartitions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	r.URL.Query().Get("test")
 	partitions, err := ws.repository.GetAllPartitions(r.Context())
 	if err != nil {
 		errorResponse(w, r, err)
@@ -111,7 +112,14 @@ func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Reque
 func (ws *WebService) getAppsPerPartitionPerQueue(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	partition := params.ByName(paramsPartitionName)
 	queue := params.ByName(paramsQueueName)
-	apps, err := ws.repository.GetAppsPerPartitionPerQueue(r.Context(), partition, queue)
+
+	filters, err := parseApplicationFilters(r)
+	if err != nil {
+		badRequestResponse(w, r, err)
+		return
+	}
+
+	apps, err := ws.repository.GetAppsPerPartitionPerQueue(r.Context(), partition, queue, *filters)
 	if err != nil {
 		errorResponse(w, r, err)
 		return
