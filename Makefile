@@ -92,7 +92,7 @@ CLUSTER_NAME ?= yhs
 NAMESPACE ?= yunikorn
 
 KIND ?= $(LOCALBIN_TOOLING)/kind
-KIND_VERSION ?= v0.23.0
+KIND_VERSION ?= latest
 
 MINIKUBE ?= $(LOCALBIN_TOOLING)/minikube
 MINIKUBE_VERSION ?= latest
@@ -338,7 +338,7 @@ docker-push: docker-build-amd64 ## push linux/amd64 docker image to registry usi
 
 ##@ External Dependencies
 
-$(CLUSTER_MGR)-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies
+kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies
 
 .PHONY: create-cluster
 create-cluster: $(KIND) $(MINIKUBE) ## create a cluster.
