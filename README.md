@@ -27,14 +27,17 @@ Make sure you have the following dependencies installed:
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) - tool for running local Kubernetes clusters using Docker container "nodes".
 * [Go v1.22+](https://golang.org/doc/install) programming language used to build the Yunikorn History Server.
 
-Setup local cluster and install dependencies:
+##### Setup local cluster and install dependencies:
+
+start all dependencies - if you are using kind as your K8S cluster manager:
 
 ```bash
-# start all dependencies - if you are using kind as your K8S cluster manager:
 make kind-all
+```
+
+If you want to use minikube for your cluster:
 
 ```bash
-# otherwise, if you want to use minikube for your cluster:
 env CLUSTER_MGR=minikube make minikube-all
 ```
 
