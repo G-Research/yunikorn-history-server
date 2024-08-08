@@ -28,4 +28,5 @@ type Repository interface {
 	UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error
 	GetAllQueues(ctx context.Context) ([]*dao.PartitionQueueDAOInfo, error)
 	GetQueuesPerPartition(ctx context.Context, partition string) ([]*dao.PartitionQueueDAOInfo, error)
+	GetResourceUsage(ctx context.Context, partition string) ([]*dao.UserResourceUsageDAOInfo, error)
 }
