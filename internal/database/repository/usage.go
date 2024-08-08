@@ -10,7 +10,7 @@ import (
 )
 
 func (s *PostgresRepository) GetResourceUsage(ctx context.Context, partition string) ([]*dao.UserResourceUsageDAOInfo, error) {
-	appQuery := `SELECT distinct user, groups FROM applications WHERE partition = $1`
+	appQuery := `SELECT distinct "user", groups FROM applications WHERE partition = $1`
 	rows, err := s.dbpool.Query(ctx, appQuery, partition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications from DB: %v", err)
@@ -27,7 +27,7 @@ func (s *PostgresRepository) GetResourceUsage(ctx context.Context, partition str
 		}
 
 		// get all queues for the user
-		queuesQuery := `SELECT distinct queue_name FROM applications WHERE partition = $1 AND user = $2`
+		queuesQuery := `SELECT distinct queue_name FROM applications WHERE partition = $1 AND "user" = $2`
 		queuesRows, err := s.dbpool.Query(ctx, queuesQuery, partition, user)
 		if err != nil {
 			return nil, fmt.Errorf("could not get queues from DB: %v", err)
