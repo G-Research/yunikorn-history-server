@@ -7,7 +7,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
+    "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js",
+    "setenv": "npx --yes ts-node ./src/environments/setEnvironmentVariables.ts",
+    "setenv:prod": "npx --yes ts-node ./src/environments/setEnvironmentVariables.ts prod",
+    "prebuild:prod": "pnpm set-env-vars"
   },
   "private": true,
   "dependencies": {

@@ -6,6 +6,7 @@ import { MatTableDataSource } from "@angular/material/table";
 import { AllocationInfo } from "@app/models/alloc-info.model";
 import { AppInfo } from "@app/models/app-info.model";
 import { ColumnDef } from "@app/models/column-def.model";
+import { EnvConfigService } from "@app/services/envconfig/envconfig.service";
 import { CommonUtil } from "@app/utils/common.util";
 
 @Injectable()
@@ -36,6 +37,7 @@ export class AllocationsDrawerComponent implements OnInit {
       this.allocDataSource.sort = this.allocSort;
     }
   }
+  constructor(private envConfig: EnvConfigService) {}
 
   ngOnInit(): void {
     this.allocColumnDef = [
@@ -56,6 +58,7 @@ export class AllocationsDrawerComponent implements OnInit {
       { colId: "priority", colName: "Priority", colWidth: 0.5 },
     ];
     this.allocColumnIds = this.allocColumnDef.map((col) => col.colId);
+    this.externalLogsBaseUrl = this.envConfig.getExternalLogsBaseUrl();
   }
 
   formatResources(colValue: string): string[] {
