@@ -146,23 +146,17 @@ func New(path string) (*Config, error) {
 	}
 
 	postgresConfig := PostgresConfig{
-		Host:     k.String("db.host"),
-		Port:     k.Int("db.port"),
-		Username: k.String("db.user"),
-		Password: k.String("db.password"),
-		DbName:   k.String("db.dbname"),
-	}
-	if k.Int("db.pool_max_conns") > 0 {
-		postgresConfig.PoolMaxConns = k.Int("db.pool_max_conns")
-	}
-	if k.Int("db.pool_min_conns") > 0 {
-		postgresConfig.PoolMinConns = k.Int("db.pool_min_conns")
-	}
-	if k.Duration("db.pool_max_conn_lifetime") > time.Duration(0) {
-		postgresConfig.PoolMaxConnLifetime = k.Duration("db.pool_max_conn_lifetime")
-	}
-	if k.Duration("db.pool_max_conn_idletime") > time.Duration(0) {
-		postgresConfig.PoolMaxConnIdleTime = k.Duration("db.pool_max_conn_idletime")
+		Host:                k.String("db.host"),
+		Port:                k.Int("db.port"),
+		Username:            k.String("db.user"),
+		Password:            k.String("db.password"),
+		DbName:              k.String("db.dbname"),
+		SSLMode:             k.String("db.sslmode"),
+		Schema:              k.String("db.schema"),
+		PoolMaxConnLifetime: k.Duration("db.pool_max_conn_lifetime"),
+		PoolMaxConnIdleTime: k.Duration("db.pool_max_conn_idletime"),
+		PoolMaxConns:        k.Int("db.pool_max_conns"),
+		PoolMinConns:        k.Int("db.pool_min_conns"),
 	}
 
 	config := &Config{
