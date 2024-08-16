@@ -6,6 +6,8 @@ import (
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
@@ -14,11 +16,11 @@ type PartitionsResponse struct {
 }
 
 type QueuesResponse struct {
-	Queues []*dao.PartitionQueueDAOInfo `json:"queues"`
+	Queues []*model.PartitionQueueDAOInfo `json:"queues"`
 }
 
 type AppsResponse struct {
-	Apps []*dao.ApplicationDAOInfo `json:"apps"`
+	Apps []*model.ApplicationDAOInfo `json:"apps"`
 }
 
 type NodesResponse struct {
