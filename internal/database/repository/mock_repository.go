@@ -74,10 +74,10 @@ func (mr *MockRepositoryMockRecorder) GetAllPartitions(arg0 any) *gomock.Call {
 }
 
 // GetAllQueues mocks base method.
-func (m *MockRepository) GetAllQueues(arg0 context.Context) ([]*dao.PartitionQueueDAOInfo, error) {
+func (m *MockRepository) GetAllQueues(arg0 context.Context) ([]*model.PartitionQueueDAOInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllQueues", arg0)
-	ret0, _ := ret[0].([]*dao.PartitionQueueDAOInfo)
+	ret0, _ := ret[0].([]*model.PartitionQueueDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

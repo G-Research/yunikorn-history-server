@@ -88,18 +88,20 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 	return nil
 }
 
-func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*dao.PartitionQueueDAOInfo, error) {
-	var queues []*dao.PartitionQueueDAOInfo
+func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.PartitionQueueDAOInfo, error) {
+	var queues []*model.PartitionQueueDAOInfo
 	rows, err := s.dbpool.Query(ctx, "SELECT * FROM queues")
 	if err != nil {
 		return nil, fmt.Errorf("could not get queues from DB: %v", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var q dao.PartitionQueueDAOInfo
-		var id string
+		var q model.PartitionQueueDAOInfo
 		err = rows.Scan(
-			&id,
+			&q.Id,
+			&q.ParentId,
+			&q.CreatedAt,
+			&q.DeletedAt,
 			&q.QueueName,
 			&q.Status,
 			&q.Partition,
@@ -147,6 +149,8 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 		err = rows.Scan(
 			&q.Id,
 			&q.ParentId,
+			&q.CreatedAt,
+			&q.DeletedAt,
 			&q.QueueName,
 			&q.Status,
 			&q.Partition,
@@ -166,8 +170,6 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 			&q.RunningApps,
 			&q.CurrentPriority,
 			&q.AllocatingAcceptedApps,
-			&q.CreatedAt,
-			&q.DeletedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan queue from DB: %v", err)

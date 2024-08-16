@@ -50,6 +50,8 @@ CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue
 CREATE TABLE queues(
     id UUID,
     parent_id UUID,
+    created_at BIGINT NOT NULL,
+    deleted_at BIGINT,
     queue_name TEXT NOT NULL,
     status TEXT,
     partition TEXT NOT NULL,
@@ -69,8 +71,6 @@ CREATE TABLE queues(
     running_apps INTEGER NOT NULL,
     current_priority INTEGER,
     allocating_accepted_apps TEXT[],
-    created_at BIGINT NOT NULL,
-    deleted_at BIGINT,
     UNIQUE (id),
     PRIMARY KEY (id)
 );
