@@ -187,6 +187,18 @@ func seedApplications(t *testing.T, repo *PostgresRepository) {
 
 	now := time.Now()
 
+	queues := []*dao.PartitionQueueDAOInfo{
+		{
+			Partition: "default",
+			QueueName: "root",
+		},
+		{
+			Partition: "default",
+			QueueName: "root.default",
+			Parent:    "root",
+		},
+	}
+
 	apps := []*dao.ApplicationDAOInfo{
 		{
 			ApplicationID:   "app1",
@@ -263,6 +275,10 @@ func seedApplications(t *testing.T, repo *PostgresRepository) {
 		},
 	}
 
+	// seed queues before applications
+	if err := repo.UpsertQueues(context.Background(), queues); err != nil {
+		t.Fatalf("could not seed queue: %v", err)
+	}
 	if err := repo.UpsertApplications(context.Background(), apps); err != nil {
 		t.Fatalf("could not seed applications: %v", err)
 	}
