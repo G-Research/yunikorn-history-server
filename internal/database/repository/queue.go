@@ -132,7 +132,6 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 	ctx context.Context,
 	parition string,
 ) ([]*model.PartitionQueueDAOInfo, error) {
-	// Only get the top level queues
 	selectSQL := `SELECT * FROM queues WHERE partition = $1`
 
 	var queues []*model.PartitionQueueDAOInfo
