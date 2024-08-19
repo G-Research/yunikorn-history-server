@@ -88,6 +88,8 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 	return nil
 }
 
+// GetAllQueues returns all queues from the database as a flat list
+// child queues are not nested in the parent queue.Children field
 func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.PartitionQueueDAOInfo, error) {
 	var queues []*model.PartitionQueueDAOInfo
 	rows, err := s.dbpool.Query(ctx, "SELECT * FROM queues")
@@ -130,6 +132,8 @@ func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.Partiti
 	return queues, nil
 }
 
+// GetQueuesPerPartition returns all top level queues for a given partition
+// child queues are nested in the queue.Children field
 func (s *PostgresRepository) GetQueuesPerPartition(
 	ctx context.Context,
 	parition string,
