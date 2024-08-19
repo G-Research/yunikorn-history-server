@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/test/database"
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 )
 
 func TestGetAllQueues_Integration(t *testing.T) {
