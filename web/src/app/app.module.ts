@@ -8,8 +8,12 @@ import { AppComponent } from "./app.component";
   declarations: [AppComponent],
   imports: [BrowserModule, AllocationsDrawerModule],
   providers: [
-    useFactory: envConfigFactory,
-    deps: [EnvConfigService],],
+    {
+      useFactory: envConfigFactory,
+      provide: EnvConfigService,
+      deps: [EnvConfigService],
+    }
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

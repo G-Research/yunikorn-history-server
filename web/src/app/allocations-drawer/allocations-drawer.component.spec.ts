@@ -10,6 +10,14 @@ import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { AllocationInfo } from "@app/models/alloc-info.model";
 
 import { AllocationsDrawerComponent } from "./allocations-drawer.component";
+import { NgxSpinnerService } from 'ngx-spinner';
+
+import {
+  MockEnvconfigService,
+  MockNgxSpinnerService,
+  MockSchedulerService,
+} from '@app/testing/mocks';
+import {EnvConfigService} from '@app/services/envconfig/envconfig.service';
 
 describe("AllocationsDrawerComponent", () => {
   let component: AllocationsDrawerComponent;
@@ -28,7 +36,10 @@ describe("AllocationsDrawerComponent", () => {
         MatTableModule,
         MatSelectModule,
       ],
-      providers: [],
+      providers: [
+        { provide: EnvConfigService, useValue: MockEnvconfigService },
+        { provide: NgxSpinnerService, useValue: MockNgxSpinnerService }
+      ],
     });
     fixture = TestBed.createComponent(AllocationsDrawerComponent);
     component = fixture.componentInstance;
