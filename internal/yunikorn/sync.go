@@ -131,10 +131,10 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 		return nil, fmt.Errorf("failed to get queues for some partitions: %v", errs)
 	}
 
-	queues = flattenQueues(queues)
+	// queues = flattenQueues(queues)
 	err := s.workqueue.Add(func(ctx context.Context) error {
 		logger.Infow("upserting queues", "count", len(queues))
-		return s.repo.UpsertQueues(ctx, queues)
+		return s.repo.UpsertQueues(ctx, nil, queues)
 	}, workqueue.WithJobName("upsert_queues"))
 	if err != nil {
 		logger.Errorf("could not add upsert queues job to workqueue: %v", err)

@@ -148,8 +148,8 @@ migrate-down: ## migrate down using gomigrate.
 ##@ Codegen
 
 .PHONY: codegen
-codegen: gomock ## generate code using go generate (mocks).
-	go generate ./...
+codegen: mockgen ## generate code using go generate (mocks).
+	PATH=$(LOCALBIN_TOOLING):$$PATH go generate ./...
 
 ##@ Run
 
@@ -444,7 +444,7 @@ $(GORELEASER): bin/tooling
 	test -s $(GORELEASER) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
 
 GOLANGCI_LINT ?= $(LOCALBIN_TOOLING)/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.59.0
+GOLANGCI_LINT_VERSION ?= v1.60.2
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): bin/tooling
@@ -477,12 +477,12 @@ $(YQ): bin/tooling
 	test -s $(YQ) || curl --silent -L https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -o $(LOCALBIN_TOOLING)/yq
 	chmod +x $(LOCALBIN_TOOLING)/yq
 
-GOMOCK ?= $(LOCALBIN_TOOLING)/gomock
-GOMOCK_VERSION ?= v0.4.0
-.PHONY: gomock
-gomock: $(GOMOCK) ## download uber-go/gomock locally if necessary.
-$(GOMOCK): bin/tooling
-	test -s $(YQ) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(GOMOCK_VERSION)
+MOCKGEN ?= $(LOCALBIN_TOOLING)/mockgen
+MOCKGEN_VERSION ?= v0.4.0
+.PHONY: mockgen
+mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
+$(MOCKGEN): bin/tooling
+	test -s $(MOCKGEN) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
 
 .PHONY: kind
 kind: $(KIND) ## download kind locally if necessary.

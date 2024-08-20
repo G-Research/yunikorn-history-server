@@ -246,71 +246,81 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 		{
 			Partition: "default",
 			QueueName: "root",
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org",
-			Parent:    "root",
-		},
-		{
-			Partition: "default",
-			QueueName: "root.system",
-			Parent:    "root",
-			IsLeaf:    true,
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org.eng",
-			Parent:    "root.org",
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org.eng.test",
-			Parent:    "root.org.eng",
-			IsLeaf:    true,
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org.eng.prod",
-			Parent:    "root.org.eng",
-			IsLeaf:    true,
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org.sales",
-			Parent:    "root.org",
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org.sales.test",
-			Parent:    "root.org.sales",
-			IsLeaf:    true,
-		},
-		{
-			Partition: "default",
-			QueueName: "root.org.sales.prod",
-			Parent:    "root.org.sales",
-			IsLeaf:    true,
+			Children: []dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root.org",
+					Parent:    "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "root.org.eng",
+							Parent:    "root.org",
+							Children: []dao.PartitionQueueDAOInfo{
+								{
+									Partition: "default",
+									QueueName: "root.org.eng.test",
+									Parent:    "root.org.eng",
+									IsLeaf:    true,
+								},
+								{
+									Partition: "default",
+									QueueName: "root.org.eng.prod",
+									Parent:    "root.org.eng",
+									IsLeaf:    true,
+								},
+							},
+						},
+						{
+							Partition: "default",
+							QueueName: "root.org.sales",
+							Parent:    "root.org",
+							Children: []dao.PartitionQueueDAOInfo{
+								{
+									Partition: "default",
+									QueueName: "root.org.sales.test",
+									Parent:    "root.org.sales",
+									IsLeaf:    true,
+								},
+								{
+									Partition: "default",
+									QueueName: "root.org.sales.prod",
+									Parent:    "root.org.sales",
+									IsLeaf:    true,
+								},
+							},
+						},
+					},
+				},
+				{
+					Partition: "default",
+					QueueName: "root.system",
+					Parent:    "root",
+					IsLeaf:    true,
+				},
+			},
 		},
 		{
 			Partition: "second",
 			QueueName: "root",
-		},
-		{
-			Partition: "second",
-			QueueName: "root.child1",
-			Parent:    "root",
-			IsLeaf:    true,
-		},
-		{
-			Partition: "second",
-			QueueName: "root.child2",
-			Parent:    "root",
-			IsLeaf:    true,
+			Children: []dao.PartitionQueueDAOInfo{
+				{
+					Partition: "second",
+					QueueName: "root.child",
+					Parent:    "root",
+					IsLeaf:    true,
+				},
+				{
+					Partition: "second",
+					QueueName: "root.child2",
+					Parent:    "root",
+					IsLeaf:    true,
+				},
+			},
 		},
 	}
 
-	if err := repo.UpsertQueues(context.Background(), queues); err != nil {
+	if err := repo.UpsertQueues(context.Background(), nil, queues); err != nil {
 		t.Fatalf("could not seed queue: %v", err)
 	}
 }

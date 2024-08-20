@@ -12,7 +12,9 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
-func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
+func (s *PostgresRepository) UpsertQueues(ctx context.Context, parentId *string, queues []*dao.PartitionQueueDAOInfo) error {
+	//  XXX change ON CONFLICT clause to CONFLICT(id), since we may have the same queue+partition name over
+	// time in the same cluster?
 	upsertSQL := `INSERT INTO queues (
 		id,
         parent_id,
@@ -51,10 +53,14 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 		is_managed = EXCLUDED.is_managed,
 		max_running_apps = EXCLUDED.max_running_apps,
 		running_apps = EXCLUDED.running_apps`
+
 	for _, q := range queues {
-		parentId, err := s.getQueueID(ctx, q.Parent, q.Partition)
-		if err != nil {
-			return fmt.Errorf("could not get parent queue from DB: %v", err)
+		var err error
+		if parentId == nil {
+			parentId, err = s.getQueueID(ctx, q.Parent, q.Partition)
+			if err != nil {
+				return fmt.Errorf("could not get parent queue from DB: %v", err)
+			}
 		}
 		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
@@ -82,7 +88,18 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 				"created_at":               time.Now().Unix(),
 			})
 		if err != nil {
-			return fmt.Errorf("could not insert/update queue into DB: %v", err)
+			return fmt.Errorf("could not insert/update queue %s into DB: %v", q.QueueName, err)
+		}
+
+		if len(q.Children) > 0 {
+			children := []*dao.PartitionQueueDAOInfo{}
+			for _, child := range q.Children {
+				children = append(children, &child)
+			}
+			err = s.UpsertQueues(ctx, parentId, children)
+			if err != nil {
+				return fmt.Errorf("could not one or more children of queue %s into DB: %v", q.QueueName, err)
+			}
 		}
 	}
 	return nil

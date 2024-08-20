@@ -276,7 +276,7 @@ func seedApplications(t *testing.T, repo *PostgresRepository) {
 	}
 
 	// seed queues before applications
-	if err := repo.UpsertQueues(context.Background(), queues); err != nil {
+	if err := repo.UpsertQueues(context.Background(), nil, queues); err != nil {
 		t.Fatalf("could not seed queue: %v", err)
 	}
 	if err := repo.UpsertApplications(context.Background(), apps); err != nil {
