@@ -16,19 +16,18 @@
  * limitations under the License.
  */
 
-// This file can be replaced during build by using the `fileReplacements` array.
-// `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
-// The list of file replacements can be found in `angular.json`.
+const fs = require('fs');
 
-export const environment = {
-  production: false,
-};
+let config = process.argv[2];
+let template_environment = fs.readFileSync('./src/environments/environment.template.ts').toString();
 
-/*
- * For easier debugging in development mode, you can import the following file
- * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.
- *
- * This import should be commented out in production mode because it will have a negative impact
- * on performance if an error is thrown.
- */
-// import 'zone.js/dist/zone-error';  // Included with Angular CLI.
+Object.keys(process.env).forEach((env_var) => {
+  let regex = new RegExp(`(${env_var}:)(\\s*?)('.*?'|".*?")`);
+  template_environment = template_environment.replace(
+    regex,
+    `${env_var}: '${process.env[env_var]}'`
+  );
+});
+
+if (config) fs.writeFileSync(`./src/environments/environment.${config}.ts`, template_environment);
+else fs.writeFileSync('./src/environments/environment.ts', template_environment);

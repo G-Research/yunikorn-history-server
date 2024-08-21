@@ -43,6 +43,7 @@ export const MockNgxSpinnerService = {
 export const MockEnvconfigService = {
   getSchedulerWebAddress: noopFn,
   getAllocationsDrawerComponentRemoteConfig: nullFn,
+  getExternalLogsBaseUrl: nullFn,
 };
 
 export const MockEventBusService = {
