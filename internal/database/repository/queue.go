@@ -62,9 +62,11 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, parentId *string,
 				return fmt.Errorf("could not get parent queue from DB: %v", err)
 			}
 		}
+
+		queueId := uuid.NewString()
 		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                       uuid.NewString(),
+				"id":                       queueId,
 				"parent_id":                parentId,
 				"queue_name":               q.QueueName,
 				"status":                   q.Status,
@@ -96,7 +98,7 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, parentId *string,
 			for _, child := range q.Children {
 				children = append(children, &child)
 			}
-			err = s.UpsertQueues(ctx, parentId, children)
+			err = s.UpsertQueues(ctx, &queueId, children)
 			if err != nil {
 				return fmt.Errorf("could not one or more children of queue %s into DB: %v", q.QueueName, err)
 			}
