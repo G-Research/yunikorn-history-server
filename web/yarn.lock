@@ -5740,6 +5740,13 @@ ngx-build-plus@^16.0.0:
     "@schematics/angular" "^16.0.0"
     webpack-merge "^5.0.0"
 
+ngx-spinner@^16.0.2:
+  version "16.0.2"
+  resolved "https://registry.yarnpkg.com/ngx-spinner/-/ngx-spinner-16.0.2.tgz#07fb97a4bfc21ea10a7d52dcbd848cb055058c0f"
+  integrity sha512-MZpOHb3dvSqD6xiEdR+EtOfPY2r1kfA7t5Hv5IVwi7gkbTwVgnqxDWdOYJ/HW1pSZ5iEGhqlJqWg6CysLmNfHQ==
+  dependencies:
+    tslib "^2.3.0"
+
 nice-napi@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/nice-napi/-/nice-napi-1.0.2.tgz#dc0ab5a1eac20ce548802fc5686eaa6bc654927b"

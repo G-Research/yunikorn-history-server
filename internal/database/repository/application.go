@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
@@ -51,10 +52,10 @@ func applyApplicationFilters(builder *sql.Builder, filters ApplicationFilters) {
 
 func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error {
 	upsertSQL := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
-			partition, queue_name, submission_time, finished_time, requests, allocations, state,
+			partition, queue_name, queue_id, submission_time, finished_time, requests, allocations, state,
 			"user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations,
 			max_request_priority)
-			VALUES (@id, @app_id,@used_resource, @max_used_resource, @pending_resource, @partition, @queue_name,
+			VALUES (@id, @app_id,@used_resource, @max_used_resource, @pending_resource, @partition, @queue_name, @queue_id,
 			@submission_time, @finished_time, @requests, @allocations, @state, @user, @groups,
 			@rejected_message, @state_log, @place_holder_data, @has_reserved, @reservations, @max_request_priority)
 		ON CONFLICT (partition, queue_name, app_id) DO UPDATE SET
@@ -73,7 +74,11 @@ func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao
 			max_request_priority = COALESCE(EXCLUDED.max_request_priority, applications.max_request_priority)`
 
 	for _, a := range apps {
-		_, err := s.dbpool.Exec(ctx, upsertSQL,
+		queueId, err := s.getQueueID(ctx, a.QueueName, a.Partition)
+		if err != nil {
+			return fmt.Errorf("could not get queue_id from DB: %v", err)
+		}
+		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
 				"id":                   uuid.NewString(),
 				"app_id":               a.ApplicationID,
@@ -82,6 +87,7 @@ func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao
 				"pending_resource":     a.PendingResource,
 				"partition":            a.Partition,
 				"queue_name":           a.QueueName,
+				"queue_id":             queueId,
 				"submission_time":      a.SubmissionTime,
 				"finished_time":        a.FinishedTime,
 				"requests":             a.Requests,
@@ -103,11 +109,11 @@ func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao
 	return nil
 }
 
-func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*dao.ApplicationDAOInfo, error) {
+func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.ApplicationDAOInfo, error) {
 	queryBuilder := sql.NewBuilder().SelectAll("applications", "a").OrderBy("a.submission_time", sql.OrderByDescending)
 	applyApplicationFilters(queryBuilder, filters)
 
-	var apps []*dao.ApplicationDAOInfo
+	var apps []*model.ApplicationDAOInfo
 
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
@@ -117,10 +123,10 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var app dao.ApplicationDAOInfo
+		var app model.ApplicationDAOInfo
 		var id string
 		err := rows.Scan(&id, &app.ApplicationID, &app.UsedResource, &app.MaxUsedResource, &app.PendingResource,
-			&app.Partition, &app.QueueName, &app.SubmissionTime, &app.FinishedTime, &app.Requests, &app.Allocations,
+			&app.Partition, &app.QueueName, &app.QueueID, &app.SubmissionTime, &app.FinishedTime, &app.Requests, &app.Allocations,
 			&app.State, &app.User, &app.Groups, &app.RejectedMessage, &app.StateLog, &app.PlaceholderData,
 			&app.HasReserved, &app.Reservations, &app.MaxRequestPriority)
 		if err != nil {
@@ -132,7 +138,7 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 }
 
 func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) (
-	[]*dao.ApplicationDAOInfo, error) {
+	[]*model.ApplicationDAOInfo, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("applications", "").
 		Conditionp("queue_name", "=", queue).
@@ -140,7 +146,7 @@ func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, pa
 		OrderBy("submission_time", sql.OrderByDescending)
 	applyApplicationFilters(queryBuilder, filters)
 
-	var apps []*dao.ApplicationDAOInfo
+	var apps []*model.ApplicationDAOInfo
 
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
@@ -150,10 +156,10 @@ func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, pa
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var app dao.ApplicationDAOInfo
+		var app model.ApplicationDAOInfo
 		var id string
 		err := rows.Scan(&id, &app.ApplicationID, &app.UsedResource, &app.MaxUsedResource, &app.PendingResource,
-			&app.Partition, &app.QueueName, &app.SubmissionTime, &app.FinishedTime, &app.Requests, &app.Allocations,
+			&app.Partition, &app.QueueName, &app.QueueID, &app.SubmissionTime, &app.FinishedTime, &app.Requests, &app.Allocations,
 			&app.State, &app.User, &app.Groups, &app.RejectedMessage, &app.StateLog, &app.PlaceholderData,
 			&app.HasReserved, &app.Reservations, &app.MaxRequestPriority)
 		if err != nil {
