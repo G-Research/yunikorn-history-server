@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
@@ -131,7 +130,6 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 		return nil, fmt.Errorf("failed to get queues for some partitions: %v", errs)
 	}
 
-	// queues = flattenQueues(queues)
 	err := s.workqueue.Add(func(ctx context.Context) error {
 		logger.Infow("upserting queues", "count", len(queues))
 		return s.repo.UpsertQueues(ctx, nil, queues)
@@ -141,24 +139,6 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 	}
 
 	return queues, nil
-}
-
-// flattenQueues returns a list of all queues in the hierarchy in a flat array.
-// Usually the returned queues are a single hierarchical structure, the root queue,
-// and all other queues are children queues.
-func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo {
-	var queues []*dao.PartitionQueueDAOInfo
-	for _, q := range qs {
-		queues = append(queues, q)
-		if len(q.Children) > 0 {
-			// update partitionName for children #148
-			for i := range q.Children {
-				q.Children[i].Partition = q.Partition
-			}
-			queues = append(queues, flattenQueues(util.ToPtrSlice(q.Children))...)
-		}
-	}
-	return queues
 }
 
 // upsertPartitionNodes fetches nodes for each partition and upserts them into the database
