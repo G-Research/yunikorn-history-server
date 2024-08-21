@@ -100,7 +100,7 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, parentId *string,
 			}
 			err = s.UpsertQueues(ctx, &queueId, children)
 			if err != nil {
-				return fmt.Errorf("could not one or more children of queue %s into DB: %v", q.QueueName, err)
+				return fmt.Errorf("could not insert/update one or more children of queue %s into DB: %v", q.QueueName, err)
 			}
 		}
 	}
