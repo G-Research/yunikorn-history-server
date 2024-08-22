@@ -86,10 +86,6 @@ export GO111MODULE
 OS ?= $(shell $(GO) env GOOS)
 ARCH ?= $(shell $(GO) env GOARCH)
 
-# Docker image config
-BASE_IMAGE ?= alpine
-BASE_IMAGE_TAG ?= 3.20
-
 # Local Development
 CLUSTER_MGR ?= kind     # either 'kind' or 'minikube'
 CLUSTER_NAME ?= yhs
@@ -272,8 +268,8 @@ test-k6-performance: ## run k6 performance tests.
 ##@ Build
 
 .PHONY: web-build
-web-build: ## build the web components.
-	npm run build --prefix web
+web-build: ng ## build the web components.
+	npm install --prefix web && npm run build --prefix web
 
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
@@ -320,16 +316,14 @@ endif
 
 .PHONY: docker-build
 docker-build: OS=linux
-docker-build: bin/docker clean build copy-build-files ## build docker image using buildx.
+docker-build: bin/docker clean build ## build docker image using buildx.
 	echo "Building docker image for linux/$(ARCH)"
 	docker buildx build    				     			 \
-		--build-arg BASE_IMAGE=$(BASE_IMAGE) 			 \
-		--build-arg BASE_IMAGE_TAG=$(BASE_IMAGE_TAG) 	 \
 		--file build/yunikorn-history-server/Dockerfile  \
 		--platform linux/$(ARCH) 		 				 \
 		--output $(DOCKER_OUTPUT) 						 \
 		$(DOCKER_TAGS) 		   						  	 \
-		$(LOCALBIN_APP)
+		.
 
 .PHONY: docker-build-tarball
 docker-build-tarball: DOCKER_OUTPUT=type=oci,dest=$(LOCALBIN_DOCKER)/$(IMAGE_NAME)-oci-$(ARCH).tar
@@ -338,11 +332,6 @@ docker-build-tarball: docker-build ## build docker images and save them as tarba
 .PHONY: docker-build-amd64
 docker-build-amd64: ## build docker image for linux/amd64.
 	OS=linux ARCH=amd64 $(MAKE) docker-build
-
-.PHONY: copy-build-files
-copy-build-files: ## copy required build files to local bin directory.
-	cp config/yunikorn-history-server/config.yml $(LOCALBIN_APP)/config.yml
-	cp -r migrations $(LOCALBIN_APP)/migrations
 
 .PHONY: docker-push
 docker-push: PUSH=--push
@@ -512,3 +501,7 @@ $(XK6): bin/tooling
 k6: xk6 $(K6) ## download k6 locally if necessary.
 $(K6): bin/tooling
 	test -s $(K6) || $(XK6) build $(K6_VERSION) --with github.com/grafana/xk6-kubernetes --output $(K6)
+
+.PHONY: ng
+ng: ## install Angular CLI.
+	npm install -g @angular/cli@17

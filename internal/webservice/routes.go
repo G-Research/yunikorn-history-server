@@ -25,7 +25,7 @@ const (
 	routeEventStatistics          = "/ws/v1/event-statistics"
 	routeHealthLiveness           = "/ws/v1/health/liveness"
 	routeHealthReadiness          = "/ws/v1/health/readiness"
-
+	routeWeb                      = "/web"
 	// params
 
 	paramsPartitionName = "partition_name"
@@ -36,7 +36,7 @@ func (ws *WebService) initRoutes(ctx context.Context) {
 	router := httprouter.New()
 
 	fs := http.Dir(ws.assetsDir)
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", http.FileServer(fs)))
+	router.Handler(http.MethodGet, routeWeb+"/*filepath", http.StripPrefix(routeWeb, http.FileServer(fs)))
 	router.Handle(http.MethodGet, routePartitions, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		enrichRequestContext(ctx, r)
 		ws.getPartitions(w, r, p)
