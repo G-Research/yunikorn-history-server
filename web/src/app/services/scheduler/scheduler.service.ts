@@ -15,13 +15,13 @@ import {CommonUtil} from '@app/utils/common.util';
 import {NOT_AVAILABLE} from '@app/utils/constants';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
-import {EnvconfigService} from '../envconfig/envconfig.service';
+import {EnvConfigService} from '../envconfig/envconfig.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SchedulerService {
-  constructor(private httpClient: HttpClient, private envConfig: EnvconfigService) {}
+  constructor(private httpClient: HttpClient, private envConfig: EnvConfigService) {}
 
   fetchClusterList(): Observable<ClusterInfo[]> {
     const clusterUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/clusters`;
@@ -60,6 +60,9 @@ export class SchedulerService {
         };
       })
     );
+  }
+  ciao() {
+    console.log("ci");
   }
 
   fetchAppList(partitionName: string, queueName: string): Observable<AppInfo[]> {
