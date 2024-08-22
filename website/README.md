@@ -1,4 +1,9 @@
-# Yunikorn History Server (YHS) - Website
+<div align="center">
+    <br/>
+    <img src="./static/images/github-banner.svg" alt="Yunikorn History Server">
+</div>
+
+# Website
 
 This website is built using [Docusaurus 3](https://docusaurus.io/), a modern static website generator.
 
