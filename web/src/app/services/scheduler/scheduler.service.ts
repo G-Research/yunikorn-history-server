@@ -61,13 +61,9 @@ export class SchedulerService {
       })
     );
   }
-  ciao() {
-    console.log("ci");
-  }
 
   fetchAppList(partitionName: string, queueName: string): Observable<AppInfo[]> {
     const appsUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/partition/${partitionName}/queue/${queueName}/applications`;
-    console.log("ciaoo");
     return this.httpClient.get(appsUrl).pipe(
       map((data: any) => {
         const result: AppInfo[] = [];
