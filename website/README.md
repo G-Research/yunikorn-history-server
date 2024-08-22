@@ -1,5 +1,4 @@
 <div align="center">
-    <br/>
     <img src="./static/images/github-banner.svg" alt="Yunikorn History Server">
 </div>
 
