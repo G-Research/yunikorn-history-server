@@ -54,6 +54,7 @@ func TestNew(t *testing.T) {
 					PoolMaxConnIdleTime: 10 * time.Minute,
 					PoolMaxConns:        10,
 					PoolMinConns:        1,
+					SSLMode:             "disable",
 				},
 			},
 			wantErr: false,
@@ -67,6 +68,8 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			assert.NoError(t, os.Setenv("YHS_DB_PASSWORD", "password"))
+			t.Cleanup(func() { assert.NoError(t, os.Unsetenv("YHS_DB_PASSWORD")) })
 			got, err := New(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
@@ -296,7 +299,11 @@ func TestLoadConfig_FromFile(t *testing.T) {
 
 func TestLoadConfig_FromEnv(t *testing.T) {
 	// Set environment variables
-	err := os.Setenv("YHS_YUNIKORN_PROTOCOL", "http")
+	err := os.Setenv("YHS_DB_PASSWORD", "psw")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("YHS_YUNIKORN_PROTOCOL", "http")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,4 +321,5 @@ func TestLoadConfig_FromEnv(t *testing.T) {
 
 	assert.Equal(t, "http", k.String("yunikorn.protocol"))
 	assert.Equal(t, "120s", k.String("db.pool_max_conn_idle_time"))
+	assert.Equal(t, "psw", k.String("db.password"))
 }

@@ -17,7 +17,10 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
+      {{- if eq $serviceType "NodePort" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
+      targetPort: http
       name: http
   selector:
     {{- include "yunikorn-history-server.selectorLabels" . | nindent 4 }}

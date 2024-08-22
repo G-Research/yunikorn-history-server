@@ -22,9 +22,15 @@ metadata:
     {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.global.annotations }}
+    {{- if or .Values.global.annotations .Values.yhs.migrations.useHelmHooks }}
   annotations:
+    {{- if .Values.yhs.migrations.useHelmHooks }}
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+    {{- end }}
+    {{- with .Values.global.annotations }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
 data:
   config.yaml: |
@@ -41,8 +47,9 @@ data:
       pool_min_conns: {{ $dbPoolMinConns }}
       pool_max_conn_lifetime: {{ $dbPoolMaxConnLifetime }}
       pool_max_conn_idle_time: {{ $dbPoolMaxConnIdleTime }}
+      sslmode: "disable"
     yhs:
-      server_addr: ":{{ $yhsPort }}"
+      port: {{ $yhsPort }}
     log:
       json_format: {{ $logJSONFormat }}
       level: "{{ $logLevel }}"

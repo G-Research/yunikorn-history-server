@@ -51,6 +51,10 @@ IMAGE_REGISTRY ?= gresearch
 IMAGE_NAME := yunikorn-history-server
 # IMAGE_REPO defines the image repository and name where the operator image will be pushed.
 IMAGE_REPO ?= $(IMAGE_REGISTRY)/$(IMAGE_NAME)
+# BUILD_TIME defines the build time of the operator image.
+BUILD_TIME ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+# GIT_COMMIT defines the git commit of the operator image.
+GIT_COMMIT ?= $(shell git rev-parse HEAD)
 # GIT_TAG defines the git tag of the operator image.
 GIT_TAG ?= $(shell git describe --tags --dirty --always)
 # IMAGE_TAG defines the name and tag of the operator image.
@@ -111,7 +115,7 @@ MINIKUBE_VERSION ?= latest
 # http://linuxcommand.org/lc3_adv_awk.php
 
 .PHONY: help
-help: ## Display this help.
+help: ## display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Database
@@ -267,10 +271,18 @@ test-k6-performance: ## run k6 performance tests.
 
 ##@ Build
 
+.PHONY: web-build
+web-build: ## build the web components.
+	npm run build --prefix web
+
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
 	echo "Building yunikorn-history-server binary for $(OS)/$(ARCH)"
-	GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server ./cmd/yunikorn-history-server
+	GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
+		-ldflags "-X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Version=$(GIT_TAG) 		\
+				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Commit=$(GIT_COMMIT) 	\
+				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.BuildTime=$(BUILD_TIME)" \
+	  	./cmd/yunikorn-history-server
 
 .PHONY: build-linux-amd64
 build-linux-amd64: ## build the yunikorn-history-server binary for linux/amd64.
@@ -338,7 +350,11 @@ docker-push: docker-build-amd64 ## push linux/amd64 docker image to registry usi
 
 ##@ External Dependencies
 
-kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies
+.PHONY: kind-all-local
+kind-all-local: kind-all helm-install-yhs-local ## create kind cluster, install dependencies locally and build & install yunikorn-history-server.
+
+.PHONY: kind-all
+kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies.
 
 .PHONY: create-cluster
 create-cluster: $(KIND) $(MINIKUBE) ## create a cluster.
@@ -355,6 +371,10 @@ ifeq ($(strip $(CLUSTER_MGR)),kind)
 else
 	$(MINIKUBE) delete
 endif
+
+.PHONY: kind-load-image
+kind-load-image: docker-build-amd64 ## inject the local docker image into the kind cluster.
+	kind load docker-image $(IMAGE_TAG) --name $(KIND_CLUSTER)
 
 .PHONY: install-dependencies
 install-dependencies: helm-repos install-and-patch-yunikorn helm-install-postgres wait-for-dependencies ## install dependencies.
@@ -383,9 +403,20 @@ helm-install-postgres: ## install postgres using helm.
 helm-uninstall-postgres: ## uninstall postgres using helm.
 	$(HELM) uninstall postgres --namespace $(NAMESPACE)
 
+.PHONY: helm-install-yhs-local
+helm-install-yhs-local: kind-load-image ## build & install yunikorn-history-server using helm.
+	helm upgrade --install yunikorn-history-server charts/yunikorn-history-server \
+		--set image.registry=""   			 \
+		--set image.repository=$(IMAGE_REPO) \
+		--set image.tag=$(GIT_TAG) 			 \
+		--set service.type=NodePort 		 \
+		--namespace $(NAMESPACE)  			 \
+		--create-namespace
+
 .PHONY: helm-repos
 helm-repos: helm
-	$(HELM) repo add yunikorn https://apache.github.io/yunikorn-release
+	$(HELM) repo add gresearch https://g-research.github.io/charts
+	helm repo add yunikorn https://apache.github.io/yunikorn-release
 	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami
 	$(HELM) repo update
 
@@ -403,28 +434,28 @@ install-tools: golangci-lint gotestsum $(CLUSTER_MGR) helm yq ## install develop
 GOTESTSUM ?= $(LOCALBIN_TOOLING)/gotestsum
 GOTESTSUM_VERSION ?= v1.11.0
 .PHONY: gotestsum
-gotestsum: $(GOTESTSUM) ## Download gotestsum locally if necessary.
+gotestsum: $(GOTESTSUM) ## download gotestsum locally if necessary.
 $(GOTESTSUM): bin/tooling
 	test -s $(GOTESTSUM) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
 
 GORELEASER ?= $(LOCALBIN_TOOLING)/goreleaser
 GORELEASER_VERSION ?= v1.26.2
 .PHONY: goreleaser
-goreleaser: $(GORELEASER) ## Download GoReleaser locally if necessary.
+goreleaser: $(GORELEASER) ## download GoReleaser locally if necessary.
 $(GORELEASER): bin/tooling
 	test -s $(GORELEASER) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
 
 GOLANGCI_LINT ?= $(LOCALBIN_TOOLING)/golangci-lint
 GOLANGCI_LINT_VERSION ?= v1.59.0
 .PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+golangci-lint: $(GOLANGCI_LINT) ## download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): bin/tooling
 	test -s $(GOLANGCI_LINT) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 GOMIGRATE ?= $(LOCALBIN_TOOLING)/migrate
 GOMIGRATE_VERSION ?= v4.17.1
 .PHONY: gomigrate
-gomigrate: $(GOMIGRATE) ## Download gomigrate locally if necessary.
+gomigrate: $(GOMIGRATE) ## download gomigrate locally if necessary.
 $(GOMIGRATE): bin/tooling
 	test -s $(GOMIGRATE) || curl --silent -L https://github.com/golang-migrate/migrate/releases/download/$(GOMIGRATE_VERSION)/migrate.$(OS)-$(ARCH).tar.gz | tar xvz -C $(LOCALBIN_TOOLING)
 
@@ -443,7 +474,7 @@ $(HELM): bin/tooling
 YQ ?= $(LOCALBIN_TOOLING)/yq
 YQ_VERSION ?= v4.44.2
 .PHONY: yq
-yq: $(YQ) ## Download gomigrate locally if necessary.
+yq: $(YQ) ## download gomigrate locally if necessary.
 $(YQ): bin/tooling
 	test -s $(YQ) || curl --silent -L https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -o $(LOCALBIN_TOOLING)/yq
 	chmod +x $(LOCALBIN_TOOLING)/yq
@@ -451,12 +482,12 @@ $(YQ): bin/tooling
 GOMOCK ?= $(LOCALBIN_TOOLING)/gomock
 GOMOCK_VERSION ?= v0.4.0
 .PHONY: gomock
-gomock: $(GOMOCK) ## Download uber-go/gomock locally if necessary.
+gomock: $(GOMOCK) ## download uber-go/gomock locally if necessary.
 $(GOMOCK): bin/tooling
 	test -s $(YQ) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(GOMOCK_VERSION)
 
 .PHONY: kind
-kind: $(KIND) ## Download kind locally if necessary.
+kind: $(KIND) ## download kind locally if necessary.
 $(KIND): bin/tooling
 	test -s $(KIND) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install sigs.k8s.io/kind@$(KIND_VERSION)
 
@@ -473,15 +504,11 @@ K6 ?= $(LOCALBIN_TOOLING)/k6
 K6_VERSION ?= v0.52.0
 
 .PHONY: xk6
-xk6: $(XK6) ## Download xk6 locally if necessary.
+xk6: $(XK6) ## download xk6 locally if necessary.
 $(XK6): bin/tooling
 	test -s $(XK6) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.k6.io/xk6/cmd/xk6@latest
 
 .PHONY: k6
-k6: xk6 $(K6) ## Download k6 locally if necessary.
+k6: xk6 $(K6) ## download k6 locally if necessary.
 $(K6): bin/tooling
 	test -s $(K6) || $(XK6) build $(K6_VERSION) --with github.com/grafana/xk6-kubernetes --output $(K6)
-
-.PHONY: web-build
-web-build: ## Build the web components
-	npm run build --prefix web
