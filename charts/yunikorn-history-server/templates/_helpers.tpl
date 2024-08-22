@@ -49,3 +49,16 @@ Selector labels
 app.kubernetes.io/name: {{ include "yunikorn-history-server.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+YHS image URI
+TODO: Implement this using dict and reuse the same for each image
+*/}}
+{{- define "yunikorn-history-server.image" -}}
+{{- $registryName := default "docker.io" .Values.image.registry -}}
+{{- $repositoryName := .Values.image.repository -}}
+{{- $tag := default .Chart.AppVersion .Values.image.tag | toString -}}
+{{- $separator := ":" -}}
+
+{{- printf "%s/%s%s%s" $registryName $repositoryName $separator $tag -}}
+{{- end -}}

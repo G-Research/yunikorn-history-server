@@ -1,11 +1,16 @@
-# -- Number of replicas for the deployment
-replicaCount: 1
-
 global:
   # -- Labels to add to all deployed resources
   labels: {}
   # -- Annotations to add to all deployed resources
   annotations: {}
+
+# -- Number of replicas for the deployment
+replicaCount: 1
+
+# -- fullnameOverride completely replaces the generated name.
+fullnameOverride: ""
+# -- nameOverride replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names.
+nameOverride: ""
 
 image:
   # -- Docker registry
@@ -22,12 +27,19 @@ service:
   type: ClusterIP
   # -- Service port
   port: 8989
-  # -- Service target port
-  targetPort: http
+  # -- Service node port
+  nodePort: 30003
 
 yhs:
   # -- YHS port
   port: 8989
+  migrations:
+    # -- Toggle whether to run migrations job on install/upgrade.
+    enabled: true
+    # -- Toggle whether to use Helm pre-install and pre-upgrade hooks for migrations job.
+    useHelmHooks: true
+    # -- Backoff limit for migrations job
+    backoffLimit: 2
 
 db:
   # -- YHS database host
@@ -50,6 +62,8 @@ db:
   poolMaxConnLifetime: 1800
   # -- Maximum idle time of a connection in the database pool
   poolMaxConnIdleTime: 120
+  # -- SSL mode for the database connection
+  sslmode: "disable"
 
 yunikorn:
   # -- Yunikorn scheduler host

@@ -5,7 +5,6 @@
 {{- end }}
 
 {{- $replicaCount := .Values.replicaCount | required "A valid .Values.replicaCount is required!" -}}
-{{- $imageRegistry := .Values.image.registry | required "A valid .Values.image.registry is required!" -}}
 {{- $imageRepository := .Values.image.repository | required "A valid .Values.image.repository is required!" -}}
 {{- $imageTag := .Values.image.tag | required "A valid .Values.image.tag is required!" -}}
 {{- $imagePullPolicy := .Values.image.pullPolicy | required "A valid .Values.image.pullPolicy is required!" -}}
@@ -38,7 +37,7 @@ spec:
     spec:
       containers:
         - name: "yunikorn-history-server"
-          image: "{{ $imageRegistry }}/{{ $imageRepository }}:{{ $imageTag }}"
+          image: "{{ include "yunikorn-history-server.image" . }}"
           imagePullPolicy: "{{ $imagePullPolicy }}"
           args:
             - "--config"
@@ -60,6 +59,18 @@ spec:
             - containerPort: {{ .Values.yhs.port }}
               name: http
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ws/v1/health/liveness
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ws/v1/health/readiness
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
       volumes:
         - name: config
           configMap:
