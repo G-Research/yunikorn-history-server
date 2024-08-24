@@ -363,7 +363,7 @@ endif
 
 .PHONY: kind-load-image
 kind-load-image: docker-build-amd64 ## inject the local docker image into the kind cluster.
-	kind load docker-image $(IMAGE_TAG) --name $(KIND_CLUSTER)
+	kind load docker-image $(IMAGE_TAG) --name $(CLUSTER_NAME)
 
 .PHONY: install-dependencies
 install-dependencies: helm-repos install-and-patch-yunikorn helm-install-postgres wait-for-dependencies ## install dependencies.
