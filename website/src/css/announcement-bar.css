@@ -11,6 +11,7 @@ button[class^='announcementBarClose'], button[class*='announcementBarClose'] {
 div[class^='announcementBarContent'] a, div[class*='announcementBarContent'] a {
     color: var(--ifm-link-color);
     text-decoration: var(--ifm-link-decoration);
+    font-weight: bold;
 }
 
 div[class^='announcementBarContent'] a:hover, div[class*='announcementBarContent'] a:hover {
