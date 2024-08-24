@@ -274,7 +274,7 @@ web-build: ng ## build the web components.
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
 	echo "Building yunikorn-history-server binary for $(OS)/$(ARCH)"
-	GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
+	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
 		-ldflags "-X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Version=$(GIT_TAG) 		\
 				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Commit=$(GIT_COMMIT) 	\
 				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.BuildTime=$(BUILD_TIME)" \
