@@ -43,14 +43,14 @@ const config: Config = {
     ],
 
     themeConfig: {
-        image: 'images/project-social-preview.jpg', // project's social card
+        image: 'images/social-preview.jpg',
         navbar: {
             title: ``,
             logo: {
-                alt: 'Project logo',
-                src: 'logo/project-logo-light.svg',
-                srcDark: 'logo/project-logo-dark.svg',
-                width: 140,
+                alt: 'Yunikorn History Server',
+                src: 'navbar/logo-light-bg.svg',
+                srcDark: 'navbar/logo-dark-bg.svg',
+                width: 112,
             },
             items: [
                 // left
@@ -91,16 +91,16 @@ const config: Config = {
                     title: 'About',
                     items: [
                         {
-                            label: 'What’s it?',
                             to: '/#what-is-it',
+                            label: 'What’s it?',
                         },
                         {
-                            label: `Architecture`,
                             to: '/#architecture',
+                            label: `Architecture`,
                         },
                         {
-                            label: `Community`,
                             to: '/#community',
+                            label: `Community`,
                         },
                     ],
                 },
@@ -108,16 +108,16 @@ const config: Config = {
                     title: 'Contribute',
                     items: [
                         {
+                            href: 'https://github.com/G-Research/yunikorn-history-server/discussions',
                             label: `Start a Discussion`,
-                            href: 'https://github.com/G-Research/yunikorn-history-server/discussions'
                         },
                         {
-                            label: `Report an Issue`,
                             href: 'https://github.com/G-Research/yunikorn-history-server/issues',
+                            label: `Report an Issue`,
                         },
                         {
-                            label: `Create a Pull Request`,
                             href: 'https://github.com/G-Research/yunikorn-history-server/pulls',
+                            label: `Create a Pull Request`,
                         },
                     ],
                 },
@@ -125,16 +125,16 @@ const config: Config = {
                     title: 'More',
                     items: [
                         {
-                            label: 'GitHub',
                             href: 'https://github.com/G-Research/yunikorn-history-server',
+                            label: 'GitHub',
                         },
                         {
-                            label: 'Twitter',
                             href: 'https://twitter.com/oss_gr',
+                            label: 'Twitter',
                         },
                         {
-                            label: 'G-Research Open-Source',
                             href: 'https://opensource.gresearch.com/',
+                            label: 'G-Research Open-Source',
                         },
                     ],
                 },
@@ -150,7 +150,7 @@ const config: Config = {
         },
         announcementBar: {
             // https://docusaurus.io/docs/api/themes/configuration#announcement-bar
-            id: `announcement-bar__support-us`,
+            id: `announcement-bar__support-project`,
             content: `Support the <a href="https://github.com/G-Research/yunikorn-history-server" target="_blank">project ⭐️!</a>`,
             isCloseable: true,
         },
@@ -172,7 +172,7 @@ const config: Config = {
             },
             {
                 name: 'keywords',
-                content: 'Yunikorn, YHS, Yunikorn History Server, K8S, Kubernetes, Scheduler, History Server',
+                content: 'Yunikorn History Server, YHS, Kubernetes, K8s, Apache YuniKorn, Scheduler',
             },
         ],
     } satisfies Preset.ThemeConfig,
