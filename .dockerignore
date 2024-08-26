@@ -1,0 +1,12 @@
+.github
+.idea
+bin/docker
+bin/tooling
+build
+charts
+cmd
+examples
+hack
+internal
+test
+test-reports
