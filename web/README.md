@@ -14,6 +14,24 @@ For managing node packages you can use `npm`, `yarn` or `pnpm`. Run `npm install
 
 Run `npm start` for a dev server. Remote components will be served from this path `http://localhost:3100/remoteEntry.js`. The application will automatically reload if you change any of the source files.
 
+### JSON Server
+
+To run a mock server for local development, follow these steps:
+
+**Start the JSON Server**:
+
+   - **Using Makefile**: you can start the server by running:
+     ```sh
+     make mock-server
+     ```
+
+   - **Using npm**: If you are in the `./web` directory, you can run the JSON Server directly with npm by using:
+     ```sh
+     npm run start:json-server
+     ```
+
+   This will start the JSON Server and serve mock data. You can access it at `http://localhost:3000`.
+
 ### Build
 
 Run `make web-build` from the project root or `npm run build`. Build output is set to `/assets` folder in project root as it will be served from the YHS server.
