@@ -157,6 +157,12 @@ codegen: gomock ## generate code using go generate (mocks).
 run: ## run the yunikorn-history-server binary.
 	go run cmd/yunikorn-history-server/main.go --config config/yunikorn-history-server/local.yml
 
+##@ Json Server
+
+.PHONY: json-server
+json-server: ## start the mock server using json-server.
+	cd web && npm run start:json-server
+
 ##@ Lint
 
 .PHONY: lint
