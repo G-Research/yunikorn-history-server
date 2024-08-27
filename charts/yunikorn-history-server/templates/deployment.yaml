@@ -39,7 +39,6 @@ spec:
         - name: "yunikorn-history-server"
           image: "{{ include "yunikorn-history-server.image" . }}"
           imagePullPolicy: "{{ $imagePullPolicy }}"
-          command: ["/app/yunikorn-history-server"]
           args:
             - "--config"
             - "/app/config/config.yaml"
