@@ -60,6 +60,9 @@ GIT_TAG ?= $(shell git describe --tags --dirty --always)
 # IMAGE_TAG defines the name and tag of the operator image.
 IMAGE_TAG ?= $(IMAGE_REPO):$(GIT_TAG)
 
+# WEB_ROOT defines path that will open web UI.
+WEB_ROOT ?= /web/
+
 # Go compiler selection
 GO := go
 GO_VERSION := $(shell $(GO) version | awk '{print substr($$3, 3, 4)}')
@@ -275,7 +278,7 @@ test-k6-performance: ## run k6 performance tests.
 
 .PHONY: web-build
 web-build: ng ## build the web components.
-	npm install --prefix web && npm run build --prefix web
+	npm install --prefix web && npm run build --prefix web -- --base-href $(WEB_ROOT)
 
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
