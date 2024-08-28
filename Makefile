@@ -60,6 +60,9 @@ GIT_TAG ?= $(shell git describe --tags --dirty --always)
 # IMAGE_TAG defines the name and tag of the operator image.
 IMAGE_TAG ?= $(IMAGE_REPO):$(GIT_TAG)
 
+# WEB_ROOT defines path that will open web UI.
+WEB_ROOT ?= /web/
+
 # Go compiler selection
 GO := go
 GO_VERSION := $(shell $(GO) version | awk '{print substr($$3, 3, 4)}')
@@ -153,6 +156,12 @@ codegen: gomock ## generate code using go generate (mocks).
 .PHONY: run
 run: ## run the yunikorn-history-server binary.
 	go run cmd/yunikorn-history-server/main.go --config config/yunikorn-history-server/local.yml
+
+##@ Json Server
+
+.PHONY: json-server
+json-server: ## start the mock server using json-server.
+	cd web && npm run start:json-server
 
 ##@ Lint
 
@@ -269,12 +278,12 @@ test-k6-performance: ## run k6 performance tests.
 
 .PHONY: web-build
 web-build: ng ## build the web components.
-	npm install --prefix web && npm run build --prefix web
+	npm install --prefix web && npm run build --prefix web -- --base-href $(WEB_ROOT)
 
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
 	echo "Building yunikorn-history-server binary for $(OS)/$(ARCH)"
-	GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
+	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
 		-ldflags "-X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Version=$(GIT_TAG) 		\
 				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Commit=$(GIT_COMMIT) 	\
 				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.BuildTime=$(BUILD_TIME)" \
@@ -363,7 +372,7 @@ endif
 
 .PHONY: kind-load-image
 kind-load-image: docker-build-amd64 ## inject the local docker image into the kind cluster.
-	kind load docker-image $(IMAGE_TAG) --name $(KIND_CLUSTER)
+	kind load docker-image $(IMAGE_TAG) --name $(CLUSTER_NAME)
 
 .PHONY: install-dependencies
 install-dependencies: helm-repos install-and-patch-yunikorn helm-install-postgres wait-for-dependencies ## install dependencies.
