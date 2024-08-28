@@ -27,6 +27,7 @@ func (s *Service) handleEvent(ctx context.Context, ev *si.EventRecord) error {
 		s.handleAppEvent(ctx, ev)
 	case si.EventRecord_NODE:
 	case si.EventRecord_QUEUE:
+		s.handleQueueEvent(ctx, ev)
 	case si.EventRecord_USERGROUP:
 	default:
 		logger.Errorf("unknown event type: %v", ev.GetType())
@@ -34,6 +35,53 @@ func (s *Service) handleEvent(ctx context.Context, ev *si.EventRecord) error {
 
 	// TODO: Handle error
 	return nil
+}
+
+// handleQueueEvent handles an event of type QUEUE.
+func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
+	logger := log.FromContext(ctx)
+
+	switch ev.GetEventChangeType() {
+	case si.EventRecord_ADD:
+		s.handleQueueAddEvent(ctx, ev)
+	case si.EventRecord_NONE:
+	default:
+		// should be warning
+		logger.Warnf("unknown event EventChangeType for an Event of type APP: %v", ev.GetEventChangeType())
+	}
+}
+
+func (s *Service) handleQueueAddEvent(ctx context.Context, ev *si.EventRecord) {
+	logger := log.FromContext(ctx)
+
+	switch ev.GetEventChangeDetail() {
+	case si.EventRecord_QUEUE_CONFIG, si.EventRecord_DETAILS_NONE:
+		// TODO: Sudipto, Replacing partitionName with default is incorrect.
+		// This will insert queues in our database which is not present in the scheduler.
+		// Same bug exist in GetApplications and GetApplication which is reported in #156
+		queue, err := s.client.GetPartitionQueue(ctx, "default", ev.GetObjectID())
+		if err != nil {
+			logger.Errorf("could not get queue info %s from scheduler: %v\nReceived Event: %v",
+				ev.GetObjectID(), err, ev)
+			return
+		}
+		if queue == nil {
+			logger.Errorf("received an new queue event but the queue was not found in the scheduler: %s",
+				ev.GetObjectID())
+			return
+		}
+		s.queueMap[ev.GetObjectID()] = queue
+		logger.Debugf("upserting: %+v", ev.GetObjectID())
+		// TODO: we need to flatten before we upsert
+		// TODO: but the new implementation of upsert will handle this
+		// TODO: ref pr #155
+		if err := s.repo.UpsertQueues(ctx, []*dao.PartitionQueueDAOInfo{queue}); err != nil {
+			logger.Errorf("could not upsert queue into DB: %v", err)
+		}
+	default:
+		logger.Warnf("unknown event EventChangeDetail type for an Event of type QUEUE: %v",
+			ev.GetEventChangeDetail())
+	}
 }
 
 // handleAppEvent handles an event of type APP.

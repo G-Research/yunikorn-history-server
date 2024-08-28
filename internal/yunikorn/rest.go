@@ -30,6 +30,9 @@ var (
 	endpointQueues = func(partitionName string) string {
 		return fmt.Sprintf("/ws/v1/partition/%s/queues", partitionName)
 	}
+	endpointQueue = func(partitionName, queueName string) string {
+		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s", partitionName, queueName)
+	}
 	endpointApplicationsByPartition = func(partitionName string) string {
 		return fmt.Sprintf("/ws/v1/partition/%s/applications/active", partitionName)
 	}
@@ -164,6 +167,27 @@ func (c *RESTClient) GetApplication(
 	}
 
 	return &app, nil
+}
+
+// GetPartitionQueue calls the Yunikorn Scheduler API to get the queue information for the given
+func (c *RESTClient) GetPartitionQueue(ctx context.Context, partitionName, queueName string) (*dao.PartitionQueueDAOInfo, error) {
+	endpoint := endpointQueue(partitionName, queueName)
+	resp, err := c.get(ctx, endpoint)
+	if err != nil {
+		return nil, err
+	}
+	defer closeBody(ctx, resp)
+
+	if resp.StatusCode != 200 {
+		return nil, handleNonOKResponse(ctx, resp)
+	}
+
+	var queue dao.PartitionQueueDAOInfo
+	if err = unmarshallBody(ctx, resp, &queue); err != nil {
+		return nil, err
+	}
+
+	return &queue, nil
 }
 
 func (c *RESTClient) GetPartitionNodes(ctx context.Context, partitionName string) ([]*dao.NodeDAOInfo, error) {

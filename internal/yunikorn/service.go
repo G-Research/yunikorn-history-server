@@ -23,6 +23,8 @@ type Service struct {
 	eventHandler EventHandler
 	// appMap is a map of application IDs to their respective DAOs.
 	appMap map[string]*dao.ApplicationDAOInfo
+	// queueMap is a map of queueNames to their respective DAOs.
+	queueMap map[string]*dao.PartitionQueueDAOInfo
 	// syncInterval is the interval at which the service will sync the state of the applications with the Yunikorn API.
 	syncInterval time.Duration
 	// workqueue processes jobs which store data in database during data sync and retries them with exponential backoff.
@@ -43,6 +45,7 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 		eventRepository: eventRepository,
 		client:          client,
 		appMap:          make(map[string]*dao.ApplicationDAOInfo),
+		queueMap:        make(map[string]*dao.PartitionQueueDAOInfo),
 		syncInterval:    5 * time.Minute,
 		workqueue:       workqueue.NewWorkQueue(workqueue.WithName("yunikorn_data_sync")),
 	}

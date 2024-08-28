@@ -12,6 +12,7 @@ import (
 //go:generate mockgen -destination=mock_client.go -package=yunikorn github.com/G-Research/yunikorn-history-server/internal/yunikorn Client
 type Client interface {
 	GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error)
+	GetPartitionQueue(ctx context.Context, partitionName, queueName string) (*dao.PartitionQueueDAOInfo, error)
 	GetPartitionQueues(ctx context.Context, partitionName string) (*dao.PartitionQueueDAOInfo, error)
 	GetApplications(ctx context.Context, partitionName, queueName string) ([]*dao.ApplicationDAOInfo, error)
 	GetApplication(ctx context.Context, partitionName, queueName, appID string) (*dao.ApplicationDAOInfo, error)
