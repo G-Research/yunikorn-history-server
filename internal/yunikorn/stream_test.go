@@ -2,10 +2,12 @@ package yunikorn
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"testing"
 	"time"
@@ -84,6 +86,44 @@ func TestFetchEventStream(t *testing.T) {
 		expectedKey2 := fmt.Sprintf("%s-%s", si.EventRecord_APP.String(), si.EventRecord_SET.String())
 		return eventCounts[expectedKey1] == 2 && eventCounts[expectedKey2] == 1
 	}, 1*time.Second, 50*time.Millisecond)
+}
+
+func TestEventRepositorySafety(t *testing.T) {
+	ctx := context.Background()
+	eventRepository := repository.NewInMemoryEventRepository()
+
+	// Start a number of goroutines and randomly write to the event repository, to
+	// verify safety of using the underlying map when returning results from its
+	// Counts() method, and the returned map might be read concurrently.
+	for n := 0; n < 10; n++ {
+		go func() {
+			for p := 0; p < 200; p++ {
+				for _, ev := range []*si.EventRecord{
+					{Type: si.EventRecord_APP, EventChangeType: si.EventRecord_ADD},
+					{Type: si.EventRecord_APP, EventChangeType: si.EventRecord_ADD},
+					{Type: si.EventRecord_APP, EventChangeType: si.EventRecord_SET},
+				} {
+					n, err := rand.Int(rand.Reader, big.NewInt(5))
+					assert.NoError(t, err)
+					time.Sleep(time.Duration(n.Int64()) * time.Millisecond)
+
+					err = eventRepository.Record(ctx, ev)
+					assert.NoError(t, err)
+				}
+			}
+		}()
+
+	}
+
+	assert.Eventually(t, func() bool {
+		eventCounts, err := eventRepository.Counts(ctx)
+		if err != nil {
+			t.Fatalf("error getting event counts: %v", err)
+		}
+		appAdds := fmt.Sprintf("%s-%s", si.EventRecord_APP.String(), si.EventRecord_ADD.String())
+		appSets := fmt.Sprintf("%s-%s", si.EventRecord_APP.String(), si.EventRecord_SET.String())
+		return eventCounts[appAdds] == 4000 && eventCounts[appSets] == 2000
+	}, 2*time.Second, 5*time.Millisecond)
 }
 
 func TestProcessStreamResponse(t *testing.T) {
