@@ -31,7 +31,17 @@ func NewInMemoryEventRepository() *InMemoryEventRepository {
 }
 
 func (r *InMemoryEventRepository) Counts(ctx context.Context) (model.EventTypeCounts, error) {
-	return r.counts, nil
+	// We must lock and make a copy of the original map to avoid
+	// "concurrent map read and map write" panics, if the caller
+	// of this func reads from the returned result of this func.
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	countsCopy := model.EventTypeCounts{}
+	for k, v := range r.counts {
+		countsCopy[k] = v
+	}
+
+	return countsCopy, nil
 }
 
 func (r *InMemoryEventRepository) Record(ctx context.Context, event *si.EventRecord) error {
