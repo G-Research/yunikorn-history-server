@@ -1,0 +1,4 @@
+{
+  "port": 9889,
+  "routes": "mock-server/routes.json"
+}
