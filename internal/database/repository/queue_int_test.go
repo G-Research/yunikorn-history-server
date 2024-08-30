@@ -320,7 +320,7 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 		},
 	}
 
-	if err := repo.UpsertQueues(context.Background(), queues); err != nil {
+	if err := repo.AddQueues(context.Background(), nil, queues); err != nil {
 		t.Fatalf("could not seed queue: %v", err)
 	}
 }
