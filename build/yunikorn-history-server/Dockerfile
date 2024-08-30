@@ -1,4 +1,7 @@
-FROM node:20 as builder
+ARG NODE_VERSION=20
+ARG ALPINE_VERSION=3.20
+
+FROM node:${NODE_VERSION} as builder
 
 COPY web /build/src
 
@@ -8,7 +11,7 @@ RUN npm install -g @angular/cli@17 && \
     npm install                    && \
     npm run build
 
-FROM alpine:3.20
+FROM alpine:${ALPINE_VERSION}
 
 COPY --from=builder /build/assets /app/assets
 COPY bin/app/yunikorn-history-server /app/yunikorn-history-server
