@@ -13,11 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
-
-	model "github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
@@ -175,6 +174,21 @@ func (m *MockRepository) GetNodesPerPartition(arg0 context.Context, arg1 string)
 func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1)
+}
+
+// GetQueue mocks base method.
+func (m *MockRepository) GetQueue(arg0 context.Context, arg1, arg2 string) (*model.PartitionQueueDAOInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQueue", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*model.PartitionQueueDAOInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQueue indicates an expected call of GetQueue.
+func (mr *MockRepositoryMockRecorder) GetQueue(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueue", reflect.TypeOf((*MockRepository)(nil).GetQueue), arg0, arg1, arg2)
 }
 
 // GetQueuesPerPartition mocks base method.

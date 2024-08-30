@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -97,6 +98,59 @@ func TestGetQueuesPerPartition_Integration(t *testing.T) {
 			queues = flattenQueues(queues)
 			if len(queues) != tt.expectedTotalQueue {
 				t.Fatalf("expected %d total queues, got %d", tt.expectedTotalQueue, len(queues))
+			}
+		})
+	}
+}
+
+func TestGetQueue_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	ctx := context.Background()
+
+	connPool := database.NewTestConnectionPool(ctx, t)
+
+	repo, err := NewPostgresRepository(connPool)
+	if err != nil {
+		t.Fatalf("could not create repository: %v", err)
+	}
+
+	seedQueues(t, repo)
+
+	tests := []struct {
+		name                     string
+		queueName                string
+		partition                string
+		expectedChildrenQueueLen int // all children in the tree
+	}{
+		{
+			name:                     "Get Queue root",
+			queueName:                "root",
+			partition:                "default",
+			expectedChildrenQueueLen: 8,
+		},
+		{
+			name:                     "Get Queue root.org.eng",
+			queueName:                "root.org.eng",
+			partition:                "default",
+			expectedChildrenQueueLen: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			queue, err := repo.GetQueue(context.Background(), tt.partition, tt.queueName)
+			if err != nil {
+				t.Fatalf("could not get queues: %v", err)
+			}
+			if queue.QueueName != tt.queueName {
+				t.Fatalf("expected queue name %s, got %s", tt.queueName, queue.QueueName)
+			}
+			queues := flattenQueues(util.ToPtrSlice(queue.Children))
+			if len(queues) != tt.expectedChildrenQueueLen {
+				t.Fatalf("expected %d total children, got %d", tt.expectedChildrenQueueLen, len(queues))
 			}
 		})
 	}

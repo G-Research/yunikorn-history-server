@@ -190,6 +190,59 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 	return queues, nil
 }
 
+// GetQueue GetQueuesPerPartition the queue with the given name and partition
+// child queues are nested in the queue.Children field
+func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName string) (*model.PartitionQueueDAOInfo, error) {
+	selectSQL := `SELECT * FROM queues WHERE partition = $1`
+
+	var queue model.PartitionQueueDAOInfo
+	childrenMap := make(map[string][]*model.PartitionQueueDAOInfo)
+
+	rows, err := s.dbpool.Query(ctx, selectSQL, partition)
+	if err != nil {
+		return nil, fmt.Errorf("could not get queues from DB: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var q model.PartitionQueueDAOInfo
+		err = rows.Scan(
+			&q.Id,
+			&q.ParentId,
+			&q.CreatedAt,
+			&q.DeletedAt,
+			&q.QueueName,
+			&q.Status,
+			&q.Partition,
+			&q.PendingResource,
+			&q.MaxResource,
+			&q.GuaranteedResource,
+			&q.AllocatedResource,
+			&q.PreemptingResource,
+			&q.HeadRoom,
+			&q.IsLeaf,
+			&q.IsManaged,
+			&q.Properties,
+			&q.Parent,
+			&q.TemplateInfo,
+			&q.AbsUsedCapacity,
+			&q.MaxRunningApps,
+			&q.RunningApps,
+			&q.CurrentPriority,
+			&q.AllocatingAcceptedApps,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan queue from DB: %v", err)
+		}
+		if q.QueueName == queueName {
+			queue = q
+		} else if q.ParentId.Valid {
+			childrenMap[q.ParentId.String] = append(childrenMap[q.ParentId.String], &q)
+		}
+	}
+	queue.Children = getChildrenFromMap(queue.Id, childrenMap)
+	return &queue, nil
+}
+
 func (s *PostgresRepository) getQueueID(ctx context.Context, queueName string, partition string) (*string, error) {
 	if queueName == "" {
 		return nil, nil
