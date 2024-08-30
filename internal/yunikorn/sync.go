@@ -132,7 +132,7 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 
 	err := s.workqueue.Add(func(ctx context.Context) error {
 		logger.Infow("upserting queues", "count", len(queues))
-		return s.repo.UpsertQueues(ctx, nil, queues)
+		return s.repo.UpsertQueues(ctx, queues)
 	}, workqueue.WithJobName("upsert_queues"))
 	if err != nil {
 		logger.Errorf("could not add upsert queues job to workqueue: %v", err)

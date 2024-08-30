@@ -88,6 +88,73 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 	return nil
 }
 
+func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, queues []*dao.PartitionQueueDAOInfo) error {
+	upsertSQL := `INSERT INTO queues (
+		parent_id, queue_name, status, partition, pending_resource, max_resource,
+		guaranteed_resource, allocated_resource, preempting_resource, head_room, is_leaf, is_managed,
+		properties, parent, template_info, abs_used_capacity, max_running_apps, running_apps,
+		current_priority, allocating_accepted_apps, created_at)
+		VALUES (@parent_id, @queue_name, @status, @partition, @pending_resource, @max_resource,
+		@guaranteed_resource, @allocated_resource, @preempting_resource, @head_room, @is_leaf, @is_managed,
+		@properties, @parent, @template_info, @abs_used_capacity, @max_running_apps, @running_apps,
+		@current_priority, @allocating_accepted_apps, @created_at)
+		RETURNING id`
+
+	for _, q := range queues {
+		var err error
+		if parentId == nil {
+			parentId, err = s.getQueueID(ctx, q.Parent, q.Partition)
+			if err != nil {
+				return fmt.Errorf("could not get parent queue from DB: %v", err)
+			}
+		}
+
+		row := s.dbpool.QueryRow(ctx, upsertSQL,
+			pgx.NamedArgs{
+				"parent_id":                parentId,
+				"queue_name":               q.QueueName,
+				"status":                   q.Status,
+				"partition":                q.Partition,
+				"pending_resource":         q.PendingResource,
+				"max_resource":             q.MaxResource,
+				"guaranteed_resource":      q.GuaranteedResource,
+				"allocated_resource":       q.AllocatedResource,
+				"preempting_resource":      q.PreemptingResource,
+				"head_room":                q.HeadRoom,
+				"is_leaf":                  q.IsLeaf,
+				"is_managed":               q.IsManaged,
+				"properties":               q.Properties,
+				"parent":                   q.Parent,
+				"template_info":            q.TemplateInfo,
+				"abs_used_capacity":        q.AbsUsedCapacity,
+				"max_running_apps":         q.MaxRunningApps,
+				"running_apps":             q.RunningApps,
+				"current_priority":         q.CurrentPriority,
+				"allocating_accepted_apps": q.AllocatingAcceptedApps,
+				"created_at":               time.Now().Unix(),
+			})
+
+		var id string
+		err = row.Scan(&id)
+
+		if err != nil {
+			return fmt.Errorf("could not insert/update queue %s into DB: %v", q.QueueName, err)
+		}
+
+		if len(q.Children) > 0 {
+			children := []*dao.PartitionQueueDAOInfo{}
+			for _, child := range q.Children {
+				children = append(children, &child)
+			}
+			err = s.AddQueues(ctx, &id, children)
+			if err != nil {
+				return fmt.Errorf("could not insert/update one or more children of queue %s into DB: %v", q.QueueName, err)
+			}
+		}
+	}
+	return nil
+}
+
 // GetAllQueues returns all queues from the database as a flat list
 // child queues are not nested in the parent queue.Children field
 func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.PartitionQueueDAOInfo, error) {

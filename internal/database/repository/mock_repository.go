@@ -56,6 +56,20 @@ func (mr *MockRepositoryMockRecorder) DeleteQueues(arg0, arg1 any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueues", reflect.TypeOf((*MockRepository)(nil).DeleteQueues), arg0, arg1)
 }
 
+// AddQueues mocks base method.
+func (m *MockRepository) AddQueues(arg0 context.Context, arg1 *string, arg2 []*dao.PartitionQueueDAOInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddQueues", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddQueues indicates an expected call of AddQueues.
+func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
+}
+
 // GetAllApplications mocks base method.
 func (m *MockRepository) GetAllApplications(arg0 context.Context, arg1 ApplicationFilters) ([]*model.ApplicationDAOInfo, error) {
 	m.ctrl.T.Helper()
@@ -277,15 +291,15 @@ func (mr *MockRepositoryMockRecorder) UpsertPartitions(arg0, arg1 any) *gomock.C
 }
 
 // UpsertQueues mocks base method.
-func (m *MockRepository) UpsertQueues(arg0 context.Context, arg1 *string, arg2 []*dao.PartitionQueueDAOInfo) error {
+func (m *MockRepository) UpsertQueues(arg0 context.Context, arg1 []*dao.PartitionQueueDAOInfo) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertQueues", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "UpsertQueues", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpsertQueues indicates an expected call of UpsertQueues.
-func (mr *MockRepositoryMockRecorder) UpsertQueues(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UpsertQueues(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertQueues", reflect.TypeOf((*MockRepository)(nil).UpsertQueues), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertQueues", reflect.TypeOf((*MockRepository)(nil).UpsertQueues), arg0, arg1)
 }
