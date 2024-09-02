@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+
+	"github.com/G-Research/yunikorn-history-server/internal/util"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/test/database"
