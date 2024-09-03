@@ -48,7 +48,7 @@ CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue
 
 -- Create queues table
 CREATE TABLE queues(
-    id UUID NOT NULL DEFAULT uuid_generate_v1(),
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
     parent_id UUID,
     created_at BIGINT NOT NULL,
     deleted_at BIGINT,
