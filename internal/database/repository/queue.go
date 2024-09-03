@@ -201,7 +201,8 @@ func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName 
 			FROM queues
 			WHERE queue_name = $1
 			  AND partition = $2
-
+              -- Only select alive queues
+              AND deleted_at IS NULL
 			UNION ALL
 
 			-- Recursively fetch all child queues
