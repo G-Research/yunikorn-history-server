@@ -89,7 +89,7 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 }
 
 func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, queues []*dao.PartitionQueueDAOInfo) error {
-	upsertSQL := `INSERT INTO queues (
+	insertSQL := `INSERT INTO queues (
 		parent_id, queue_name, status, partition, pending_resource, max_resource,
 		guaranteed_resource, allocated_resource, preempting_resource, head_room, is_leaf, is_managed,
 		properties, parent, template_info, abs_used_capacity, max_running_apps, running_apps,
@@ -109,7 +109,7 @@ func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, qu
 			}
 		}
 
-		row := s.dbpool.QueryRow(ctx, upsertSQL,
+		row := s.dbpool.QueryRow(ctx, insertSQL,
 			pgx.NamedArgs{
 				"parent_id":                parentId,
 				"queue_name":               q.QueueName,
@@ -138,17 +138,17 @@ func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, qu
 		err = row.Scan(&id)
 
 		if err != nil {
-			return fmt.Errorf("could not insert/update queue %s into DB: %v", q.QueueName, err)
+			return fmt.Errorf("could not add queue %s into DB: %v", q.QueueName, err)
 		}
 
 		if len(q.Children) > 0 {
-			children := []*dao.PartitionQueueDAOInfo{}
+			var children []*dao.PartitionQueueDAOInfo
 			for _, child := range q.Children {
 				children = append(children, &child)
 			}
 			err = s.AddQueues(ctx, &id, children)
 			if err != nil {
-				return fmt.Errorf("could not insert/update one or more children of queue %s into DB: %v", q.QueueName, err)
+				return fmt.Errorf("could not add one or more children of queue %s into DB: %v", q.QueueName, err)
 			}
 		}
 	}
