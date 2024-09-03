@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
-
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/test/database"
 )
@@ -177,7 +175,7 @@ func TestGetQueue_Integration(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tt.queueName, queue.QueueName)
 
-				queues := flattenQueues(util.ToPtrSlice(queue.Children))
+				queues := flattenQueues(queue.Children)
 				assert.Equal(t, tt.expectedChildrenQueueLen, len(queues))
 			}
 		})
