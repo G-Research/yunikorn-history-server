@@ -7,7 +7,6 @@ import (
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
-	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/test/database"
 )
 
@@ -33,7 +32,7 @@ func TestGetAllQueues_Integration(t *testing.T) {
 	}{
 		{
 			name:               "Get All Queues",
-			expectedTotalQueue: 11,
+			expectedTotalQueue: 12,
 		},
 	}
 
@@ -82,7 +81,7 @@ func TestGetQueuesPerPartition_Integration(t *testing.T) {
 			name:               "Get Queues for second partition",
 			partition:          "second",
 			expectedRootQueue:  1,
-			expectedTotalQueue: 2,
+			expectedTotalQueue: 3,
 		},
 	}
 
@@ -98,6 +97,63 @@ func TestGetQueuesPerPartition_Integration(t *testing.T) {
 			queues = flattenQueues(queues)
 			if len(queues) != tt.expectedTotalQueue {
 				t.Fatalf("expected %d total queues, got %d", tt.expectedTotalQueue, len(queues))
+			}
+		})
+	}
+}
+
+func TestDeleteQueues_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	ctx := context.Background()
+	connPool := database.NewTestConnectionPool(ctx, t)
+
+	repo, err := NewPostgresRepository(connPool)
+	if err != nil {
+		t.Fatalf("could not create repository: %v", err)
+	}
+
+	seedQueues(t, repo)
+
+	tests := []struct {
+		name              string
+		partition         string
+		expectedDelQueues int
+	}{
+		{
+			name:              "Delete Queues for default partition",
+			partition:         "default",
+			expectedDelQueues: 9,
+		},
+		{
+			name:              "Delete Queues for second partition",
+			partition:         "second",
+			expectedDelQueues: 3,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			queues, err := repo.GetQueuesPerPartition(context.Background(), tt.partition)
+			if err != nil {
+				t.Fatalf("could not get queues: %v", err)
+			}
+			if err := repo.DeleteQueues(ctx, queues); err != nil {
+				t.Fatalf("could not delete queues: %v", err)
+			}
+			queues, err = repo.GetAllQueues(context.Background())
+			if err != nil {
+				t.Fatalf("could not get queues: %v", err)
+			}
+			// count the deleted queues
+			var delQueues int
+			for _, q := range queues {
+				if q.DeletedAt.Valid && q.Partition == tt.partition {
+					delQueues++
+				}
+			}
+			if delQueues != tt.expectedDelQueues {
+				t.Fatalf("expected %d deleted queues, got %d", tt.expectedDelQueues, delQueues)
 			}
 		})
 	}
@@ -162,7 +218,13 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Partition: "second",
-			QueueName: "root.child",
+			QueueName: "root.child1",
+			Parent:    "root",
+			IsLeaf:    true,
+		},
+		{
+			Partition: "second",
+			QueueName: "root.child2",
 			Parent:    "root",
 			IsLeaf:    true,
 		},
@@ -178,7 +240,7 @@ func flattenQueues(qs []*model.PartitionQueueDAOInfo) []*model.PartitionQueueDAO
 	for _, q := range qs {
 		queues = append(queues, q)
 		if len(q.Children) > 0 {
-			queues = append(queues, flattenQueues(util.ToPtrSlice(q.Children))...)
+			queues = append(queues, flattenQueues(q.Children)...)
 		}
 	}
 	return queues

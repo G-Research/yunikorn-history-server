@@ -203,12 +203,36 @@ func (s *PostgresRepository) getQueueID(ctx context.Context, queueName string, p
 	return &id, nil
 }
 
-func getChildrenFromMap(queueID string, childrenMap map[string][]*model.PartitionQueueDAOInfo) []model.PartitionQueueDAOInfo {
+func getChildrenFromMap(queueID string, childrenMap map[string][]*model.PartitionQueueDAOInfo) []*model.PartitionQueueDAOInfo {
 	children := childrenMap[queueID]
-	var childrenResult []model.PartitionQueueDAOInfo
+	var childrenResult []*model.PartitionQueueDAOInfo
 	for _, child := range children {
 		child.Children = getChildrenFromMap(child.Id, childrenMap)
-		childrenResult = append(childrenResult, *child)
+		childrenResult = append(childrenResult, child)
 	}
 	return childrenResult
+}
+
+// DeleteQueues marks the provided queues and their children as deleted.
+// The function works recursively, so if a queue has children, the function will
+// call itself with the children queues.
+func (s *PostgresRepository) DeleteQueues(ctx context.Context, queues []*model.PartitionQueueDAOInfo) error {
+	deleteSQL := `UPDATE queues SET deleted_at = $1 WHERE id = $2`
+	for _, q := range queues {
+
+		// If there are children, recursively delete them
+		if len(q.Children) > 0 {
+			err := s.DeleteQueues(ctx, q.Children)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Delete the current queue
+		_, err := s.dbpool.Exec(ctx, deleteSQL, time.Now().Unix(), q.Id)
+		if err != nil {
+			return fmt.Errorf("could not delete queue from DB: %v", err)
+		}
+	}
+	return nil
 }
