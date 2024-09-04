@@ -239,6 +239,262 @@ func TestDeleteQueues_Integration(t *testing.T) {
 	}
 }
 
+func TestAddQueues_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	ctx := context.Background()
+	connPool := database.NewTestConnectionPool(ctx, t)
+
+	repo, err := NewPostgresRepository(connPool)
+	if err != nil {
+		t.Fatalf("could not create repository: %v", err)
+	}
+
+	tests := []struct {
+		name           string
+		existingQueues []*dao.PartitionQueueDAOInfo
+		newQueues      []*dao.PartitionQueueDAOInfo
+		expectedError  error
+	}{
+		{
+			name:           "Add Queues in empty DB",
+			existingQueues: nil,
+			newQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "default",
+							QueueName: "root.system",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Add Queues when non conflicting queues exist in same partition",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "secondRoot",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "secondRoot.child1",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "default",
+							QueueName: "secondRoot.child2",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+			newQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "default",
+							QueueName: "root.system",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Add Queues when conflicting queues exist in different partition",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "secondPartition",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "secondPartition",
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "secondPartition",
+							QueueName: "root.system",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+			newQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "default",
+							QueueName: "root.system",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Add Queues when conflicting root queues exist in same partition",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "default",
+							QueueName: "root.system",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+			newQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "default",
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+						{
+							Partition: "default",
+							QueueName: "root.system",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("could not add queue %s into DB", "root"),
+		},
+		// Add Queues when conflicting child queues exist in same partition under different parent
+		// Sudipto: This test case is not valid as the parent queueName is appended to the child queueName
+		// child queueName = parentName.childName
+		// {...},
+		{
+			// AddQueues() will use partition name from the parent queue to set the partition name for the child queue
+			name:           "Add Queues when partition name is empty for child queue",
+			existingQueues: nil,
+			newQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "", // yunikorn returns empty string for child queue partition
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+		},
+		{
+			// We should not encounter this case as yunikorn should not return empty string for partition name for a root queue
+			name:           "Add Queues when partition name is empty for root queue",
+			existingQueues: nil,
+			newQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition: "",
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition: "", // yunikorn returns empty string for child queue partition
+							QueueName: "root.org",
+							Parent:    "root",
+							IsLeaf:    true,
+						},
+					},
+				},
+			},
+			expectedError: fmt.Errorf("partition is required for queue %s", "root"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			defer func() {
+				_, err := connPool.Exec(ctx, "DELETE FROM queues")
+				if err != nil {
+					t.Fatalf("could not empty queue table: %v", err)
+				}
+			}()
+			// seed the existing queues
+			if tt.existingQueues != nil {
+				if err := repo.AddQueues(ctx, nil, tt.existingQueues); err != nil {
+					t.Fatalf("could not seed queue: %v", err)
+				}
+			}
+			// add the new queues
+			err := repo.AddQueues(ctx, nil, tt.newQueues)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				// match expected error message exist in the actual error message
+				assert.Contains(t, err.Error(), tt.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+				for _, q := range tt.newQueues {
+					// check if the queue is added along with its children
+					queueFromDB, err := repo.GetQueue(ctx, q.Partition, q.QueueName)
+					require.NoError(t, err)
+					assert.Equal(t, q.QueueName, queueFromDB.QueueName)
+					assert.Equal(t, q.Partition, queueFromDB.Partition)
+					assert.Equal(t, len(q.Children), len(queueFromDB.Children))
+				}
+
+			}
+		})
+	}
+
+}
+
 func seedQueues(t *testing.T, repo *PostgresRepository) {
 	t.Helper()
 
