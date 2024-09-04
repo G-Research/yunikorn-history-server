@@ -108,6 +108,9 @@ func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, qu
 				return fmt.Errorf("could not get parent queue from DB: %v", err)
 			}
 		}
+		if q.Partition == "" {
+			return fmt.Errorf("partition is required for queue %s", q.QueueName)
+		}
 
 		row := s.dbpool.QueryRow(ctx, insertSQL,
 			pgx.NamedArgs{
@@ -144,6 +147,9 @@ func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, qu
 		if len(q.Children) > 0 {
 			var children []*dao.PartitionQueueDAOInfo
 			for _, child := range q.Children {
+				// add parent partition to the child
+				// yunikorn does not provide partition for child queues
+				child.Partition = q.Partition
 				children = append(children, &child)
 			}
 			err = s.AddQueues(ctx, &id, children)
