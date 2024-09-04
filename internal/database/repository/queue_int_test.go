@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/test/database"
@@ -97,6 +100,83 @@ func TestGetQueuesPerPartition_Integration(t *testing.T) {
 			queues = flattenQueues(queues)
 			if len(queues) != tt.expectedTotalQueue {
 				t.Fatalf("expected %d total queues, got %d", tt.expectedTotalQueue, len(queues))
+			}
+		})
+	}
+}
+
+func TestGetQueue_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	ctx := context.Background()
+	connPool := database.NewTestConnectionPool(ctx, t)
+	repo, err := NewPostgresRepository(connPool)
+	require.NoError(t, err, "could not create repository")
+
+	seedQueues(t, repo)
+
+	tests := []struct {
+		name                     string
+		queueName                string
+		partition                string
+		expectedChildrenQueueLen int // all children in the tree
+		expectedError            error
+	}{
+		{
+			name:                     "Get Queue root",
+			queueName:                "root",
+			partition:                "default",
+			expectedChildrenQueueLen: 8,
+			expectedError:            nil,
+		},
+		{
+			name:                     "Get Queue root.org.eng",
+			queueName:                "root.org.eng",
+			partition:                "default",
+			expectedChildrenQueueLen: 2,
+			expectedError:            nil,
+		},
+		{
+			name:          "Get non-existent Queue",
+			queueName:     "non-existent",
+			partition:     "default",
+			expectedError: fmt.Errorf("queue not found: %s", "non-existent"),
+		},
+		{
+			name:                     "Get Queue with no children",
+			queueName:                "root.org.sales.prod",
+			partition:                "default",
+			expectedChildrenQueueLen: 0,
+			expectedError:            nil,
+		},
+		{
+			name:          "Get deleted Queue",
+			queueName:     "deletedQueue",
+			partition:     "default",
+			expectedError: fmt.Errorf("queue not found: %s", "deletedQueue"),
+		},
+		{
+			name:          "Get Queue from non-existent partition",
+			queueName:     "root",
+			partition:     "nonExistentPartition",
+			expectedError: fmt.Errorf("queue not found: %s", "root"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			queue, err := repo.GetQueue(context.Background(), tt.partition, tt.queueName)
+
+			if tt.expectedError != nil {
+				assert.EqualError(t, err, tt.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.queueName, queue.QueueName)
+
+				queues := flattenQueues(queue.Children)
+				assert.Equal(t, tt.expectedChildrenQueueLen, len(queues))
 			}
 		})
 	}
