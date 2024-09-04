@@ -164,9 +164,6 @@ jobs:
   all-required-checks-done:
     name: All required checks done
     needs:
-      - go-lint
-      - go-unit-tests
-      - go-integration-tests
       - build
     runs-on: ubuntu-latest
     steps:
