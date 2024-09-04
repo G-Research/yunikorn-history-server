@@ -107,6 +107,10 @@ jobs:
   build:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
     name: Build (${{ matrix.os }}/${{ matrix.arch }})
+    needs:
+      - go-lint
+      - go-unit-tests
+      - go-integration-tests
     strategy:
       matrix:
         os: [ linux ]
