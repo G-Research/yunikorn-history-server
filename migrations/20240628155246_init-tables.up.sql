@@ -54,7 +54,7 @@ CREATE TABLE queues(
     deleted_at BIGINT,
     queue_name TEXT NOT NULL,
     status TEXT,
-    partition TEXT NOT NULL,
+    partition TEXT NOT NULL CHECK (partition <> ''),
     pending_resource JSONB,
     max_resource JSONB,
     guaranteed_resource JSONB,
