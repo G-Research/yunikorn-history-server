@@ -42,7 +42,7 @@ export class EnvConfigService {
     this.uiHostname = window.location.hostname;
     this.uiPort = window.location.port;
     this.envConfig = {
-      localYhsComponentsWebAddress: "http://localhost:3000",
+      localYhsComponentsWebAddress: "http://localhost:8989",
     };
   }
 

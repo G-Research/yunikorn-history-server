@@ -27,9 +27,17 @@ export class AllocationsDrawerComponent implements OnInit {
 
   @Output() removeRowSelection = new EventEmitter<void>();
 
+  selectedAllocation: any;
+  showDetails: boolean = false;
   allocColumnDef: ColumnDef[] = [];
   allocColumnIds: string[] = [];
   selectedAllocationsRow: number = -1;
+
+  displayedColumns: string[] = ['key', 'value'];
+
+  dataSource = new MatTableDataSource<{ key: string, value: string, link?: string }>([]);
+
+
 
   ngOnChanges(): void {
     if (this.allocDataSource) {
@@ -42,26 +50,17 @@ export class AllocationsDrawerComponent implements OnInit {
   ngOnInit(): void {
     this.allocColumnDef = [
       { colId: "displayName", colName: "Display Name", colWidth: 1 },
-      { colId: "allocationKey", colName: "Allocation Key", colWidth: 1 },
+      { colId: "resource", colName: "Resource", colWidth: 1, colFormatter: CommonUtil.resourceColumnFormatter },
       { colId: "nodeId", colName: "Node ID", colWidth: 1 },
-      {
-        colId: "log",
-        colName: "Log Link",
-        colWidth: 1,
-      },
-      {
-        colId: "resource",
-        colName: "Resource",
-        colFormatter: CommonUtil.resourceColumnFormatter,
-        colWidth: 1,
-      },
-      { colId: "priority", colName: "Priority", colWidth: 0.5 },
+      { colId: "state", colName: "State", colWidth: 1 },
     ];
     this.allocColumnIds = this.allocColumnDef.map((col) => col.colId);
     this.externalLogsBaseUrl = this.envConfig.getExternalLogsBaseUrl();
   }
+  
 
   formatResources(colValue: string): string[] {
+    console.log(colValue);
     const arr: string[] = colValue.split("<br/>");
     // Check if there are "cpu" or "Memory" elements in the array
     const hasCpu = arr.some((item) => item.toLowerCase().includes("cpu"));
@@ -72,10 +71,10 @@ export class AllocationsDrawerComponent implements OnInit {
     if (!hasMemory) {
       arr.unshift("Memory: n/a");
     }
-
+    
     // Concatenate the two arrays, with "cpu" and "Memory" elements first
-    const cpuAndMemoryElements = arr.filter((item) => item.toLowerCase().includes("CPU") || item.toLowerCase().includes("Memory"));
-    const otherElements = arr.filter((item) => !item.toLowerCase().includes("CPU") && !item.toLowerCase().includes("Memory"));
+    const cpuAndMemoryElements = arr.filter((item) => item.toLowerCase().includes("cpu") || item.toLowerCase().includes("memory"));
+    const otherElements = arr.filter((item) => !item.toLowerCase().includes("cpu") && !item.toLowerCase().includes("memory"));
     const result = cpuAndMemoryElements.concat(otherElements);
 
     return result;
@@ -85,7 +84,35 @@ export class AllocationsDrawerComponent implements OnInit {
     return this.allocDataSource?.data && this.allocDataSource.data.length === 0;
   }
 
-  allocationsDetailToggle(row: number) {
+  allocationsDetailToggle(row: any) {
+    this.showDetails = true;
+    this.selectedAllocation = row;
+    console.log("data", row);
+    const newData = [
+      { key: 'User', value: row.user },
+      { key: 'Name', value: row.name },
+      { key: 'Application Type', value: row.applicationType },
+      { key: 'Application Tags', value: row.applicationTags },
+      { key: 'Application Priority', value: row.applicationPriority },
+      { key: 'YarnApplication State', value: row.yarnApplicationState },
+      { key: 'Queue', value: row.queue },
+      { key: 'FinalStatus Reported by AM', value: row.finalStatusReportedByAM },
+      { key: 'Started', value: row.started },
+      { key: 'Launched', value: row.launched },
+      { key: 'Finished', value: row.finished },
+      { key: 'Elapsed', value: row.elapsed },
+      { key: 'Tracking URL', value: 'History', link: row.trackingUrl },
+      { key: 'Log Aggregation Status', value: row.logAggregationStatus },
+      { key: 'Application Timeout (Remaining Time)', value: row.applicationTimeout },
+      { key: 'Unmanaged Application', value: row.unmanagedApplication },
+      { key: 'Application Node Label Expression', value: row.applicationNodeLabelExpression },
+      { key: 'AM Container Node Label Expression', value: row.amContainerNodeLabelExpression }
+    ];
+
+
+    console.log('new data', newData);
+    this.dataSource.data = newData;
+    console.log(this.selectedAllocation);
     if (this.selectedAllocationsRow !== -1) {
       if (this.selectedAllocationsRow !== row) {
         this.allocDataSource.data[this.selectedAllocationsRow].expanded = false;
@@ -101,6 +128,10 @@ export class AllocationsDrawerComponent implements OnInit {
     }
   }
 
+  goBackToTable(){
+    this.showDetails = false;
+  }
+  
   closeDrawer() {
     this.selectedAllocationsRow = -1;
     this.matDrawer.close();
