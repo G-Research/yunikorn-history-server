@@ -48,13 +48,13 @@ CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue
 
 -- Create queues table
 CREATE TABLE queues(
-    id UUID,
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
     parent_id UUID,
     created_at BIGINT NOT NULL,
     deleted_at BIGINT,
     queue_name TEXT NOT NULL,
     status TEXT,
-    partition TEXT NOT NULL,
+    partition TEXT NOT NULL CHECK (partition <> ''),
     pending_resource JSONB,
     max_resource JSONB,
     guaranteed_resource JSONB,
