@@ -34,6 +34,7 @@ module.exports = {
         exposes: {
             './AllocationsDrawerComponent': './/src/app/allocations-drawer/allocations-drawer.component.ts',
             './AllocationsDrawerModule': './/src/app/allocations-drawer/allocations-drawer.module.ts',
+            './SchedulerService': './/src/app/services/scheduler/scheduler.service.ts'
         },
 
         shared: share({
