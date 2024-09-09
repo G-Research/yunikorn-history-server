@@ -1,0 +1,19 @@
+.featureSvg {
+    height: 200px;
+    width: 200px;
+}
+
+.features {
+    row-gap: 2rem;
+}
+
+@media screen and (max-width: 996px) {
+    .section {
+        padding-bottom: 3.5rem !important;
+    }
+
+    .description {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
