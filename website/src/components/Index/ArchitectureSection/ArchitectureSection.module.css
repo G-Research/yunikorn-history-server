@@ -1,0 +1,14 @@
+.section {
+    background-color: var(--ifm-footer-background-color);
+    color: var(--ifm-footer-color);
+}
+
+@media screen and (max-width: 996px) {
+    .sectionDiv {
+        padding-bottom: 1.5rem !important;
+    }
+}
+
+.markdownContainer img {
+    max-width: 100%;
+}
