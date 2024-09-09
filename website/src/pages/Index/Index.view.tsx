@@ -2,12 +2,12 @@ import React from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HeroSection from '@site/src/components/Index/HeroSection';
-import DescriptionSection from '@site/src/components/Index/DescriptionSection';
+import WhatIsItSection from '@site/src/components/Index/WhatIsItSection';
 import ArchitectureSection from '@site/src/components/Index/ArchitectureSection';
 import CommunitySection from '@site/src/components/Index/CommunitySection';
 
 
-export default function Home(): React.JSX.Element {
+export default function IndexView(): React.JSX.Element {
     const {siteConfig} = useDocusaurusContext();
     return (
         <Layout
@@ -15,7 +15,7 @@ export default function Home(): React.JSX.Element {
             description={siteConfig.tagline}>
             <HeroSection/>
             <main>
-                <DescriptionSection/>
+                <WhatIsItSection/>
                 <ArchitectureSection/>
                 <CommunitySection/>
             </main>
