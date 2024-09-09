@@ -43,13 +43,13 @@ const config: Config = {
     ],
 
     themeConfig: {
-        image: 'images/social-preview.jpg',
+        image: 'img/social-preview.jpg',
         navbar: {
             title: ``,
             logo: {
                 alt: 'Yunikorn History Server',
-                src: 'navbar/logo-light-bg.svg',
-                srcDark: 'navbar/logo-dark-bg.svg',
+                src: 'img/navbar/logo-light-bg.svg',
+                srcDark: 'img/navbar/logo-dark-bg.svg',
                 width: 112,
             },
             items: [
