@@ -10,7 +10,7 @@ import styles from './HeroSection.module.css';
 export default function HeroSectionView(): React.JSX.Element {
     const {siteConfig} = useDocusaurusContext();
     return (
-        <header className={clsx('hero', 'padding-vert--lg', styles.heroBanner)}>
+        <header className={clsx('hero', styles.heroBanner)}>
             <div className="container">
                 <div className="row row--no-gutters">
                     <div className={clsx("col padding-vert--xl margin-vert--xl", styles.heroHeadingColumn)}>

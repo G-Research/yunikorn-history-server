@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
     title: 'Yunikorn History Server (YHS)',
-    tagline: 'A service to store and provide historical data for K8S clusters using the Yunikorn scheduler',
+    tagline: 'A service to store and provide historical data for K8s clusters using the Yunikorn scheduler',
     favicon: 'favicon.ico',
 
     onBrokenLinks: 'throw',
