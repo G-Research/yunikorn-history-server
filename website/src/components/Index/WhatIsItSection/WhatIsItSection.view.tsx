@@ -41,7 +41,7 @@ const featuresList: FeatureItem[] = [
 export default function WhatIsItSectionView(): React.JSX.Element {
     return (
         <section>
-            <div className={clsx("container padding-bottom--xl", styles.section)}>
+            <div className={clsx("container padding-bottom--xl padding-top--lg", styles.sectionDiv)}>
                 <h2 id="what-is-it" className={clsx("text--center section__ref")}>What’s it?</h2>
                 <p className={clsx("text--center padding-horiz--xl", styles.description)}>
                     Yunikorn History Server (YHS) is an ancillary service for K8s Clusters using the Yunikorn
