@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./static/images/github-banner.svg" alt="Yunikorn History Server">
+    <img src="./static/img/github-banner.svg" alt="Yunikorn History Server">
 </div>
 
 # Website
