@@ -1,6 +1,16 @@
 yhs:
   port: 8080
   assets_dir: assets
+  cors:
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+    allowed_headers:
+      - "*"
 
 yunikorn:
   host: localhost
@@ -21,3 +31,4 @@ db:
   pool_max_conns: 10
   pool_min_conns: 1
   sslmode: disable
+
