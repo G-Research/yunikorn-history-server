@@ -39,12 +39,10 @@ export class AllocationsDrawerComponent implements OnInit {
 
   filteredDataSource = new MatTableDataSource<{ key: string, value: string, link?: string }>([]);
 
-  // Variabili per il filtro
   selectedState: string = '';
   selectedNode: string = '';
   selectedInstance: string = '';
 
-  // Stati, nodi, e istanze per il dropdown
   states = ['Running', 'Unknown', 'Failed', 'Succeeded'];
   nodes = ['lima-rancher-desktop', 'Custom name 1', 'Custom name 2', 'Custom name 3'];
   instances = ['default/sleep-dp-7b89667644-ff75z', 'default/sleep-dp-7b89667644-ff75m'];
