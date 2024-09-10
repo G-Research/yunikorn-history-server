@@ -48,7 +48,7 @@ func (ws *WebService) Start(ctx context.Context) error {
 	logger = logger.With("component", "webservice")
 	ctx = log.ToContext(ctx, logger)
 
-	ws.initRoutes(ctx)
+	ws.init(ctx)
 
 	logger.Infof("starting webservice on %s", ws.server.Addr)
 	return ws.server.ListenAndServe()

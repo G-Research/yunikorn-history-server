@@ -4,10 +4,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
+
+	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 	paramsQueueName     = "queue_name"
 )
 
-func (ws *WebService) initRoutes(ctx context.Context) {
+func (ws *WebService) init(ctx context.Context) {
 	router := httprouter.New()
 
 	fs := http.Dir(ws.assetsDir)
