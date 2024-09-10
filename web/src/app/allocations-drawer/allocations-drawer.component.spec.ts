@@ -18,6 +18,8 @@ import {
   MockSchedulerService,
 } from '@app/testing/mocks';
 import {EnvConfigService} from '@app/services/envconfig/envconfig.service';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from "@angular/material/form-field";
+import { MatDialogModule } from "@angular/material/dialog";
 
 describe("AllocationsDrawerComponent", () => {
   let component: AllocationsDrawerComponent;
@@ -35,10 +37,13 @@ describe("AllocationsDrawerComponent", () => {
         MatInputModule,
         MatTableModule,
         MatSelectModule,
+        MatFormFieldModule,
+        MatDialogModule,
       ],
       providers: [
         { provide: EnvConfigService, useValue: MockEnvconfigService },
-        { provide: NgxSpinnerService, useValue: MockNgxSpinnerService }
+        { provide: NgxSpinnerService, useValue: MockNgxSpinnerService },
+        { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: {appearance: 'outline'}}
       ],
     });
     fixture = TestBed.createComponent(AllocationsDrawerComponent);

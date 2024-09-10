@@ -8,7 +8,28 @@
 
       </div>
       <div class="content">
-        <mat-table [dataSource]="allocDataSource" matSort #allocSort="matSort">
+        <div class="filters">
+          <mat-form-field>
+            <mat-select placeholder="All states" [(value)]="selectedState" (selectionChange)="applyFilter()">
+              <mat-option *ngFor="let state of states" [value]="state">{{ state }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        
+          <mat-form-field>
+            <mat-select placeholder="All nodes" [(value)]="selectedNode" (selectionChange)="applyFilter()">
+              <mat-option *ngFor="let node of nodes" [value]="node">{{ node }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        
+          <mat-form-field>
+            <mat-select placeholder="Show all instances" [(value)]="selectedInstance" (selectionChange)="applyFilter()">
+              <mat-option value="">Show all instances</mat-option>
+              <mat-option *ngFor="let instance of instances" [value]="instance">{{ instance }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-table [dataSource]="filteredDataSource" matSort #allocSort="matSort">
           <ng-container [matColumnDef]="columnDef.colId" *ngFor="let columnDef of allocColumnDef">
             <mat-header-cell *matHeaderCellDef mat-sort-header [style.flex]="columnDef?.colWidth || 1">
               {{ columnDef.colName }}

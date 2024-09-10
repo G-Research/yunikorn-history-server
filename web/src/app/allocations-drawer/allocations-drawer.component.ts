@@ -37,7 +37,17 @@ export class AllocationsDrawerComponent implements OnInit {
 
   dataSource = new MatTableDataSource<{ key: string, value: string, link?: string }>([]);
 
+  filteredDataSource = new MatTableDataSource<{ key: string, value: string, link?: string }>([]);
 
+  // Variabili per il filtro
+  selectedState: string = '';
+  selectedNode: string = '';
+  selectedInstance: string = '';
+
+  // Stati, nodi, e istanze per il dropdown
+  states = ['Running', 'Unknown', 'Failed', 'Succeeded'];
+  nodes = ['lima-rancher-desktop', 'Custom name 1', 'Custom name 2', 'Custom name 3'];
+  instances = ['default/sleep-dp-7b89667644-ff75z', 'default/sleep-dp-7b89667644-ff75m'];
 
   ngOnChanges(): void {
     if (this.allocDataSource) {
@@ -56,6 +66,21 @@ export class AllocationsDrawerComponent implements OnInit {
     ];
     this.allocColumnIds = this.allocColumnDef.map((col) => col.colId);
     this.externalLogsBaseUrl = this.envConfig.getExternalLogsBaseUrl();
+    this.filteredDataSource.data = this.dataSource.data;
+  }
+
+  applyFilter(): void {
+    
+    this.filteredDataSource.data = this.dataSource.data.filter(item => {
+      /*
+      const matchesState = this.selectedState ? item.state === this.selectedState : true;
+      const matchesNode = this.selectedNode ? item.node === this.selectedNode : true;
+      const matchesInstance = this.selectedInstance ? item.instance === this.selectedInstance : true;
+      return matchesState && matchesNode && matchesInstance;
+
+    */
+      return true;
+    });
   }
   
 
@@ -87,30 +112,28 @@ export class AllocationsDrawerComponent implements OnInit {
   allocationsDetailToggle(row: any) {
     this.showDetails = true;
     this.selectedAllocation = row;
-    console.log("data", row);
+    console.log("data", this.selectedRow);
     const newData = [
-      { key: 'User', value: row.user },
-      { key: 'Name', value: row.name },
-      { key: 'Application Type', value: row.applicationType },
-      { key: 'Application Tags', value: row.applicationTags },
-      { key: 'Application Priority', value: row.applicationPriority },
-      { key: 'YarnApplication State', value: row.yarnApplicationState },
-      { key: 'Queue', value: row.queue },
-      { key: 'FinalStatus Reported by AM', value: row.finalStatusReportedByAM },
-      { key: 'Started', value: row.started },
-      { key: 'Launched', value: row.launched },
-      { key: 'Finished', value: row.finished },
-      { key: 'Elapsed', value: row.elapsed },
-      { key: 'Tracking URL', value: 'History', link: row.trackingUrl },
-      { key: 'Log Aggregation Status', value: row.logAggregationStatus },
-      { key: 'Application Timeout (Remaining Time)', value: row.applicationTimeout },
-      { key: 'Unmanaged Application', value: row.unmanagedApplication },
-      { key: 'Application Node Label Expression', value: row.applicationNodeLabelExpression },
-      { key: 'AM Container Node Label Expression', value: row.amContainerNodeLabelExpression }
+      { key: 'User', value: null },
+      { key: 'Name', value: null },
+      { key: 'Application Type', value: null },
+      { key: 'Application Tags', value: null },
+      { key: 'Application Priority', value: null },
+      { key: 'YarnApplication State', value: this.selectedRow?.applicationState },
+      { key: 'Queue', value: row.queueName },
+      { key: 'FinalStatus Reported by AM', value: null },
+      { key: 'Started', value: null },
+      { key: 'Launched', value: null },
+      { key: 'Finished', value: null },
+      { key: 'Elapsed', value: null },
+      { key: 'Tracking URL', value: 'History', link: undefined },
+      { key: 'Log Aggregation Status', value: null },
+      { key: 'Application Timeout (Remaining Time)', value: null },
+      { key: 'Unmanaged Application', value: null },
+      { key: 'Application Node Label Expression', value: null },
+      { key: 'AM Container Node Label Expression', value: null }
     ];
 
-
-    console.log('new data', newData);
     this.dataSource.data = newData;
     console.log(this.selectedAllocation);
     if (this.selectedAllocationsRow !== -1) {
