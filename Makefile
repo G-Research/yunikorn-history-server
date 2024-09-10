@@ -298,7 +298,8 @@ clean: ## remove generated build artifacts.
 	rm -rf $(LOCALBIN_APP)
 
 ##@ Publish
-
+NODE_VERSION ?= 20
+ALPINE_VERSION ?= 3.20
 DOCKER_OUTPUT ?= type=docker
 DOCKER_TAGS ?= $(IMAGE_TAG)
 ifneq ($(origin DOCKER_METADATA), undefined)
@@ -331,6 +332,8 @@ docker-build: bin/docker clean build ## build docker image using buildx.
 		--file build/yunikorn-history-server/Dockerfile  \
 		--platform linux/$(ARCH) 		 				 \
 		--output $(DOCKER_OUTPUT) 						 \
+		--build-arg NODE_VERSION=$(NODE_VERSION) 		 \
+        --build-arg ALPINE_VERSION=$(ALPINE_VERSION)     \
 		$(DOCKER_TAGS) 		   						  	 \
 		.
 
