@@ -13,10 +13,11 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
+
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
@@ -246,6 +247,20 @@ func (m *MockRepository) UpdateHistory(arg0 context.Context, arg1 []*dao.Applica
 func (mr *MockRepositoryMockRecorder) UpdateHistory(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHistory", reflect.TypeOf((*MockRepository)(nil).UpdateHistory), arg0, arg1, arg2)
+}
+
+// UpdateQueue mocks base method.
+func (m *MockRepository) UpdateQueue(arg0 context.Context, arg1 *dao.PartitionQueueDAOInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateQueue", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateQueue indicates an expected call of UpdateQueue.
+func (mr *MockRepositoryMockRecorder) UpdateQueue(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQueue", reflect.TypeOf((*MockRepository)(nil).UpdateQueue), arg0, arg1)
 }
 
 // UpsertApplications mocks base method.
