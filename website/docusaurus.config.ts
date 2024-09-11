@@ -56,7 +56,7 @@ const config: Config = {
                 // left
                 {
                     to: '/#what-is-it',
-                    label: 'What’s it?',
+                    label: 'What is it?',
                     position: 'left',
                     activeBaseRegex: `dummy-never-match`,
                 },
@@ -92,7 +92,7 @@ const config: Config = {
                     items: [
                         {
                             to: '/#what-is-it',
-                            label: 'What’s it?',
+                            label: 'What is it?',
                         },
                         {
                             to: '/#architecture',

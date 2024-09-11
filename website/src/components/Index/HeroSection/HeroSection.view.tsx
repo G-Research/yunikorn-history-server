@@ -20,7 +20,7 @@ export default function HeroSectionView(): React.JSX.Element {
                             <Link
                                 className="button button--primary button--lg shadow--md"
                                 to="/#what-is-it">
-                                <IconHelpSquareRounded size={18} color="currentcolor" stroke={3}/> What's it?
+                                <IconHelpSquareRounded size={18} color="currentcolor" stroke={3}/> What is it?
                             </Link>
                             <Link
                                 className="button button--secondary button--lg shadow--md"
