@@ -201,9 +201,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 	}
 
-	if err := repo.AddQueues(ctx, nil, queues); err != nil {
-		t.Fatalf("could not seed queue: %v", err)
-	}
+	err := repo.AddQueues(ctx, nil, queues)
+	require.NoError(t, err, "could not seed queues")
 
 	apps := []*dao.ApplicationDAOInfo{
 		{
@@ -281,7 +280,6 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 	}
 
-	if err := repo.UpsertApplications(ctx, apps); err != nil {
-		t.Fatalf("could not seed applications: %v", err)
-	}
+	err = repo.UpsertApplications(ctx, apps)
+	require.NoError(t, err, "could not seed applications")
 }
