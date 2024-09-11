@@ -28,7 +28,7 @@ func TestGetAllApplications_Integration(t *testing.T) {
 		t.Fatalf("could not create repository: %v", err)
 	}
 
-	seedApplications(t, repo)
+	seedApplications(ctx, t, repo)
 
 	tests := []struct {
 		name     string
@@ -112,7 +112,7 @@ func TestGetAppsPerPartitionPerQueue_Integration(t *testing.T) {
 		t.Fatalf("could not create repository: %v", err)
 	}
 
-	seedApplications(t, repo)
+	seedApplications(ctx, t, repo)
 
 	tests := []struct {
 		name     string
@@ -182,7 +182,7 @@ func TestGetAppsPerPartitionPerQueue_Integration(t *testing.T) {
 	}
 }
 
-func seedApplications(t *testing.T, repo *PostgresRepository) {
+func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 	t.Helper()
 
 	now := time.Now()
@@ -191,13 +191,18 @@ func seedApplications(t *testing.T, repo *PostgresRepository) {
 		{
 			Partition: "default",
 			QueueName: "root",
-		},
-		{
-			Partition: "default",
-			QueueName: "root.default",
-			Parent:    "root",
+			Children: []dao.PartitionQueueDAOInfo{
+				{
+					Partition: "default",
+					QueueName: "root.default",
+					Parent:    "root",
+				},
+			},
 		},
 	}
+
+	err := repo.AddQueues(ctx, nil, queues)
+	require.NoError(t, err, "could not seed queues")
 
 	apps := []*dao.ApplicationDAOInfo{
 		{
@@ -275,11 +280,6 @@ func seedApplications(t *testing.T, repo *PostgresRepository) {
 		},
 	}
 
-	// seed queues before applications
-	if err := repo.UpsertQueues(context.Background(), queues); err != nil {
-		t.Fatalf("could not seed queue: %v", err)
-	}
-	if err := repo.UpsertApplications(context.Background(), apps); err != nil {
-		t.Fatalf("could not seed applications: %v", err)
-	}
+	err = repo.UpsertApplications(ctx, apps)
+	require.NoError(t, err, "could not seed applications")
 }
