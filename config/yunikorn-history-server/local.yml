@@ -22,9 +22,6 @@ yhs:
       - "*"
     allowed_methods:
       - "GET"
-      - "POST"
-      - "PUT"
-      - "DELETE"
     allowed_headers:
       - "*"
 

@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 					DataSyncInterval: 5 * time.Minute,
 					CORSConfig: cors.Options{
 						AllowedOrigins: []string{"*"},
-						AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+						AllowedMethods: []string{"GET"},
 						AllowedHeaders: []string{"*"},
 					},
 				},
