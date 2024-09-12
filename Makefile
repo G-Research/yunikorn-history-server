@@ -139,10 +139,6 @@ define database_url
 	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 endef
 
-.PHONY: create-postgres-db
-create-postgres-db: ## create database specified in the config file.
-	PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -c "CREATE DATABASE $(DB_NAME);"
-
 .PHONY: migrate
 migrate: yq gomigrate ## run migrations.
 	$(GOMIGRATE) -path migrations -database $(call database_url) $(ARGS)
@@ -197,7 +193,6 @@ define start-cluster
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
 	@echo "**********************************"
-	$(MAKE) create-postgres-db
 	$(MAKE) install-dependencies migrate-up
 endef
 
@@ -366,7 +361,7 @@ docker-push: docker-build-amd64 ## push linux/amd64 docker image to registry usi
 kind-all-local: kind-all helm-install-yhs-local ## create kind cluster, install dependencies locally and build & install yunikorn-history-server.
 
 .PHONY: kind-all
-kind-all minikube-all: create-cluster install-dependencies create-postgres-db migrate-up ## create cluster and install dependencies.
+kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies.
 
 .PHONY: create-cluster
 create-cluster: $(KIND) $(MINIKUBE) ## create a cluster.

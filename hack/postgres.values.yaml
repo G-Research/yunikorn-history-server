@@ -1,5 +1,6 @@
 auth:
   postgresPassword: psw
+  database: yhs
 
 primary:
   service:
