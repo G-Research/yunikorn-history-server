@@ -120,11 +120,11 @@ func New(path string) (*Config, error) {
 		return nil, err
 	}
 
-	assetsDir := k.String("yhs.assets_dir")
+	assetsDir := k.String("yhs_assets_dir")
 	if assetsDir == "" {
 		assetsDir = "assets"
 	}
-	dataSyncInterval := k.Duration("yhs.data_sync_interval")
+	dataSyncInterval := k.Duration("yhs_data_sync_interval")
 	if dataSyncInterval == 0 {
 		dataSyncInterval = 5 * time.Minute
 	}
@@ -135,7 +135,7 @@ func New(path string) (*Config, error) {
 	}
 
 	yhsConfig := YHSConfig{
-		Port:             k.Int("yhs.port"),
+		Port:             k.Int("yhs_port"),
 		AssetsDir:        assetsDir,
 		DataSyncInterval: dataSyncInterval,
 		CORSConfig:       corsConfig,
@@ -145,28 +145,28 @@ func New(path string) (*Config, error) {
 	}
 
 	yunikornConfig := YunikornConfig{
-		Host:   k.String("yunikorn.host"),
-		Port:   k.Int("yunikorn.port"),
-		Secure: k.Bool("yunikorn.secure"),
+		Host:   k.String("yunikorn_host"),
+		Port:   k.Int("yunikorn_port"),
+		Secure: k.Bool("yunikorn_secure"),
 	}
 
 	logConfig := LogConfig{
-		JSONFormat: k.Bool("log.json_format"),
-		LogLevel:   k.String("log.level"),
+		JSONFormat: k.Bool("log_json_format"),
+		LogLevel:   k.String("log_level"),
 	}
 
 	postgresConfig := PostgresConfig{
-		Host:                k.String("db.host"),
-		Port:                k.Int("db.port"),
-		Username:            k.String("db.user"),
-		Password:            k.String("db.password"),
-		DbName:              k.String("db.dbname"),
-		SSLMode:             k.String("db.sslmode"),
-		Schema:              k.String("db.schema"),
-		PoolMaxConnLifetime: k.Duration("db.pool_max_conn_lifetime"),
-		PoolMaxConnIdleTime: k.Duration("db.pool_max_conn_idletime"),
-		PoolMaxConns:        k.Int("db.pool_max_conns"),
-		PoolMinConns:        k.Int("db.pool_min_conns"),
+		Host:                k.String("db_host"),
+		Port:                k.Int("db_port"),
+		Username:            k.String("db_user"),
+		Password:            k.String("db_password"),
+		DbName:              k.String("db_dbname"),
+		SSLMode:             k.String("db_sslmode"),
+		Schema:              k.String("db_schema"),
+		PoolMaxConnLifetime: k.Duration("db_pool_max_conn_lifetime"),
+		PoolMaxConnIdleTime: k.Duration("db_pool_max_conn_idletime"),
+		PoolMaxConns:        k.Int("db_pool_max_conns"),
+		PoolMinConns:        k.Int("db_pool_min_conns"),
 	}
 
 	config := &Config{
@@ -181,7 +181,10 @@ func New(path string) (*Config, error) {
 // loadConfig loads the configuration from a config file if provided,
 // otherwise it loads the configuration from environment variables prefixed with YHS_.
 func loadConfig(cfgFile string) (*koanf.Koanf, error) {
-	k := koanf.New(".")
+	k := koanf.NewWithConf(koanf.Conf{
+		Delim:       "_",
+		StrictMerge: true,
+	})
 
 	if cfgFile != "" {
 		if _, err := os.Stat(cfgFile); err != nil {
@@ -192,7 +195,7 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 		}
 	}
 
-	if err := k.Load(env.Provider("YHS_", ".", processEnvVar), nil); err != nil {
+	if err := k.Load(env.Provider("YHS_", "_", processEnvVar), nil); err != nil {
 		return nil, fmt.Errorf("error loading environment variables: %v", err)
 	}
 
@@ -202,10 +205,5 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 // Removes the prefix "YHS_" and replaces the first "_" with "."
 // YHS_PARENT1_CHILD1_NAME will be converted into "parent1.child1_name"
 func processEnvVar(s string) string {
-	s = strings.TrimPrefix(s, "YHS_")
-	firstIndex := strings.Index(s, "_")
-	if firstIndex > -1 {
-		s = s[:firstIndex] + "." + s[firstIndex+1:]
-	}
-	return strings.ToLower(s)
+	return strings.ToLower(strings.TrimPrefix(s, "YHS_"))
 }
