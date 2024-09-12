@@ -17,6 +17,13 @@ db:
 yhs:
   port: 8989
   data_sync_interval: 5m
+  cors:
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - "GET"
+    allowed_headers:
+      - "*"
 
 log:
   level: "INFO"
