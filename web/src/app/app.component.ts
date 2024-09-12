@@ -16,7 +16,8 @@ export class AppComponent implements OnInit {
 
   copyWebEnvToClipboard() {
     const copyString = `"moduleFederationRemoteEntry": "${this.remoteEntry}",
-                "allocationsDrawerRemoteComponent": "./AllocationsDrawerComponent"`;
+                "allocationsDrawerRemoteComponent": "./AllocationsDrawerComponent",
+                "schedulerService": "./SchedulerService"`;
     navigator.clipboard
       .writeText(copyString)
       .catch((error) => console.error('Writing to the clipboard is not allowed. ', error));
