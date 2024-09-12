@@ -1,4 +1,5 @@
 @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+@import "@angular/material/prebuilt-themes/deeppurple-amber.css"; 
 .mat-drawer-container {
   min-width: 430px;
   width: 55%;
@@ -150,4 +151,17 @@
   .label-column {
     font-weight: bold; 
   } 
+
+  .filters {
+    display: flex;
+    align-items: center;
+  }
+  
+  .first-field {
+    margin-right: auto;
+  }
+  
+  .right-align {
+    margin-left: 16px;
+  }
 }

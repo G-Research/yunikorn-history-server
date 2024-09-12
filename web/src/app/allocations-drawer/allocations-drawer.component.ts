@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Injectable, Input, OnInit, Output, ViewChild } from "@angular/core";
+import { FormControl } from "@angular/forms";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatDrawer } from "@angular/material/sidenav";
 import { MatSort } from "@angular/material/sort";
@@ -27,6 +28,8 @@ export class AllocationsDrawerComponent implements OnInit {
 
   @Output() removeRowSelection = new EventEmitter<void>();
 
+
+  disableSelect = new FormControl(false);
   selectedAllocation: any;
   showDetails: boolean = false;
   allocColumnDef: ColumnDef[] = [];
@@ -35,9 +38,9 @@ export class AllocationsDrawerComponent implements OnInit {
 
   displayedColumns: string[] = ['key', 'value'];
 
-  dataSource = new MatTableDataSource<{ key: string, value: string, link?: string }>([]);
+  dataSource = new MatTableDataSource<{ key: string, value: string|undefined }>([]);
 
-  filteredDataSource = new MatTableDataSource<{ key: string, value: string, link?: string }>([]);
+  filteredDataSource = new MatTableDataSource<AllocationInfo & { expanded: boolean }>([]);
 
   selectedState: string = '';
   selectedNode: string = '';
@@ -45,12 +48,14 @@ export class AllocationsDrawerComponent implements OnInit {
 
   states = ['Running', 'Unknown', 'Failed', 'Succeeded'];
   nodes = ['lima-rancher-desktop', 'Custom name 1', 'Custom name 2', 'Custom name 3'];
-  instances = ['default/sleep-dp-7b89667644-ff75z', 'default/sleep-dp-7b89667644-ff75m'];
+  instances: string[] = [];
 
   ngOnChanges(): void {
     if (this.allocDataSource) {
+      this.updateInstances();
       this.allocDataSource.paginator = this.allocPaginator;
       this.allocDataSource.sort = this.allocSort;
+      this.applyFilter();
     }
   }
   constructor(private envConfig: EnvConfigService) {}
@@ -64,12 +69,10 @@ export class AllocationsDrawerComponent implements OnInit {
     ];
     this.allocColumnIds = this.allocColumnDef.map((col) => col.colId);
     this.externalLogsBaseUrl = this.envConfig.getExternalLogsBaseUrl();
-    this.filteredDataSource.data = this.dataSource.data;
   }
 
   applyFilter(): void {
-    
-    this.filteredDataSource.data = this.dataSource.data.filter(item => {
+    this.filteredDataSource.data = this.allocDataSource.data.filter(item => {
       /*
       const matchesState = this.selectedState ? item.state === this.selectedState : true;
       const matchesNode = this.selectedNode ? item.node === this.selectedNode : true;
@@ -77,13 +80,18 @@ export class AllocationsDrawerComponent implements OnInit {
       return matchesState && matchesNode && matchesInstance;
 
     */
-      return true;
+    const matchesInstance = this.selectedInstance ? item.displayName === this.selectedInstance : true;
+    return matchesInstance;
     });
   }
   
+  updateInstances(): void {
+    if (this.allocDataSource && this.allocDataSource.data) {
+      this.instances = [...new Set(this.allocDataSource.data.map(item => item.displayName))];
+    }
+  }
 
   formatResources(colValue: string): string[] {
-    console.log(colValue);
     const arr: string[] = colValue.split("<br/>");
     // Check if there are "cpu" or "Memory" elements in the array
     const hasCpu = arr.some((item) => item.toLowerCase().includes("cpu"));
@@ -110,30 +118,20 @@ export class AllocationsDrawerComponent implements OnInit {
   allocationsDetailToggle(row: any) {
     this.showDetails = true;
     this.selectedAllocation = row;
-    console.log("data", this.selectedRow);
     const newData = [
-      { key: 'User', value: null },
-      { key: 'Name', value: null },
-      { key: 'Application Type', value: null },
-      { key: 'Application Tags', value: null },
-      { key: 'Application Priority', value: null },
+      { key: 'User', value: undefined },
+      { key: 'Name', value: undefined },
+      { key: 'Application Type', value: "spark" },
+      { key: 'Application Tags', value: undefined },
       { key: 'YarnApplication State', value: this.selectedRow?.applicationState },
-      { key: 'Queue', value: row.queueName },
-      { key: 'FinalStatus Reported by AM', value: null },
-      { key: 'Started', value: null },
-      { key: 'Launched', value: null },
-      { key: 'Finished', value: null },
-      { key: 'Elapsed', value: null },
-      { key: 'Tracking URL', value: 'History', link: undefined },
-      { key: 'Log Aggregation Status', value: null },
-      { key: 'Application Timeout (Remaining Time)', value: null },
-      { key: 'Unmanaged Application', value: null },
-      { key: 'Application Node Label Expression', value: null },
-      { key: 'AM Container Node Label Expression', value: null }
+      { key: 'FinalStatus Reported by AM', value: undefined },
+      { key: 'Started', value: undefined },
+      { key: 'Launched', value: undefined },
+      { key: 'Finished', value: undefined },
+      { key: 'Elapsed', value: undefined },
     ];
 
     this.dataSource.data = newData;
-    console.log(this.selectedAllocation);
     if (this.selectedAllocationsRow !== -1) {
       if (this.selectedAllocationsRow !== row) {
         this.allocDataSource.data[this.selectedAllocationsRow].expanded = false;
