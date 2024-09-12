@@ -42,7 +42,6 @@ func (c *YHSConfig) Validate() error {
 		return fmt.Errorf("yhs config validation errors: %v", errorMessages)
 	}
 	return nil
-
 }
 
 type PostgresConfig struct {

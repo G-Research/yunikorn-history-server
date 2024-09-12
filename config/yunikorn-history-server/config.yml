@@ -6,7 +6,7 @@ yunikorn:
 db:
   host: postgresql
   port: 5432
-  dbname: postgres
+  dbname: yhs
   user: postgres
   password: psw
   pool_max_conns: 0
