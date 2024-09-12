@@ -201,8 +201,7 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 	return k, nil
 }
 
-// Removes the prefix "YHS_" and replaces the first "_" with "."
-// YHS_PARENT1_CHILD1_NAME will be converted into "parent1.child1_name"
+// Removes the prefix "YHS_" and converts the value to lowercase
 func processEnvVar(s string) string {
 	return strings.ToLower(strings.TrimPrefix(s, "YHS_"))
 }
