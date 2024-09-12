@@ -45,7 +45,6 @@ func (c *YHSConfig) Validate() error {
 		return fmt.Errorf("yhs config validation errors: %v", errorMessages)
 	}
 	return nil
-
 }
 
 type PostgresConfig struct {
@@ -129,9 +128,9 @@ func New(path string) (*Config, error) {
 		dataSyncInterval = 5 * time.Minute
 	}
 	corsConfig := cors.Options{
-		AllowedOrigins: k.Strings("yhs.cors.allowed_origins"),
-		AllowedMethods: k.Strings("yhs.cors.allowed_methods"),
-		AllowedHeaders: k.Strings("yhs.cors.allowed_headers"),
+		AllowedOrigins: k.Strings("yhs_cors_allowed_origins"),
+		AllowedMethods: k.Strings("yhs_cors_allowed_methods"),
+		AllowedHeaders: k.Strings("yhs_cors_allowed_headers"),
 	}
 
 	yhsConfig := YHSConfig{
