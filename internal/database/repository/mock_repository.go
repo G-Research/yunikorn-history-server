@@ -13,11 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
-
-	model "github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
@@ -43,20 +42,6 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// DeleteQueues mocks base method.
-func (m *MockRepository) DeleteQueues(arg0 context.Context, arg1 []*model.PartitionQueueDAOInfo) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteQueues", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteQueues indicates an expected call of DeleteQueues.
-func (mr *MockRepositoryMockRecorder) DeleteQueues(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueues", reflect.TypeOf((*MockRepository)(nil).DeleteQueues), arg0, arg1)
-}
-
 // AddQueues mocks base method.
 func (m *MockRepository) AddQueues(arg0 context.Context, arg1 *string, arg2 []*dao.PartitionQueueDAOInfo) error {
 	m.ctrl.T.Helper()
@@ -69,6 +54,20 @@ func (m *MockRepository) AddQueues(arg0 context.Context, arg1 *string, arg2 []*d
 func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
+}
+
+// DeleteQueues mocks base method.
+func (m *MockRepository) DeleteQueues(arg0 context.Context, arg1 []*model.PartitionQueueDAOInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQueues", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteQueues indicates an expected call of DeleteQueues.
+func (mr *MockRepositoryMockRecorder) DeleteQueues(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueues", reflect.TypeOf((*MockRepository)(nil).DeleteQueues), arg0, arg1)
 }
 
 // GetAllApplications mocks base method.
