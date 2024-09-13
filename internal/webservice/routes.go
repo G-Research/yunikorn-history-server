@@ -112,6 +112,15 @@ func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Reque
 	jsonResponse(w, QueuesResponse{Queues: queues})
 }
 
+// getAppsPerPartitionPerQueue returns all applications for a given partition and queue.
+// Results are ordered by submission time in descending order.
+// Following query params are supported:
+// - user: filter by user
+// - groups: filter by groups (comma-separated list)
+// - submissionStartTime: filter from the submission time
+// - submissionEndTime: filter until the submission time
+// - limit: limit the number of returned applications
+// - offset: offset the returned applications
 func (ws *WebService) getAppsPerPartitionPerQueue(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	partition := params.ByName(paramsPartitionName)
 	queue := params.ByName(paramsQueueName)
