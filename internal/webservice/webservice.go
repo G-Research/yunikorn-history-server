@@ -6,25 +6,27 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	repository2 "github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
+	"github.com/rs/cors"
 
+	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 type WebService struct {
 	server          *http.Server
-	repository      repository2.Repository
-	eventRepository repository2.EventRepository
+	repository      repository.Repository
+	eventRepository repository.EventRepository
 	healthService   health.Interface
 	assetsDir       string
+	corsConfig      cors.Options
 }
 
 func NewWebService(
 	cfg *config.YHSConfig,
-	repository repository2.Repository,
-	eventRepository repository2.EventRepository,
+	repository repository.Repository,
+	eventRepository repository.EventRepository,
 	healthService health.Interface,
 ) *WebService {
 	return &WebService{
@@ -36,6 +38,7 @@ func NewWebService(
 		eventRepository: eventRepository,
 		healthService:   healthService,
 		assetsDir:       cfg.AssetsDir,
+		corsConfig:      cfg.CORSConfig,
 	}
 }
 
@@ -45,7 +48,7 @@ func (ws *WebService) Start(ctx context.Context) error {
 	logger = logger.With("component", "webservice")
 	ctx = log.ToContext(ctx, logger)
 
-	ws.initRoutes(ctx)
+	ws.init(ctx)
 
 	logger.Infof("starting webservice on %s", ws.server.Addr)
 	return ws.server.ListenAndServe()
