@@ -112,7 +112,6 @@ func TestEventRepositorySafety(t *testing.T) {
 				}
 			}
 		}()
-
 	}
 
 	assert.Eventually(t, func() bool {

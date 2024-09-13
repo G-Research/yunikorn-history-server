@@ -93,13 +93,12 @@ func enrichRequestContext(ctx context.Context, r *http.Request) {
 }
 
 func (ws *WebService) getPartitions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	r.URL.Query().Get("test")
 	partitions, err := ws.repository.GetAllPartitions(r.Context())
 	if err != nil {
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, PartitionsResponse{Partitions: partitions})
+	jsonResponse(w, partitions)
 }
 
 func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -109,7 +108,7 @@ func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Reque
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, QueuesResponse{Queues: queues})
+	jsonResponse(w, queues)
 }
 
 // getAppsPerPartitionPerQueue returns all applications for a given partition and queue.
@@ -136,7 +135,7 @@ func (ws *WebService) getAppsPerPartitionPerQueue(w http.ResponseWriter, r *http
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, AppsResponse{Apps: apps})
+	jsonResponse(w, apps)
 }
 
 func (ws *WebService) getNodesPerPartition(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -146,7 +145,7 @@ func (ws *WebService) getNodesPerPartition(w http.ResponseWriter, r *http.Reques
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, NodesResponse{Nodes: nodes})
+	jsonResponse(w, nodes)
 }
 
 func (ws *WebService) getAppsHistory(w http.ResponseWriter, r *http.Request) {
