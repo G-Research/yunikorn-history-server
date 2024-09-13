@@ -129,8 +129,14 @@ define yq_get_db
     $(shell $(call yq_get, .db.$(1)))
 endef
 
+DB_USER ?= $(strip $(call yq_get_db,user))
+DB_PASSWORD ?= $(strip $(call yq_get_db,password))
+DB_HOST ?= $(strip $(call yq_get_db,host))
+DB_PORT ?= $(strip $(call yq_get_db,port))
+DB_NAME ?= $(strip $(call yq_get_db,dbname))
+
 define database_url
-	postgres://$(strip $(call yq_get_db,user)):$(strip $(call yq_get_db,password))@$(strip $(call yq_get_db,host)):$(strip $(call yq_get_db,port))/$(strip $(call yq_get_db,dbname))?sslmode=disable
+	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 endef
 
 .PHONY: migrate
