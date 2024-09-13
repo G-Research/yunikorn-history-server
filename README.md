@@ -69,7 +69,8 @@ YHS is composed of three main components:
    querying capabilities to filter and retrieve specific data.
 
 3. **Web Frontend:** This component enhances the existing Yunikorn Web interface by providing additional features that utilize
-   the historical data stored by YHS. It is loaded on the application page of Yunikorn Web.
+   the historical data stored by YHS. It is loaded on the application page of Yunikorn Web. The home page served by YHS
+   will display instructions on how to connect YHS to the YuniKorn Web.
    More details on the web component is available [here](web/README.md).
 
 By integrating these components, YHS provides a comprehensive view of the historical operations of a Yunikorn-managed cluster,
