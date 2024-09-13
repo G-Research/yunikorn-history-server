@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
 	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
 	"github.com/G-Research/yunikorn-history-server/test/k8s"
 	"github.com/G-Research/yunikorn-history-server/test/util"
@@ -31,8 +31,10 @@ const (
 	serverURL           = "http://localhost:8989"
 )
 
-var ctx context.Context
-var cancel context.CancelFunc
+var (
+	ctx    context.Context
+	cancel context.CancelFunc
+)
 
 func TestMain(m *testing.M) {
 	// Setup
@@ -79,7 +81,7 @@ func TestYunikornApp_E2E(t *testing.T) {
 		if err != nil {
 			return false
 		}
-		for _, app := range appsResponse.Apps {
+		for _, app := range appsResponse {
 			fmt.Println(app.ApplicationID)
 			if app.ApplicationID == appID {
 				return true
@@ -87,7 +89,6 @@ func TestYunikornApp_E2E(t *testing.T) {
 		}
 		return false
 	}, 400*time.Second, 5*time.Second)
-
 }
 
 func TestYunikornEventStream_E2E(t *testing.T) {
@@ -190,7 +191,7 @@ func TestYunikornQueueCreation_E2E(t *testing.T) {
 		if err != nil {
 			return false
 		}
-		for _, queue := range queuesResponse.Queues {
+		for _, queue := range queuesResponse {
 			if queue.QueueName == "root" {
 				for _, childQueue := range queue.Children {
 					if childQueue.QueueName == "root."+queueName {
@@ -244,20 +245,20 @@ func getEventStatistics(serverURL string) (model.EventTypeCounts, error) {
 	return counts, nil
 }
 
-func getQueues(serverURL string) (webservice.QueuesResponse, error) {
-	var queues webservice.QueuesResponse
+func getQueues(serverURL string) ([]*dao.PartitionQueueDAOInfo, error) {
+	var queues []*dao.PartitionQueueDAOInfo
 	url := fmt.Sprintf("%s/ws/v1/partition/default/queues", serverURL)
 	if err := httpGet(url, &queues); err != nil {
-		return webservice.QueuesResponse{}, err
+		return nil, err
 	}
 	return queues, nil
 }
 
-func getApps(serverURL string, namespace string) (webservice.AppsResponse, error) {
-	var apps webservice.AppsResponse
+func getApps(serverURL string, namespace string) ([]*dao.ApplicationDAOInfo, error) {
+	var apps []*dao.ApplicationDAOInfo
 	url := fmt.Sprintf("%s/ws/v1/partition/default/queue/root.%s/applications", serverURL, namespace)
 	if err := httpGet(url, &apps); err != nil {
-		return webservice.AppsResponse{}, err
+		return nil, err
 	}
 	return apps, nil
 }
