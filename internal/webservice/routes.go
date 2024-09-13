@@ -3,6 +3,8 @@ package webservice
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -13,7 +15,6 @@ import (
 
 const (
 	// routes
-
 	routeClusters                 = "/ws/v1/clusters"
 	routePartitions               = "/ws/v1/partitions"
 	routeQueuesPerPartition       = "/ws/v1/partition/:partition_name/queues"
@@ -26,18 +27,16 @@ const (
 	routeEventStatistics          = "/ws/v1/event-statistics"
 	routeHealthLiveness           = "/ws/v1/health/liveness"
 	routeHealthReadiness          = "/ws/v1/health/readiness"
-	routeWeb                      = "/web"
-	// params
 
+	// params
 	paramsPartitionName = "partition_name"
 	paramsQueueName     = "queue_name"
 )
 
 func (ws *WebService) init(ctx context.Context) {
 	router := httprouter.New()
+	router.NotFound = http.HandlerFunc(ws.serveSPA)
 
-	fs := http.Dir(ws.assetsDir)
-	router.Handler(http.MethodGet, routeWeb+"/*filepath", http.StripPrefix(routeWeb, http.FileServer(fs)))
 	router.Handle(http.MethodGet, routePartitions, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		enrichRequestContext(ctx, r)
 		ws.getPartitions(w, r, p)
@@ -191,4 +190,20 @@ func (ws *WebService) LivenessHealthcheck(w http.ResponseWriter, r *http.Request
 
 func (ws *WebService) ReadinessHealthcheck(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, ws.healthService.Readiness(r.Context()))
+}
+
+func (ws *WebService) serveSPA(w http.ResponseWriter, r *http.Request) {
+	path := filepath.Join(ws.assetsDir, r.URL.Path)
+
+	fi, err := os.Stat(path)
+	if os.IsNotExist(err) || fi.IsDir() {
+		http.ServeFile(w, r, filepath.Join(ws.assetsDir, "index.html"))
+	}
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	http.FileServer(http.Dir(ws.assetsDir)).ServeHTTP(w, r)
 }
