@@ -4,10 +4,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
+
+	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 	paramsQueueName     = "queue_name"
 )
 
-func (ws *WebService) initRoutes(ctx context.Context) {
+func (ws *WebService) init(ctx context.Context) {
 	router := httprouter.New()
 
 	fs := http.Dir(ws.assetsDir)
@@ -78,7 +79,9 @@ func (ws *WebService) initRoutes(ctx context.Context) {
 		ws.ReadinessHealthcheck(w, r)
 	})
 
-	ws.server.Handler = router
+	// Setup CORS
+	c := cors.New(ws.corsConfig)
+	ws.server.Handler = c.Handler(router)
 }
 
 func enrichRequestContext(ctx context.Context, r *http.Request) {
@@ -109,6 +112,15 @@ func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Reque
 	jsonResponse(w, QueuesResponse{Queues: queues})
 }
 
+// getAppsPerPartitionPerQueue returns all applications for a given partition and queue.
+// Results are ordered by submission time in descending order.
+// Following query params are supported:
+// - user: filter by user
+// - groups: filter by groups (comma-separated list)
+// - submissionStartTime: filter from the submission time
+// - submissionEndTime: filter until the submission time
+// - limit: limit the number of returned applications
+// - offset: offset the returned applications
 func (ws *WebService) getAppsPerPartitionPerQueue(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	partition := params.ByName(paramsPartitionName)
 	queue := params.ByName(paramsQueueName)
