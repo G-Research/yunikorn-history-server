@@ -266,11 +266,11 @@ func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "", k.String("config.ignored"))
-	assert.Equal(t, "http", k.String("yunikorn.protocol"))
-	assert.Equal(t, "example.com", k.String("yunikorn.host"))
-	assert.Equal(t, 8080, k.Int("yunikorn.port"))
-	assert.Equal(t, "localhost:8081", k.String("yhs.serverAddr"))
+	assert.Equal(t, "", k.String("config_ignored"))
+	assert.Equal(t, "http", k.String("yunikorn_protocol"))
+	assert.Equal(t, "example.com", k.String("yunikorn_host"))
+	assert.Equal(t, 8080, k.Int("yunikorn_port"))
+	assert.Equal(t, "localhost:8081", k.String("yhs_serverAddr"))
 }
 
 func TestLoadConfig_FromFile(t *testing.T) {
@@ -295,11 +295,11 @@ func TestLoadConfig_FromFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "", k.String("config.ignored"))
-	assert.Equal(t, "http", k.String("yunikorn.protocol"))
-	assert.Equal(t, "localhost", k.String("yunikorn.host"))
-	assert.Equal(t, 8080, k.Int("yunikorn.port"))
-	assert.Equal(t, "localhost:8081", k.String("yhs.serverAddr"))
+	assert.Equal(t, "", k.String("config_ignored"))
+	assert.Equal(t, "http", k.String("yunikorn_protocol"))
+	assert.Equal(t, "localhost", k.String("yunikorn_host"))
+	assert.Equal(t, 8080, k.Int("yunikorn_port"))
+	assert.Equal(t, "localhost:8081", k.String("yhs_serverAddr"))
 }
 
 func TestLoadConfig_FromEnv(t *testing.T) {
@@ -324,7 +324,7 @@ func TestLoadConfig_FromEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "http", k.String("yunikorn.protocol"))
-	assert.Equal(t, "120s", k.String("db.pool_max_conn_idle_time"))
-	assert.Equal(t, "psw", k.String("db.password"))
+	assert.Equal(t, "http", k.String("yunikorn_protocol"))
+	assert.Equal(t, "120s", k.String("db_pool_max_conn_idle_time"))
+	assert.Equal(t, "psw", k.String("db_password"))
 }
