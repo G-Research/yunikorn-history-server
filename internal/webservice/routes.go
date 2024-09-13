@@ -194,10 +194,10 @@ func (ws *WebService) ReadinessHealthcheck(w http.ResponseWriter, r *http.Reques
 
 func (ws *WebService) serveSPA(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(ws.assetsDir, r.URL.Path)
-
 	fi, err := os.Stat(path)
 	if os.IsNotExist(err) || fi.IsDir() {
 		http.ServeFile(w, r, filepath.Join(ws.assetsDir, "index.html"))
+		return
 	}
 
 	if err != nil {
