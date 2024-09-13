@@ -657,12 +657,12 @@ func TestUpdateQueue_Integration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// clean up the table after the test
-			defer func() {
+			t.Cleanup(func() {
 				_, err := connPool.Exec(ctx, "DELETE FROM queues")
 				if err != nil {
 					t.Fatalf("could not empty queue table: %v", err)
 				}
-			}()
+			})
 			// seed the existing queues
 			if tt.existingQueues != nil {
 				if err := repo.AddQueues(ctx, nil, tt.existingQueues); err != nil {
