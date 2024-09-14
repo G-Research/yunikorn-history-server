@@ -14,20 +14,6 @@
 /* Navbar */
 
 
-/* Hero Title */
-.hero__title {
-    background: -webkit-linear-gradient(0deg, var(--ifm-color-primary-light) 0%, var(--ifm-color-primary-darker) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.hero__subtitle {
-    color: var(--ifm-color-emphasis-700);
-}
-
-/* Hero Title */
-
-
 /* Section */
 .section__ref::before {
     content: '';

@@ -1,46 +1,53 @@
 import React from "react";
 import clsx from "clsx";
-import ThemedImage from '@theme/ThemedImage';
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Link from "@docusaurus/Link";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import {IconBrandGithub, IconHelpSquareRounded} from '@tabler/icons-react';
 import styles from './HeroSection.module.css';
 
+
 export default function HeroSectionView(): React.JSX.Element {
-    const {siteConfig} = useDocusaurusContext();
     return (
-        <header className={clsx('hero', styles.heroBanner)}>
-            <div className="container">
-                <div className="row row--no-gutters">
-                    <div className={clsx("col padding-vert--xl margin-vert--xl", styles.heroHeadingColumn)}>
-                        <h1 className="hero__title">{siteConfig.title}</h1>
-                        <p className="hero__subtitle">{siteConfig.tagline}</p>
-                        <div className={styles.buttons}>
-                            <Link
-                                className="button button--primary button--lg shadow--md"
-                                to="/#what-is-it">
-                                <IconHelpSquareRounded size={18} color="currentcolor" stroke={3}/> What is it?
-                            </Link>
-                            <Link
-                                className="button button--secondary button--lg shadow--md"
-                                to="https://github.com/G-Research/yunikorn-history-server">
-                                <IconBrandGithub size={18} color="currentcolor" stroke={3}/> GitHub
-                            </Link>
-                        </div>
+        <header>
+            <div className={clsx("padding--lg", styles.topBanner)}>
+                <h1 className={styles.topBannerTitle}>
+                    Yunikorn History Server (YHS)
+                </h1>
+            </div>
+            <div className={clsx("padding-vert--xl padding-horiz--md", styles.hero)}>
+                <div className="container">
+                    <div className={styles.heroInner}>
+                        <img
+                            alt='YHS logo'
+                            className={clsx("padding--sm", styles.heroLogo)}
+                            src={useBaseUrl('/img/logo/project-logo-dark-bg.svg')}
+                            width="500"
+                            height="225"
+                        />
+                        <span className={styles.heroTitle}>
+                            <b>Store</b> and <b>access</b> historical data of your <b>K8s clusters</b> using <b>Apache Yunikorn</b>
+                        </span>
                     </div>
-                    <div className={clsx("col", styles.heroIconColumn)}>
-                        <div className={styles.heroIconContainer}>
-                            <div className={styles.heroIconBackground}></div>
-                            <ThemedImage
-                                className={styles.heroIcon} width={256} height={256}
-                                alt="YHS icon"
-                                sources={{
-                                    light: useBaseUrl('/img/icon/project-icon-light-bg-2.svg'),
-                                    dark: useBaseUrl('/img/icon/project-icon-dark-bg-2.svg'),
-                                }}
+                    <div className={clsx("margin-top--lg", styles.heroCtas)}>
+                        <Link
+                            className="button button--primary button--lg shadow--md"
+                            to="/#what-is-it">
+                            <IconHelpSquareRounded size={18} color="currentcolor" stroke={3}/> What is it?
+                        </Link>
+                        <Link
+                            className="button button--secondary button--lg shadow--md"
+                            to="https://github.com/G-Research/yunikorn-history-server">
+                            <IconBrandGithub size={18} color="currentcolor" stroke={3}/> GitHub
+                        </Link>
+                        <span className={styles.gitHubButtonWrapper}>
+                            <iframe
+                                className={styles.gitHubButton}
+                                src="https://ghbtns.com/github-btn.html?user=G-Research&amp;repo=yunikorn-history-server&amp;type=star&amp;count=true&amp;size=large"
+                                width={160}
+                                height={30}
+                                title="GitHub Stars"
                             />
-                        </div>
+                    </span>
                     </div>
                 </div>
             </div>

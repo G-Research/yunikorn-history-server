@@ -7,6 +7,10 @@
     row-gap: 2rem;
 }
 
+.description {
+    font-size: 20px;
+}
+
 @media screen and (max-width: 996px) {
     .sectionDiv {
         padding-bottom: 5rem !important;
@@ -15,5 +19,6 @@
     .description {
         padding-left: 0 !important;
         padding-right: 0 !important;
+        font-size: 18px;
     }
 }
