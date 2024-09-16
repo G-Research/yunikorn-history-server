@@ -248,6 +248,20 @@ func (mr *MockRepositoryMockRecorder) UpdateHistory(arg0, arg1, arg2 any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHistory", reflect.TypeOf((*MockRepository)(nil).UpdateHistory), arg0, arg1, arg2)
 }
 
+// UpdateQueue mocks base method.
+func (m *MockRepository) UpdateQueue(arg0 context.Context, arg1 *dao.PartitionQueueDAOInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateQueue", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateQueue indicates an expected call of UpdateQueue.
+func (mr *MockRepositoryMockRecorder) UpdateQueue(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQueue", reflect.TypeOf((*MockRepository)(nil).UpdateQueue), arg0, arg1)
+}
+
 // UpsertApplications mocks base method.
 func (m *MockRepository) UpsertApplications(arg0 context.Context, arg1 []*dao.ApplicationDAOInfo) error {
 	m.ctrl.T.Helper()
