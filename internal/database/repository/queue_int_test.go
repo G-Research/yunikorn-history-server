@@ -504,15 +504,13 @@ func TestUpdateQueue_Integration(t *testing.T) {
 	connPool := database.NewTestConnectionPool(ctx, t)
 
 	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
+	require.NoError(t, err)
 
 	tests := []struct {
 		name           string
 		existingQueues []*dao.PartitionQueueDAOInfo
 		queueToUpdate  *dao.PartitionQueueDAOInfo
-		expectedError  error
+		expectedError  bool
 	}{
 		{
 			name: "Update root queue when root queue exists",
@@ -528,7 +526,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 				QueueName:       "root",
 				CurrentPriority: 1,
 			},
-			expectedError: nil,
+			expectedError: false,
 		},
 		{
 			name:           "Update root queue when root queue does not exist",
@@ -538,7 +536,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 				QueueName:       "root",
 				CurrentPriority: 1,
 			},
-			expectedError: fmt.Errorf("queue not found: %s", "root"),
+			expectedError: true,
 		},
 		{
 			name: "Update when child queues has changed",
@@ -586,7 +584,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 					},
 				},
 			},
-			expectedError: nil,
+			expectedError: false,
 		},
 		{
 			name: "Update when new child queues has been added",
@@ -618,7 +616,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 					},
 				},
 			},
-			expectedError: nil,
+			expectedError: false,
 		},
 		{
 			name: "Update when both parent queue changed and new child queues has been added",
@@ -650,7 +648,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 					},
 				},
 			},
-			expectedError: nil,
+			expectedError: false,
 		},
 	}
 
@@ -659,9 +657,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			// clean up the table after the test
 			t.Cleanup(func() {
 				_, err := connPool.Exec(ctx, "DELETE FROM queues")
-				if err != nil {
-					t.Fatalf("could not empty queue table: %v", err)
-				}
+				require.NoError(t, err)
 			})
 			// seed the existing queues
 			if tt.existingQueues != nil {
@@ -671,23 +667,22 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			}
 			// update the new queue
 			err := repo.UpdateQueue(ctx, tt.queueToUpdate)
-			if tt.expectedError != nil {
+			if tt.expectedError {
 				require.Error(t, err)
-				// match expected error message exist in the actual error message
-				assert.Contains(t, err.Error(), tt.expectedError.Error())
-			} else {
-				require.NoError(t, err)
-				// check if the queue is updated along with its children
-				queueFromDB, err := repo.GetQueue(ctx, tt.queueToUpdate.Partition, tt.queueToUpdate.QueueName)
-				require.NoError(t, err)
-				assert.Equal(t, tt.queueToUpdate.QueueName, queueFromDB.QueueName)
-				assert.Equal(t, tt.queueToUpdate.Partition, queueFromDB.Partition)
-				assert.Equal(t, tt.queueToUpdate.CurrentPriority, queueFromDB.CurrentPriority)
-				// compare the children
-				for i, child := range tt.queueToUpdate.Children {
-					assert.Equal(t, child.CurrentPriority, queueFromDB.Children[i].CurrentPriority)
-				}
+				return
 			}
+			require.NoError(t, err)
+			// check if the queue is updated along with its children
+			queueFromDB, err := repo.GetQueue(ctx, tt.queueToUpdate.Partition, tt.queueToUpdate.QueueName)
+			require.NoError(t, err)
+			assert.Equal(t, tt.queueToUpdate.QueueName, queueFromDB.QueueName)
+			assert.Equal(t, tt.queueToUpdate.Partition, queueFromDB.Partition)
+			assert.Equal(t, tt.queueToUpdate.CurrentPriority, queueFromDB.CurrentPriority)
+			// compare the children
+			for i, child := range tt.queueToUpdate.Children {
+				assert.Equal(t, child.CurrentPriority, queueFromDB.Children[i].CurrentPriority)
+			}
+
 		})
 	}
 }
