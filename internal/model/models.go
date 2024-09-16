@@ -17,7 +17,7 @@ type PartitionQueueDAOInfo struct {
 	Id       string         `json:"id"`
 	ParentId sql.NullString `json:"parentId,omitempty"`
 	dao.PartitionQueueDAOInfo
-	Children  []PartitionQueueDAOInfo `json:"children,omitempty"`
-	CreatedAt sql.NullInt64           `json:"createdAt,omitempty"`
-	DeletedAt sql.NullInt64           `json:"deletedAt,omitempty"`
+	Children  []*PartitionQueueDAOInfo `json:"children,omitempty"`
+	CreatedAt sql.NullInt64            `json:"createdAt,omitempty"`
+	DeletedAt sql.NullInt64            `json:"deletedAt,omitempty"`
 }

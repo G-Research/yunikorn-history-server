@@ -88,6 +88,79 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 	return nil
 }
 
+func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, queues []*dao.PartitionQueueDAOInfo) error {
+	insertSQL := `INSERT INTO queues (
+		parent_id, queue_name, status, partition, pending_resource, max_resource,
+		guaranteed_resource, allocated_resource, preempting_resource, head_room, is_leaf, is_managed,
+		properties, parent, template_info, abs_used_capacity, max_running_apps, running_apps,
+		current_priority, allocating_accepted_apps, created_at)
+		VALUES (@parent_id, @queue_name, @status, @partition, @pending_resource, @max_resource,
+		@guaranteed_resource, @allocated_resource, @preempting_resource, @head_room, @is_leaf, @is_managed,
+		@properties, @parent, @template_info, @abs_used_capacity, @max_running_apps, @running_apps,
+		@current_priority, @allocating_accepted_apps, @created_at)
+		RETURNING id`
+
+	for _, q := range queues {
+		var err error
+		if parentId == nil {
+			parentId, err = s.getQueueID(ctx, q.Parent, q.Partition)
+			if err != nil {
+				return fmt.Errorf("could not get parent queue from DB: %v", err)
+			}
+		}
+		if q.Partition == "" {
+			return fmt.Errorf("partition is required for queue %s", q.QueueName)
+		}
+
+		row := s.dbpool.QueryRow(ctx, insertSQL,
+			pgx.NamedArgs{
+				"parent_id":                parentId,
+				"queue_name":               q.QueueName,
+				"status":                   q.Status,
+				"partition":                q.Partition,
+				"pending_resource":         q.PendingResource,
+				"max_resource":             q.MaxResource,
+				"guaranteed_resource":      q.GuaranteedResource,
+				"allocated_resource":       q.AllocatedResource,
+				"preempting_resource":      q.PreemptingResource,
+				"head_room":                q.HeadRoom,
+				"is_leaf":                  q.IsLeaf,
+				"is_managed":               q.IsManaged,
+				"properties":               q.Properties,
+				"parent":                   q.Parent,
+				"template_info":            q.TemplateInfo,
+				"abs_used_capacity":        q.AbsUsedCapacity,
+				"max_running_apps":         q.MaxRunningApps,
+				"running_apps":             q.RunningApps,
+				"current_priority":         q.CurrentPriority,
+				"allocating_accepted_apps": q.AllocatingAcceptedApps,
+				"created_at":               time.Now().Unix(),
+			})
+
+		var id string
+		err = row.Scan(&id)
+
+		if err != nil {
+			return fmt.Errorf("could not add queue %s into DB: %v", q.QueueName, err)
+		}
+
+		if len(q.Children) > 0 {
+			var children []*dao.PartitionQueueDAOInfo
+			for _, child := range q.Children {
+				// add parent partition to the child
+				// yunikorn does not provide partition for child queues
+				child.Partition = q.Partition
+				children = append(children, &child)
+			}
+			err = s.AddQueues(ctx, &id, children)
+			if err != nil {
+				return fmt.Errorf("could not add one or more children of queue %s into DB: %v", q.QueueName, err)
+			}
+		}
+	}
+	return nil
+}
+
 // GetAllQueues returns all queues from the database as a flat list
 // child queues are not nested in the parent queue.Children field
 func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.PartitionQueueDAOInfo, error) {
@@ -190,6 +263,91 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 	return queues, nil
 }
 
+// GetQueue the queue with the given name and partition
+// child queues are nested in the queue.Children field
+func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName string) (*model.PartitionQueueDAOInfo, error) {
+	selectSQL := `
+		WITH RECURSIVE generation AS (
+			-- Start with the specific queue based on queue_name and partition
+			SELECT *,
+				   0 AS generation_number
+			FROM queues
+			WHERE queue_name = $1
+			  AND partition = $2
+              -- Only select alive queues
+              AND deleted_at IS NULL
+			UNION ALL
+
+			-- Recursively fetch all child queues
+			SELECT child.*,
+				   g.generation_number + 1 AS generation_number
+			FROM queues child
+			JOIN generation g
+			ON g.id = child.parent_id
+		)
+		SELECT * FROM generation ORDER BY generation_number;
+	`
+	rows, err := s.dbpool.Query(ctx, selectSQL, queueName, partition)
+	if err != nil {
+		return nil, fmt.Errorf("could not get queues from DB: %v", err)
+	}
+	defer rows.Close()
+
+	// Initialize map to track parent-child relationships
+	childrenMap := make(map[string][]*model.PartitionQueueDAOInfo)
+	var rootQueue *model.PartitionQueueDAOInfo
+
+	for rows.Next() {
+		var q model.PartitionQueueDAOInfo
+		var generationNumber int
+		err = rows.Scan(
+			&q.Id,
+			&q.ParentId,
+			&q.CreatedAt,
+			&q.DeletedAt,
+			&q.QueueName,
+			&q.Status,
+			&q.Partition,
+			&q.PendingResource,
+			&q.MaxResource,
+			&q.GuaranteedResource,
+			&q.AllocatedResource,
+			&q.PreemptingResource,
+			&q.HeadRoom,
+			&q.IsLeaf,
+			&q.IsManaged,
+			&q.Properties,
+			&q.Parent,
+			&q.TemplateInfo,
+			&q.AbsUsedCapacity,
+			&q.MaxRunningApps,
+			&q.RunningApps,
+			&q.CurrentPriority,
+			&q.AllocatingAcceptedApps,
+			&generationNumber,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan queue from DB: %v", err)
+		}
+
+		// Track the root queue for the current query
+		if rootQueue == nil && generationNumber == 0 {
+			rootQueue = &q
+		} else if q.ParentId.Valid {
+			// Otherwise, add the queue to the children map
+			childrenMap[q.ParentId.String] = append(childrenMap[q.ParentId.String], &q)
+		}
+	}
+
+	if rootQueue == nil {
+		return nil, fmt.Errorf("queue not found: %s", queueName)
+	}
+	// Recursively populate the children for the root queue
+	rootQueue.Children = getChildrenFromMap(rootQueue.Id, childrenMap)
+
+	return rootQueue, nil
+}
+
 func (s *PostgresRepository) getQueueID(ctx context.Context, queueName string, partition string) (*string, error) {
 	if queueName == "" {
 		return nil, nil
@@ -203,12 +361,36 @@ func (s *PostgresRepository) getQueueID(ctx context.Context, queueName string, p
 	return &id, nil
 }
 
-func getChildrenFromMap(queueID string, childrenMap map[string][]*model.PartitionQueueDAOInfo) []model.PartitionQueueDAOInfo {
+func getChildrenFromMap(queueID string, childrenMap map[string][]*model.PartitionQueueDAOInfo) []*model.PartitionQueueDAOInfo {
 	children := childrenMap[queueID]
-	var childrenResult []model.PartitionQueueDAOInfo
+	var childrenResult []*model.PartitionQueueDAOInfo
 	for _, child := range children {
 		child.Children = getChildrenFromMap(child.Id, childrenMap)
-		childrenResult = append(childrenResult, *child)
+		childrenResult = append(childrenResult, child)
 	}
 	return childrenResult
+}
+
+// DeleteQueues marks the provided queues and their children as deleted.
+// The function works recursively, so if a queue has children, the function will
+// call itself with the children queues.
+func (s *PostgresRepository) DeleteQueues(ctx context.Context, queues []*model.PartitionQueueDAOInfo) error {
+	deleteSQL := `UPDATE queues SET deleted_at = $1 WHERE id = $2`
+	for _, q := range queues {
+
+		// If there are children, recursively delete them
+		if len(q.Children) > 0 {
+			err := s.DeleteQueues(ctx, q.Children)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Delete the current queue
+		_, err := s.dbpool.Exec(ctx, deleteSQL, time.Now().Unix(), q.Id)
+		if err != nil {
+			return fmt.Errorf("could not delete queue from DB: %v", err)
+		}
+	}
+	return nil
 }

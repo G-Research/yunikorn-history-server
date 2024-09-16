@@ -129,8 +129,14 @@ define yq_get_db
     $(shell $(call yq_get, .db.$(1)))
 endef
 
+DB_USER ?= $(strip $(call yq_get_db,user))
+DB_PASSWORD ?= $(strip $(call yq_get_db,password))
+DB_HOST ?= $(strip $(call yq_get_db,host))
+DB_PORT ?= $(strip $(call yq_get_db,port))
+DB_NAME ?= $(strip $(call yq_get_db,dbname))
+
 define database_url
-	postgres://$(strip $(call yq_get_db,user)):$(strip $(call yq_get_db,password))@$(strip $(call yq_get_db,host)):$(strip $(call yq_get_db,port))/$(strip $(call yq_get_db,dbname))?sslmode=disable
+	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 endef
 
 .PHONY: migrate
@@ -148,8 +154,8 @@ migrate-down: ## migrate down using gomigrate.
 ##@ Codegen
 
 .PHONY: codegen
-codegen: gomock ## generate code using go generate (mocks).
-	go generate ./...
+codegen: mockgen ## generate code using go generate (mocks).
+	PATH=$(LOCALBIN_TOOLING):$$PATH go generate ./...
 
 ##@ Run
 
@@ -298,7 +304,8 @@ clean: ## remove generated build artifacts.
 	rm -rf $(LOCALBIN_APP)
 
 ##@ Publish
-
+NODE_VERSION ?= 20
+ALPINE_VERSION ?= 3.20
 DOCKER_OUTPUT ?= type=docker
 DOCKER_TAGS ?= $(IMAGE_TAG)
 ifneq ($(origin DOCKER_METADATA), undefined)
@@ -331,6 +338,8 @@ docker-build: bin/docker clean build ## build docker image using buildx.
 		--file build/yunikorn-history-server/Dockerfile  \
 		--platform linux/$(ARCH) 		 				 \
 		--output $(DOCKER_OUTPUT) 						 \
+		--build-arg NODE_VERSION=$(NODE_VERSION) 		 \
+        --build-arg ALPINE_VERSION=$(ALPINE_VERSION)     \
 		$(DOCKER_TAGS) 		   						  	 \
 		.
 
@@ -444,7 +453,7 @@ $(GORELEASER): bin/tooling
 	test -s $(GORELEASER) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
 
 GOLANGCI_LINT ?= $(LOCALBIN_TOOLING)/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.59.0
+GOLANGCI_LINT_VERSION ?= v1.60.2
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): bin/tooling
@@ -477,12 +486,12 @@ $(YQ): bin/tooling
 	test -s $(YQ) || curl --silent -L https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -o $(LOCALBIN_TOOLING)/yq
 	chmod +x $(LOCALBIN_TOOLING)/yq
 
-GOMOCK ?= $(LOCALBIN_TOOLING)/gomock
-GOMOCK_VERSION ?= v0.4.0
-.PHONY: gomock
-gomock: $(GOMOCK) ## download uber-go/gomock locally if necessary.
-$(GOMOCK): bin/tooling
-	test -s $(YQ) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(GOMOCK_VERSION)
+MOCKGEN ?= $(LOCALBIN_TOOLING)/mockgen
+MOCKGEN_VERSION ?= v0.4.0
+.PHONY: mockgen
+mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
+$(MOCKGEN): bin/tooling
+	test -s $(MOCKGEN) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
 
 .PHONY: kind
 kind: $(KIND) ## download kind locally if necessary.

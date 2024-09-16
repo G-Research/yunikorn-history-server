@@ -30,6 +30,22 @@ service:
   # -- Service node port
   nodePort: 30003
 
+ingress:
+  # -- Toggle whether to render Ingress resource
+  enabled: true
+  # -- Specify which ingress class should be used
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  tls: []
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
 yhs:
   # -- YHS port
   port: 8989
@@ -47,7 +63,7 @@ db:
   # -- YHS database port
   port: "5432"
   # -- YHS database name
-  name: "postgres"
+  name: "yhs"
   # -- YHS database user
   user: "postgres"
   # -- YHS database password (insecure, use secrets)
@@ -74,7 +90,7 @@ yunikorn:
   protocol: "http"
 
 log:
-    # -- Output type of the log, if true, log will be output in json format
-    jsonFormat: true
-    # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
-    level: "INFO"
+  # -- Output type of the log, if true, log will be output in json format
+  jsonFormat: true
+  # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
+  level: "INFO"
