@@ -50,6 +50,7 @@ bin/
 
 # Build artifacts
 dist/
+build/
 
 # Compiled output
 tmp
@@ -58,8 +59,9 @@ bazel-out
 
 # Node
 node_modules
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Miscellaneous
 cache
@@ -69,6 +71,12 @@ coverage
 libpeerconnection.log
 testem.log
 typings
+.docusaurus
+.cache-loader
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # System files
 Thumbs.db
