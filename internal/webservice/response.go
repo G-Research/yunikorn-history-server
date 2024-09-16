@@ -4,28 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-
-	"github.com/G-Research/yunikorn-history-server/internal/model"
-
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
-
-type PartitionsResponse struct {
-	Partitions []*dao.PartitionInfo `json:"partitions"`
-}
-
-type QueuesResponse struct {
-	Queues []*model.PartitionQueueDAOInfo `json:"queues"`
-}
-
-type AppsResponse struct {
-	Apps []*model.ApplicationDAOInfo `json:"apps"`
-}
-
-type NodesResponse struct {
-	Nodes []*dao.NodeDAOInfo `json:"nodes"`
-}
 
 // jsonResponse writes the data to the response writer as a JSON object.
 func jsonResponse(w http.ResponseWriter, data any) {

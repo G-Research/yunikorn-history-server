@@ -2,23 +2,18 @@ package commands
 
 import (
 	"context"
-
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-
 	"fmt"
 	"os/signal"
 	"syscall"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-
 	"github.com/oklog/run"
-
 	"github.com/spf13/cobra"
 
 	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info"
-
 	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"

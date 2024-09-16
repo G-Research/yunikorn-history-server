@@ -8,7 +8,7 @@
 			"schematics": {
 				"@schematics/angular:component": {
 					"style": "scss"
-				}
+                }
 			},
 			"root": "",
 			"sourceRoot": "src",
@@ -68,11 +68,11 @@
 					"builder": "ngx-build-plus:dev-server",
 					"configurations": {
 						"production": {
-							"browserTarget": "yhs-components:build:production",
+							"buildTarget": "yhs-components:build:production",
 							"extraWebpackConfig": "webpack.prod.config.js"
 						},
 						"development": {
-							"browserTarget": "yhs-components:build:development"
+							"buildTarget": "yhs-components:build:development"
 						}
 					},
 					"defaultConfiguration": "development",
@@ -85,7 +85,7 @@
 				"extract-i18n": {
 					"builder": "ngx-build-plus:extract-i18n",
 					"options": {
-						"browserTarget": "yhs-components:build",
+						"buildTarget": "yhs-components:build",
 						"extraWebpackConfig": "webpack.config.js"
 					}
 				},
