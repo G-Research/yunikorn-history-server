@@ -25,6 +25,7 @@
 # UI build files
 assets/
 !assets/.gitkeep
+!web/src/assets/
 
 # OSX
 .DS_Store

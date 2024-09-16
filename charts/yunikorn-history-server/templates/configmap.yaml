@@ -1,0 +1,55 @@
+{{- $yunikornHost := .Values.yunikorn.host | required "A valid .yunikorn.host is required!" -}}
+{{- $yunikornPort := .Values.yunikorn.port | required "A valid .yunikorn.port is required!" -}}
+{{- $yunikornProtocol := .Values.yunikorn.protocol | required "A valid .yunikorn.protocol is required!" -}}
+{{- $dbHost := .Values.db.host | required "A valid .db.host is required!" -}}
+{{- $dbPort := .Values.db.port | required "A valid .db.port is required!" -}}
+{{- $dbName := .Values.db.name | required "A valid .db.name is required!" -}}
+{{- $dbUser := .Values.db.user | required "A valid .db.user is required!" -}}
+{{- $dbPoolMaxConns := .Values.db.poolMaxConns | required "A valid .db.poolMaxConns is required!" -}}
+{{- $dbPoolMinConns := .Values.db.poolMinConns | required "A valid .db.poolMinConns is required!" -}}
+{{- $dbPoolMaxConnLifetime := .Values.db.poolMaxConnLifetime | required "A valid .db.poolMaxConnLifetime is required!" -}}
+{{- $dbPoolMaxConnIdleTime := .Values.db.poolMaxConnIdleTime | required "A valid .db.poolMaxConnIdleTime is required!" -}}
+{{- $yhsPort := .Values.yhs.port | required "A valid .yhs.port is required!" -}}
+{{- $logJSONFormat := .Values.log.jsonFormat | required "A valid .log.jsonFormat is required!" -}}
+{{- $logLevel := .Values.log.level | required "A valid .log.level is required!" -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "yunikorn-history-server.fullname" . }}
+  labels:
+    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
+    {{- with .Values.global.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if or .Values.global.annotations .Values.yhs.migrations.useHelmHooks }}
+  annotations:
+    {{- if .Values.yhs.migrations.useHelmHooks }}
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+    {{- end }}
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+data:
+  config.yaml: |
+    yunikorn:
+      host: "{{ $yunikornHost }}"
+      port: {{ $yunikornPort }}
+      secure: {{ $yunikornProtocol }}
+    db:
+      host: "{{ $dbHost }}"
+      port: {{ $dbPort }}
+      dbname: "{{ $dbName }}"
+      user: "{{ $dbUser }}"
+      pool_max_conns: {{ $dbPoolMaxConns }}
+      pool_min_conns: {{ $dbPoolMinConns }}
+      pool_max_conn_lifetime: {{ $dbPoolMaxConnLifetime }}
+      pool_max_conn_idle_time: {{ $dbPoolMaxConnIdleTime }}
+      sslmode: "disable"
+    yhs:
+      port: {{ $yhsPort }}
+    log:
+      json_format: {{ $logJSONFormat }}
+      level: "{{ $logLevel }}"

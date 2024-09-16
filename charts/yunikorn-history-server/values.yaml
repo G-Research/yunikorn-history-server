@@ -1,0 +1,96 @@
+global:
+  # -- Labels to add to all deployed resources
+  labels: {}
+  # -- Annotations to add to all deployed resources
+  annotations: {}
+
+# -- Number of replicas for the deployment
+replicaCount: 1
+
+# -- fullnameOverride completely replaces the generated name.
+fullnameOverride: ""
+# -- nameOverride replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names.
+nameOverride: ""
+
+image:
+  # -- Docker registry
+  registry: "docker.io"
+  # -- Docker image repository
+  repository: "gresearch/yunikorn-history-server"
+  # -- Docker image tag
+  tag: "main"
+  # -- Docker image pull policy
+  pullPolicy: "IfNotPresent"
+
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 8989
+  # -- Service node port
+  nodePort: 30003
+
+ingress:
+  # -- Toggle whether to render Ingress resource
+  enabled: true
+  # -- Specify which ingress class should be used
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  tls: []
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+yhs:
+  # -- YHS port
+  port: 8989
+  migrations:
+    # -- Toggle whether to run migrations job on install/upgrade.
+    enabled: true
+    # -- Toggle whether to use Helm pre-install and pre-upgrade hooks for migrations job.
+    useHelmHooks: true
+    # -- Backoff limit for migrations job
+    backoffLimit: 2
+
+db:
+  # -- YHS database host
+  host: "postgresql"
+  # -- YHS database port
+  port: "5432"
+  # -- YHS database name
+  name: "yhs"
+  # -- YHS database user
+  user: "postgres"
+  # -- YHS database password (insecure, use secrets)
+  password: "psw"
+  # -- YHS database password secret reference
+  passwordSecretRef: ""
+  # -- Maximum number of connections in the database pool
+  poolMaxConns: 0
+  # -- Minimum number of connections in the database pool
+  poolMinConns: 0
+  # -- Maximum lifetime of a connection in the database pool
+  poolMaxConnLifetime: 1800
+  # -- Maximum idle time of a connection in the database pool
+  poolMaxConnIdleTime: 120
+  # -- SSL mode for the database connection
+  sslmode: "disable"
+
+yunikorn:
+  # -- Yunikorn scheduler host
+  host: "yunikorn-service"
+  # -- Yunikorn scheduler port
+  port: "9889"
+  # -- Yunikorn scheduler protocol
+  protocol: "http"
+
+log:
+  # -- Output type of the log, if true, log will be output in json format
+  jsonFormat: true
+  # -- Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL
+  level: "INFO"

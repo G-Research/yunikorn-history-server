@@ -6,7 +6,7 @@ yunikorn:
 db:
   host: 127.0.0.1
   port: 30002
-  dbname: postgres
+  dbname: yhs
   user: postgres
   password: psw
   pool_max_conns: 0
@@ -16,6 +16,15 @@ db:
 
 yhs:
   port: 8989
+  data_sync_interval: 20s
+  cors:
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - "GET"
+    allowed_headers:
+      - "*"
+
 
 log:
   level: "INFO"

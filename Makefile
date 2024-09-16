@@ -51,10 +51,17 @@ IMAGE_REGISTRY ?= gresearch
 IMAGE_NAME := yunikorn-history-server
 # IMAGE_REPO defines the image repository and name where the operator image will be pushed.
 IMAGE_REPO ?= $(IMAGE_REGISTRY)/$(IMAGE_NAME)
+# BUILD_TIME defines the build time of the operator image.
+BUILD_TIME ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+# GIT_COMMIT defines the git commit of the operator image.
+GIT_COMMIT ?= $(shell git rev-parse HEAD)
 # GIT_TAG defines the git tag of the operator image.
 GIT_TAG ?= $(shell git describe --tags --dirty --always)
 # IMAGE_TAG defines the name and tag of the operator image.
 IMAGE_TAG ?= $(IMAGE_REPO):$(GIT_TAG)
+
+# WEB_ROOT defines path that will open web UI.
+WEB_ROOT ?= /web/
 
 # Go compiler selection
 GO := go
@@ -82,13 +89,16 @@ export GO111MODULE
 OS ?= $(shell $(GO) env GOOS)
 ARCH ?= $(shell $(GO) env GOARCH)
 
-# Docker image config
-BASE_IMAGE ?= alpine
-BASE_IMAGE_TAG ?= 3.20
-
 # Local Development
-KIND_CLUSTER ?= yhs
+CLUSTER_MGR ?= kind     # either 'kind' or 'minikube'
+CLUSTER_NAME ?= yhs
 NAMESPACE ?= yunikorn
+
+KIND ?= $(LOCALBIN_TOOLING)/kind
+KIND_VERSION ?= latest
+
+MINIKUBE ?= $(LOCALBIN_TOOLING)/minikube
+MINIKUBE_VERSION ?= latest
 
 ##@ General
 
@@ -104,7 +114,7 @@ NAMESPACE ?= yunikorn
 # http://linuxcommand.org/lc3_adv_awk.php
 
 .PHONY: help
-help: ## Display this help.
+help: ## display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Database
@@ -119,8 +129,14 @@ define yq_get_db
     $(shell $(call yq_get, .db.$(1)))
 endef
 
+DB_USER ?= $(strip $(call yq_get_db,user))
+DB_PASSWORD ?= $(strip $(call yq_get_db,password))
+DB_HOST ?= $(strip $(call yq_get_db,host))
+DB_PORT ?= $(strip $(call yq_get_db,port))
+DB_NAME ?= $(strip $(call yq_get_db,dbname))
+
 define database_url
-	postgres://$(strip $(call yq_get_db,user)):$(strip $(call yq_get_db,password))@$(strip $(call yq_get_db,host)):$(strip $(call yq_get_db,port))/$(strip $(call yq_get_db,dbname))?sslmode=disable
+	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 endef
 
 .PHONY: migrate
@@ -138,14 +154,20 @@ migrate-down: ## migrate down using gomigrate.
 ##@ Codegen
 
 .PHONY: codegen
-codegen: gomock ## generate code using go generate (mocks).
-	go generate ./...
+codegen: mockgen ## generate code using go generate (mocks).
+	PATH=$(LOCALBIN_TOOLING):$$PATH go generate ./...
 
 ##@ Run
 
 .PHONY: run
 run: ## run the yunikorn-history-server binary.
 	go run cmd/yunikorn-history-server/main.go --config config/yunikorn-history-server/local.yml
+
+##@ Json Server
+
+.PHONY: json-server
+json-server: ## start the mock server using json-server.
+	cd web && npm run start:json-server
 
 ##@ Lint
 
@@ -164,9 +186,9 @@ go-lint-fix: golangci-lint ## lint Golang code using golangci-lint.
 
 define start-cluster
 	@echo "**********************************"
-	@echo "Creating kind cluster"
+	@echo "Creating cluster"
 	@echo "**********************************"
-	@KIND_CLUSTER=yhs-test $(MAKE) kind-create-cluster
+	@CLUSTER_NAME=yhs-test $(MAKE) create-cluster
 
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
@@ -177,9 +199,9 @@ endef
 define cleanup-cluster
 	cleanup() {
 	    echo "**********************************"
-	    echo "Deleting kind cluster"
+	    echo "Deleting cluster"
 	    echo "**********************************"
-	    KIND_CLUSTER=yhs-test $(MAKE) kind-delete-cluster
+	    CLUSTER_NAME=yhs-test $(MAKE) delete-cluster
     }
 endef
 
@@ -198,7 +220,7 @@ integration-tests: ## start dependencies and run integration tests.
 e2e-tests: ## start dependencies and run e2e tests.
 	@$(cleanup-cluster); trap cleanup EXIT
 	@$(start-cluster)
-	KIND_CLUSTER=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
+	CLUSTER_NAME=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
 .ONESHELL:
@@ -256,15 +278,22 @@ test-go-e2e: gotestsum ## run go e2e tests.
 	$(GOTESTSUM) $(TEST_ARGS) ./test/e2e/... -run E2E
 
 test-k6-performance: ## run k6 performance tests.
-	touch test-reports/performance/report.json
-	$(K6) run -e NAMESPACE=$(NAMESPACE) test/performance/*_test.js --out json=test-reports/performance/report.json
+	K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=test-reports/performance/report.html $(K6) run -e NAMESPACE=$(NAMESPACE) --out json=test-reports/performance/report.json test/performance/*_test.js
 
 ##@ Build
+
+.PHONY: web-build
+web-build: ng ## build the web components.
+	npm install --prefix web && npm run build --prefix web -- --base-href $(WEB_ROOT)
 
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
 	echo "Building yunikorn-history-server binary for $(OS)/$(ARCH)"
-	GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server ./cmd/yunikorn-history-server
+	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
+		-ldflags "-X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Version=$(GIT_TAG) 		\
+				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Commit=$(GIT_COMMIT) 	\
+				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.BuildTime=$(BUILD_TIME)" \
+	  	./cmd/yunikorn-history-server
 
 .PHONY: build-linux-amd64
 build-linux-amd64: ## build the yunikorn-history-server binary for linux/amd64.
@@ -275,7 +304,8 @@ clean: ## remove generated build artifacts.
 	rm -rf $(LOCALBIN_APP)
 
 ##@ Publish
-
+NODE_VERSION ?= 20
+ALPINE_VERSION ?= 3.20
 DOCKER_OUTPUT ?= type=docker
 DOCKER_TAGS ?= $(IMAGE_TAG)
 ifneq ($(origin DOCKER_METADATA), undefined)
@@ -302,16 +332,16 @@ endif
 
 .PHONY: docker-build
 docker-build: OS=linux
-docker-build: bin/docker clean build copy-build-files ## build docker image using buildx.
+docker-build: bin/docker clean build ## build docker image using buildx.
 	echo "Building docker image for linux/$(ARCH)"
 	docker buildx build    				     			 \
-		--build-arg BASE_IMAGE=$(BASE_IMAGE) 			 \
-		--build-arg BASE_IMAGE_TAG=$(BASE_IMAGE_TAG) 	 \
 		--file build/yunikorn-history-server/Dockerfile  \
 		--platform linux/$(ARCH) 		 				 \
 		--output $(DOCKER_OUTPUT) 						 \
+		--build-arg NODE_VERSION=$(NODE_VERSION) 		 \
+        --build-arg ALPINE_VERSION=$(ALPINE_VERSION)     \
 		$(DOCKER_TAGS) 		   						  	 \
-		$(LOCALBIN_APP)
+		.
 
 .PHONY: docker-build-tarball
 docker-build-tarball: DOCKER_OUTPUT=type=oci,dest=$(LOCALBIN_DOCKER)/$(IMAGE_NAME)-oci-$(ARCH).tar
@@ -321,26 +351,37 @@ docker-build-tarball: docker-build ## build docker images and save them as tarba
 docker-build-amd64: ## build docker image for linux/amd64.
 	OS=linux ARCH=amd64 $(MAKE) docker-build
 
-.PHONY: copy-build-files
-copy-build-files: ## copy required build files to local bin directory.
-	cp config/yunikorn-history-server/config.yml $(LOCALBIN_APP)/config.yml
-	cp -r migrations $(LOCALBIN_APP)/migrations
-
 .PHONY: docker-push
 docker-push: PUSH=--push
 docker-push: docker-build-amd64 ## push linux/amd64 docker image to registry using buildx.
 
 ##@ External Dependencies
 
-kind-all: kind-create-cluster install-dependencies migrate-up ## create kind cluster and install dependencies
+.PHONY: kind-all-local
+kind-all-local: kind-all helm-install-yhs-local ## create kind cluster, install dependencies locally and build & install yunikorn-history-server.
 
-.PHONY: kind-create-cluster
-kind-create-cluster: kind ## create a kind cluster.
-	$(KIND) create cluster --name $(KIND_CLUSTER) --config hack/kind-config.yml
+.PHONY: kind-all
+kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies.
 
-.PHONY: kind-delete-cluster
-kind-delete-cluster: kind ## delete the kind cluster.
-	$(KIND) delete cluster --name $(KIND_CLUSTER)
+.PHONY: create-cluster
+create-cluster: $(KIND) $(MINIKUBE) ## create a cluster.
+ifeq ($(strip $(CLUSTER_MGR)),kind)
+	$(KIND) create cluster --name $(CLUSTER_NAME) --config hack/kind-config.yml
+else
+	$(MINIKUBE) start --ports=30000:30000 --ports=30001:30001 --ports=30002:30002 --ports=30003:30003
+endif
+
+.PHONY: delete-cluster
+delete-cluster: $(KIND) $(MINIKUBE) ## delete the cluster.
+ifeq ($(strip $(CLUSTER_MGR)),kind)
+	$(KIND) delete cluster --name $(CLUSTER_NAME)
+else
+	$(MINIKUBE) delete
+endif
+
+.PHONY: kind-load-image
+kind-load-image: docker-build-amd64 ## inject the local docker image into the kind cluster.
+	kind load docker-image $(IMAGE_TAG) --name $(CLUSTER_NAME)
 
 .PHONY: install-dependencies
 install-dependencies: helm-repos install-and-patch-yunikorn helm-install-postgres wait-for-dependencies ## install dependencies.
@@ -354,25 +395,37 @@ install-and-patch-yunikorn: helm-install-yunikorn patch-yunikorn-service ## inst
 
 .PHONY: helm-install-yunikorn
 helm-install-yunikorn: ## install yunikorn using helm.
-	helm upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace
+	$(HELM) upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace
 
 .PHONY: helm-uninstall-yunikorn
 helm-uninstall-yunikorn: ## uninstall yunikorn using helm.
-	helm uninstall yunikorn --namespace $(NAMESPACE)
+	$(HELM) uninstall yunikorn --namespace $(NAMESPACE)
 
 .PHONY: helm-install-postgres
 helm-install-postgres: ## install postgres using helm.
-	helm upgrade --install postgresql bitnami/postgresql --values hack/postgres.values.yaml --namespace $(NAMESPACE) --create-namespace
+	$(HELM) upgrade --install postgresql bitnami/postgresql --values hack/postgres.values.yaml \
+		--namespace $(NAMESPACE) --create-namespace
 
 .PHONY: helm-uninstall-postgres
 helm-uninstall-postgres: ## uninstall postgres using helm.
-	helm uninstall postgres --namespace $(NAMESPACE)
+	$(HELM) uninstall postgres --namespace $(NAMESPACE)
+
+.PHONY: helm-install-yhs-local
+helm-install-yhs-local: kind-load-image ## build & install yunikorn-history-server using helm.
+	helm upgrade --install yunikorn-history-server charts/yunikorn-history-server \
+		--set image.registry=""   			 \
+		--set image.repository=$(IMAGE_REPO) \
+		--set image.tag=$(GIT_TAG) 			 \
+		--set service.type=NodePort 		 \
+		--namespace $(NAMESPACE)  			 \
+		--create-namespace
 
 .PHONY: helm-repos
-helm-repos:
+helm-repos: helm
+	$(HELM) repo add gresearch https://g-research.github.io/charts
 	helm repo add yunikorn https://apache.github.io/yunikorn-release
-	helm repo add bitnami https://charts.bitnami.com/bitnami
-	helm repo update
+	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami
+	$(HELM) repo update
 
 ##@ Utils
 
@@ -383,72 +436,90 @@ patch-yunikorn-service: ## patch yunikorn service to expose it as NodePort (yuni
 ##@ Build Dependencies
 
 .PHONY: install-tools
-install-tools: golangci-lint gotestsum kind yq ## install development tools.
+install-tools: golangci-lint gotestsum $(CLUSTER_MGR) helm yq ## install development tools.
 
 GOTESTSUM ?= $(LOCALBIN_TOOLING)/gotestsum
 GOTESTSUM_VERSION ?= v1.11.0
 .PHONY: gotestsum
-gotestsum: $(GOTESTSUM) ## Download gotestsum locally if necessary.
+gotestsum: $(GOTESTSUM) ## download gotestsum locally if necessary.
 $(GOTESTSUM): bin/tooling
 	test -s $(GOTESTSUM) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
 
 GORELEASER ?= $(LOCALBIN_TOOLING)/goreleaser
 GORELEASER_VERSION ?= v1.26.2
 .PHONY: goreleaser
-goreleaser: $(GORELEASER) ## Download GoReleaser locally if necessary.
+goreleaser: $(GORELEASER) ## download GoReleaser locally if necessary.
 $(GORELEASER): bin/tooling
 	test -s $(GORELEASER) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
 
 GOLANGCI_LINT ?= $(LOCALBIN_TOOLING)/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.59.0
+GOLANGCI_LINT_VERSION ?= v1.60.2
 .PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+golangci-lint: $(GOLANGCI_LINT) ## download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): bin/tooling
 	test -s $(GOLANGCI_LINT) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 GOMIGRATE ?= $(LOCALBIN_TOOLING)/migrate
 GOMIGRATE_VERSION ?= v4.17.1
 .PHONY: gomigrate
-gomigrate: $(GOMIGRATE) ## Download gomigrate locally if necessary.
+gomigrate: $(GOMIGRATE) ## download gomigrate locally if necessary.
 $(GOMIGRATE): bin/tooling
 	test -s $(GOMIGRATE) || curl --silent -L https://github.com/golang-migrate/migrate/releases/download/$(GOMIGRATE_VERSION)/migrate.$(OS)-$(ARCH).tar.gz | tar xvz -C $(LOCALBIN_TOOLING)
+
+HELM ?= $(LOCALBIN_TOOLING)/helm
+HELM_VERSION ?= v3.15.3
+.PHONY: helm
+.ONESHELL:
+helm: $(HELM) ## Download helm locally if necessary.
+$(HELM): bin/tooling
+	if [ ! -s $(HELM) ]; then \
+		curl --silent -L https://get.helm.sh/helm-$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | tar xvzf - ; \
+		mv $(OS)-$(ARCH)/helm $(LOCALBIN_TOOLING) ; \
+		rm -r $(OS)-$(ARCH) ; \
+	fi
 
 YQ ?= $(LOCALBIN_TOOLING)/yq
 YQ_VERSION ?= v4.44.2
 .PHONY: yq
-yq: $(YQ) ## Download gomigrate locally if necessary.
+yq: $(YQ) ## download gomigrate locally if necessary.
 $(YQ): bin/tooling
 	test -s $(YQ) || curl --silent -L https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -o $(LOCALBIN_TOOLING)/yq
 	chmod +x $(LOCALBIN_TOOLING)/yq
 
-GOMOCK ?= $(LOCALBIN_TOOLING)/gomock
-GOMOCK_VERSION ?= v0.4.0
-.PHONY: gomock
-gomock: $(GOMOCK) ## Download uber-go/gomock locally if necessary.
-$(GOMOCK): bin/tooling
-	test -s $(YQ) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(GOMOCK_VERSION)
+MOCKGEN ?= $(LOCALBIN_TOOLING)/mockgen
+MOCKGEN_VERSION ?= v0.4.0
+.PHONY: mockgen
+mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
+$(MOCKGEN): bin/tooling
+	test -s $(MOCKGEN) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
 
-KIND ?= $(LOCALBIN_TOOLING)/kind
-KIND_VERSION ?= v0.23.0
 .PHONY: kind
-kind: $(KIND) ## Download kind locally if necessary.
+kind: $(KIND) ## download kind locally if necessary.
 $(KIND): bin/tooling
 	test -s $(KIND) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install sigs.k8s.io/kind@$(KIND_VERSION)
+
+.PHONY: minikube
+minikube: $(MINIKUBE) ## Download minikube locally if necessary.
+$(MINIKUBE): bin/tooling
+	test -s $(MINIKUBE) || \
+	curl --silent -L https://storage.googleapis.com/minikube/releases/$(MINIKUBE_VERSION)/minikube-$(OS)-$(ARCH) \
+		-o $(LOCALBIN_TOOLING)/minikube
+	chmod +x $(LOCALBIN_TOOLING)/minikube
 
 XK6 ?= $(LOCALBIN_TOOLING)/xk6
 K6 ?= $(LOCALBIN_TOOLING)/k6
 K6_VERSION ?= v0.52.0
 
 .PHONY: xk6
-xk6: $(XK6) ## Download xk6 locally if necessary.
+xk6: $(XK6) ## download xk6 locally if necessary.
 $(XK6): bin/tooling
 	test -s $(XK6) || GOBIN=$(LOCALBIN_TOOLING) $(GO) install go.k6.io/xk6/cmd/xk6@latest
 
 .PHONY: k6
-k6: xk6 $(K6) ## Download k6 locally if necessary.
+k6: xk6 $(K6) ## download k6 locally if necessary.
 $(K6): bin/tooling
 	test -s $(K6) || $(XK6) build $(K6_VERSION) --with github.com/grafana/xk6-kubernetes --output $(K6)
 
-.PHONY: web-build
-web-build: ## Build the web components
-	npm run build --prefix web
+.PHONY: ng
+ng: ## install Angular CLI.
+	npm install -g @angular/cli@17

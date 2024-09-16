@@ -1,0 +1,31 @@
+yhs:
+  port: 8080
+  assets_dir: assets
+  cors:
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - "GET"
+    allowed_headers:
+      - "*"
+
+yunikorn:
+  host: localhost
+  port: 9090
+  secure: false
+
+log:
+  json_format: false
+  level: info
+
+db:
+  host: localhost
+  port: 5432
+  user: user
+  dbname: testdb
+  pool_max_conn_lifetime: 30m
+  pool_max_conn_idletime: 10m
+  pool_max_conns: 10
+  pool_min_conns: 1
+  sslmode: disable
+

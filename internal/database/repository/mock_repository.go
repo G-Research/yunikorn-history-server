@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -41,19 +42,47 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// GetAllApplications mocks base method.
-func (m *MockRepository) GetAllApplications(arg0 context.Context) ([]*dao.ApplicationDAOInfo, error) {
+// AddQueues mocks base method.
+func (m *MockRepository) AddQueues(arg0 context.Context, arg1 *string, arg2 []*dao.PartitionQueueDAOInfo) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllApplications", arg0)
-	ret0, _ := ret[0].([]*dao.ApplicationDAOInfo)
+	ret := m.ctrl.Call(m, "AddQueues", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddQueues indicates an expected call of AddQueues.
+func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
+}
+
+// DeleteQueues mocks base method.
+func (m *MockRepository) DeleteQueues(arg0 context.Context, arg1 []*model.PartitionQueueDAOInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQueues", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteQueues indicates an expected call of DeleteQueues.
+func (mr *MockRepositoryMockRecorder) DeleteQueues(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueues", reflect.TypeOf((*MockRepository)(nil).DeleteQueues), arg0, arg1)
+}
+
+// GetAllApplications mocks base method.
+func (m *MockRepository) GetAllApplications(arg0 context.Context, arg1 ApplicationFilters) ([]*model.ApplicationDAOInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllApplications", arg0, arg1)
+	ret0, _ := ret[0].([]*model.ApplicationDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllApplications indicates an expected call of GetAllApplications.
-func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllApplications", reflect.TypeOf((*MockRepository)(nil).GetAllApplications), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllApplications", reflect.TypeOf((*MockRepository)(nil).GetAllApplications), arg0, arg1)
 }
 
 // GetAllPartitions mocks base method.
@@ -72,10 +101,10 @@ func (mr *MockRepositoryMockRecorder) GetAllPartitions(arg0 any) *gomock.Call {
 }
 
 // GetAllQueues mocks base method.
-func (m *MockRepository) GetAllQueues(arg0 context.Context) ([]*dao.PartitionQueueDAOInfo, error) {
+func (m *MockRepository) GetAllQueues(arg0 context.Context) ([]*model.PartitionQueueDAOInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllQueues", arg0)
-	ret0, _ := ret[0].([]*dao.PartitionQueueDAOInfo)
+	ret0, _ := ret[0].([]*model.PartitionQueueDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -102,18 +131,18 @@ func (mr *MockRepositoryMockRecorder) GetApplicationsHistory(arg0 any) *gomock.C
 }
 
 // GetAppsPerPartitionPerQueue mocks base method.
-func (m *MockRepository) GetAppsPerPartitionPerQueue(arg0 context.Context, arg1, arg2 string) ([]*dao.ApplicationDAOInfo, error) {
+func (m *MockRepository) GetAppsPerPartitionPerQueue(arg0 context.Context, arg1, arg2 string, arg3 ApplicationFilters) ([]*model.ApplicationDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAppsPerPartitionPerQueue", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]*dao.ApplicationDAOInfo)
+	ret := m.ctrl.Call(m, "GetAppsPerPartitionPerQueue", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*model.ApplicationDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAppsPerPartitionPerQueue indicates an expected call of GetAppsPerPartitionPerQueue.
-func (mr *MockRepositoryMockRecorder) GetAppsPerPartitionPerQueue(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetAppsPerPartitionPerQueue(arg0, arg1, arg2, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppsPerPartitionPerQueue", reflect.TypeOf((*MockRepository)(nil).GetAppsPerPartitionPerQueue), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppsPerPartitionPerQueue", reflect.TypeOf((*MockRepository)(nil).GetAppsPerPartitionPerQueue), arg0, arg1, arg2, arg3)
 }
 
 // GetContainersHistory mocks base method.
@@ -161,11 +190,26 @@ func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1 any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1)
 }
 
+// GetQueue mocks base method.
+func (m *MockRepository) GetQueue(arg0 context.Context, arg1, arg2 string) (*model.PartitionQueueDAOInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQueue", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*model.PartitionQueueDAOInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQueue indicates an expected call of GetQueue.
+func (mr *MockRepositoryMockRecorder) GetQueue(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueue", reflect.TypeOf((*MockRepository)(nil).GetQueue), arg0, arg1, arg2)
+}
+
 // GetQueuesPerPartition mocks base method.
-func (m *MockRepository) GetQueuesPerPartition(arg0 context.Context, arg1 string) ([]*dao.PartitionQueueDAOInfo, error) {
+func (m *MockRepository) GetQueuesPerPartition(arg0 context.Context, arg1 string) ([]*model.PartitionQueueDAOInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueuesPerPartition", arg0, arg1)
-	ret0, _ := ret[0].([]*dao.PartitionQueueDAOInfo)
+	ret0, _ := ret[0].([]*model.PartitionQueueDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

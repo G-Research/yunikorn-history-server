@@ -32,9 +32,9 @@ module.exports = {
         name: "yhsComponents",
         filename: "remoteEntry.js",
         exposes: {
-            './HelloWorldModule': './/src/app/yhs-hello-world/yhs-hello-world.module.ts',
-            './TestModule': './/src/app/test/test.module.ts',
-            './TestComponent': './/src/app/test/test.component.ts',
+            './AllocationsDrawerComponent': './/src/app/allocations-drawer/allocations-drawer.component.ts',
+            './AllocationsDrawerModule': './/src/app/allocations-drawer/allocations-drawer.module.ts',
+            './SchedulerService': './/src/app/services/scheduler/scheduler.service.ts'
         },
 
         shared: share({
@@ -42,6 +42,12 @@ module.exports = {
           "@angular/common": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
           "@angular/common/http": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
           "@angular/router": { singleton: true, strictVersion: true, requiredVersion: 'auto' },
+          "@angular/material/paginator": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/sidenav": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/sort":  {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/table": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/tooltip": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/platform-browser": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
 
           ...sharedMappings.getDescriptors(),
         })

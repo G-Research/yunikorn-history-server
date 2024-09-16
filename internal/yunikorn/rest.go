@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"io"
 	"net/http"
+
+	"github.com/G-Research/yunikorn-history-server/internal/config"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 

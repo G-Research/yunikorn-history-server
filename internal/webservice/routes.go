@@ -2,15 +2,19 @@ package webservice
 
 import (
 	"context"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
+	"github.com/rs/cors"
+
+	"github.com/G-Research/yunikorn-history-server/internal/log"
 )
 
 const (
 	// routes
-
 	routeClusters                 = "/ws/v1/clusters"
 	routePartitions               = "/ws/v1/partitions"
 	routeQueuesPerPartition       = "/ws/v1/partition/:partition_name/queues"
@@ -25,16 +29,14 @@ const (
 	routeHealthReadiness          = "/ws/v1/health/readiness"
 
 	// params
-
 	paramsPartitionName = "partition_name"
 	paramsQueueName     = "queue_name"
 )
 
-func (ws *WebService) initRoutes(ctx context.Context) {
+func (ws *WebService) init(ctx context.Context) {
 	router := httprouter.New()
+	router.NotFound = http.HandlerFunc(ws.serveSPA)
 
-	fs := http.Dir(ws.assetsDir)
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", http.FileServer(fs)))
 	router.Handle(http.MethodGet, routePartitions, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		enrichRequestContext(ctx, r)
 		ws.getPartitions(w, r, p)
@@ -76,7 +78,9 @@ func (ws *WebService) initRoutes(ctx context.Context) {
 		ws.ReadinessHealthcheck(w, r)
 	})
 
-	ws.server.Handler = router
+	// Setup CORS
+	c := cors.New(ws.corsConfig)
+	ws.server.Handler = c.Handler(router)
 }
 
 func enrichRequestContext(ctx context.Context, r *http.Request) {
@@ -93,7 +97,7 @@ func (ws *WebService) getPartitions(w http.ResponseWriter, r *http.Request, _ ht
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, PartitionsResponse{Partitions: partitions})
+	jsonResponse(w, partitions)
 }
 
 func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -103,18 +107,34 @@ func (ws *WebService) getQueuesPerPartition(w http.ResponseWriter, r *http.Reque
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, QueuesResponse{Queues: queues})
+	jsonResponse(w, queues)
 }
 
+// getAppsPerPartitionPerQueue returns all applications for a given partition and queue.
+// Results are ordered by submission time in descending order.
+// Following query params are supported:
+// - user: filter by user
+// - groups: filter by groups (comma-separated list)
+// - submissionStartTime: filter from the submission time
+// - submissionEndTime: filter until the submission time
+// - limit: limit the number of returned applications
+// - offset: offset the returned applications
 func (ws *WebService) getAppsPerPartitionPerQueue(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	partition := params.ByName(paramsPartitionName)
 	queue := params.ByName(paramsQueueName)
-	apps, err := ws.repository.GetAppsPerPartitionPerQueue(r.Context(), partition, queue)
+
+	filters, err := parseApplicationFilters(r)
+	if err != nil {
+		badRequestResponse(w, r, err)
+		return
+	}
+
+	apps, err := ws.repository.GetAppsPerPartitionPerQueue(r.Context(), partition, queue, *filters)
 	if err != nil {
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, AppsResponse{Apps: apps})
+	jsonResponse(w, apps)
 }
 
 func (ws *WebService) getNodesPerPartition(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -124,7 +144,7 @@ func (ws *WebService) getNodesPerPartition(w http.ResponseWriter, r *http.Reques
 		errorResponse(w, r, err)
 		return
 	}
-	jsonResponse(w, NodesResponse{Nodes: nodes})
+	jsonResponse(w, nodes)
 }
 
 func (ws *WebService) getAppsHistory(w http.ResponseWriter, r *http.Request) {
@@ -169,4 +189,20 @@ func (ws *WebService) LivenessHealthcheck(w http.ResponseWriter, r *http.Request
 
 func (ws *WebService) ReadinessHealthcheck(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, ws.healthService.Readiness(r.Context()))
+}
+
+func (ws *WebService) serveSPA(w http.ResponseWriter, r *http.Request) {
+	path := filepath.Join(ws.assetsDir, r.URL.Path)
+	fi, err := os.Stat(path)
+	if os.IsNotExist(err) || fi.IsDir() {
+		http.ServeFile(w, r, filepath.Join(ws.assetsDir, "index.html"))
+		return
+	}
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	http.FileServer(http.Dir(ws.assetsDir)).ServeHTTP(w, r)
 }

@@ -1,0 +1,4 @@
+{
+  "localYhsComponentsWebAddress": "http://localhost:3100",
+  "externalLogsURL": "https://logs.example.com?token=abc123&applicationId="
+}
