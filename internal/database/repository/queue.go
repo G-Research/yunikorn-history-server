@@ -9,9 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
-
 	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/G-Research/yunikorn-history-server/internal/util"
 )
 
 func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
