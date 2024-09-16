@@ -3,6 +3,7 @@ package webservice
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,7 +17,8 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+	ykmodel "github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
 )
 
 const (
@@ -133,8 +135,8 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeEventStatistics).
 			To(ws.getEventStatistics).
 			Produces(restful.MIME_JSON).
-			Writes(model.EventTypeCounts{}).
-			Returns(200, "OK", model.EventTypeCounts{}).
+			Writes(ykmodel.EventTypeCounts{}).
+			Returns(200, "OK", ykmodel.EventTypeCounts{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get event statistics"),
 	)
@@ -239,11 +241,50 @@ func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.
 		errorResponse(req, resp, err)
 		return
 	}
-	daoQueues := make([]*dao.PartitionQueueDAOInfo, 0, len(queues))
-	for _, queue := range queues {
-		daoQueues = append(daoQueues, &queue.PartitionQueueDAOInfo)
+	root, err := buildPartitionQueueTree(ctx, queues)
+	if err != nil {
+		errorResponse(req, resp, err)
 	}
-	jsonResponse(resp, daoQueues)
+	jsonResponse(resp, root)
+}
+
+func buildPartitionQueueTree(ctx context.Context, queues []*model.PartitionQueueDAOInfo) (*dao.PartitionQueueDAOInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(queues) == 0 {
+		return nil, nil
+	}
+
+	queueMap := make(map[string]*dao.PartitionQueueDAOInfo)
+	for _, queue := range queues {
+		queueMap[queue.Id] = &queue.PartitionQueueDAOInfo
+	}
+
+	var rootID string
+	for _, queue := range queues {
+		if !queue.ParentId.Valid {
+			rootID = queue.Id
+			continue
+		}
+
+		parent, ok := queueMap[queue.ParentId.String]
+		if !ok {
+			return nil, fmt.Errorf("parent queue %q not found", queue.Parent)
+		}
+		parent.Children = append(parent.Children, queue.PartitionQueueDAOInfo)
+	}
+
+	if rootID == "" {
+		return nil, fmt.Errorf("root queue not found")
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	return queueMap[rootID], nil
 }
 
 // getAppsPerPartitionPerQueue returns all applications for a given partition and queue.

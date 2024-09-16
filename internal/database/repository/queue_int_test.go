@@ -69,38 +69,27 @@ func TestGetQueuesPerPartition_Integration(t *testing.T) {
 	seedQueues(t, repo)
 
 	tests := []struct {
-		name               string
-		partition          string
-		expectedRootQueue  int
-		expectedTotalQueue int
+		name                string
+		partition           string
+		expectedTotalQueues int
 	}{
 		{
-			name:               "Get Queues for default partition",
-			partition:          "default",
-			expectedRootQueue:  1,
-			expectedTotalQueue: 9,
+			name:                "Get Queues for default partition",
+			partition:           "default",
+			expectedTotalQueues: 9,
 		},
 		{
-			name:               "Get Queues for second partition",
-			partition:          "second",
-			expectedRootQueue:  1,
-			expectedTotalQueue: 3,
+			name:                "Get Queues for second partition",
+			partition:           "second",
+			expectedTotalQueues: 3,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			queues, err := repo.GetQueuesPerPartition(context.Background(), tt.partition)
-			if err != nil {
-				t.Fatalf("could not get queues: %v", err)
-			}
-			if len(queues) != tt.expectedRootQueue {
-				t.Fatalf("expected %d root queues, got %d", tt.expectedRootQueue, len(queues))
-			}
-			queues = flattenQueues(queues)
-			if len(queues) != tt.expectedTotalQueue {
-				t.Fatalf("expected %d total queues, got %d", tt.expectedTotalQueue, len(queues))
-			}
+			require.NoError(t, err)
+			assert.Len(t, queues, tt.expectedTotalQueues)
 		})
 	}
 }
@@ -492,7 +481,6 @@ func TestAddQueues_Integration(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestUpdateQueue_Integration(t *testing.T) {
