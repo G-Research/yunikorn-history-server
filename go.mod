@@ -5,17 +5,18 @@ go 1.22.4
 require (
 	github.com/apache/yunikorn-core v1.5.1
 	github.com/apache/yunikorn-scheduler-interface v1.5.1
+	github.com/emicklei/go-restful-openapi/v2 v2.10.2
+	github.com/emicklei/go-restful/v3 v3.12.1
+	github.com/go-openapi/spec v0.20.9
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.6.0
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf/parsers/yaml v0.1.0
 	github.com/knadh/koanf/providers/env v0.1.0
 	github.com/knadh/koanf/providers/file v1.0.0
 	github.com/knadh/koanf/v2 v2.1.1
 	github.com/oklog/run v1.1.0
-	github.com/rs/cors v1.11.1
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.4.0
@@ -28,7 +29,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect

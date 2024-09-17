@@ -1,5 +1,10 @@
 package webservice
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // ProblemDetails represents the problem details as per RFC 7807
 type ProblemDetails struct {
 	// Type is a URI reference that identifies the problem type.
@@ -12,4 +17,12 @@ type ProblemDetails struct {
 	Detail string `json:"detail,omitempty"`
 	// Instance is a URI reference that identifies the specific occurrence of the problem.
 	Instance string `json:"instance,omitempty"`
+}
+
+func (pd *ProblemDetails) Error() string {
+	val, err := json.MarshalIndent(pd, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("%s: %s", pd.Title, pd.Detail)
+	}
+	return string(val)
 }

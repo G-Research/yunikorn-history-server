@@ -228,7 +228,7 @@ func deleteTestNamespace(ctx context.Context, t *testing.T, k8sClient kubernetes
 // getReadinessStatus performs a readiness check on the yunikorn history server.
 func getReadinessStatus(serverURL string) (bool, error) {
 	var status health.ReadinessStatus
-	url := fmt.Sprintf("%s/ws/v1/health/readiness", serverURL)
+	url := fmt.Sprintf("%s/api/v1/health/readiness", serverURL)
 	if err := httpGet(url, &status); err != nil {
 		return false, err
 	}
@@ -238,7 +238,7 @@ func getReadinessStatus(serverURL string) (bool, error) {
 
 func getEventStatistics(serverURL string) (model.EventTypeCounts, error) {
 	var counts model.EventTypeCounts
-	url := fmt.Sprintf("%s/ws/v1/event-statistics", serverURL)
+	url := fmt.Sprintf("%s/api/v1/event-statistics", serverURL)
 	if err := httpGet(url, &counts); err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func getEventStatistics(serverURL string) (model.EventTypeCounts, error) {
 
 func getQueues(serverURL string) ([]*dao.PartitionQueueDAOInfo, error) {
 	var queues []*dao.PartitionQueueDAOInfo
-	url := fmt.Sprintf("%s/ws/v1/partition/default/queues", serverURL)
+	url := fmt.Sprintf("%s/api/v1/partition/default/queues", serverURL)
 	if err := httpGet(url, &queues); err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func getQueues(serverURL string) ([]*dao.PartitionQueueDAOInfo, error) {
 
 func getApps(serverURL string, namespace string) ([]*dao.ApplicationDAOInfo, error) {
 	var apps []*dao.ApplicationDAOInfo
-	url := fmt.Sprintf("%s/ws/v1/partition/default/queue/root.%s/applications", serverURL, namespace)
+	url := fmt.Sprintf("%s/api/v1/partition/default/queue/root.%s/applications", serverURL, namespace)
 	if err := httpGet(url, &apps); err != nil {
 		return nil, err
 	}

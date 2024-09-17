@@ -8,7 +8,6 @@ import (
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
-	"github.com/rs/cors"
 
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
@@ -33,7 +32,13 @@ type YHSConfig struct {
 	// DataSyncInterval specifies the interval at which the data is synced from the Yunikorn API.
 	DataSyncInterval time.Duration
 	// CORSConfig specifies the configuration for the CORS middleware.
-	CORSConfig cors.Options
+	CORSConfig CORSConfig
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string
+	AllowedMethods []string
+	AllowedHeaders []string
 }
 
 func (c *YHSConfig) Validate() error {
@@ -127,7 +132,7 @@ func New(path string) (*Config, error) {
 	if dataSyncInterval == 0 {
 		dataSyncInterval = 5 * time.Minute
 	}
-	corsConfig := cors.Options{
+	corsConfig := CORSConfig{
 		AllowedOrigins: k.Strings("yhs_cors_allowed_origins"),
 		AllowedMethods: k.Strings("yhs_cors_allowed_methods"),
 		AllowedHeaders: k.Strings("yhs_cors_allowed_headers"),
