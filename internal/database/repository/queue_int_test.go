@@ -495,6 +495,198 @@ func TestAddQueues_Integration(t *testing.T) {
 
 }
 
+func TestUpdateQueue_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	ctx := context.Background()
+	connPool := database.NewTestConnectionPool(ctx, t)
+
+	repo, err := NewPostgresRepository(connPool)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name           string
+		existingQueues []*dao.PartitionQueueDAOInfo
+		queueToUpdate  *dao.PartitionQueueDAOInfo
+		expectedError  bool
+	}{
+		{
+			name: "Update root queue when root queue exists",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition:       "default",
+					QueueName:       "root",
+					CurrentPriority: 0,
+				},
+			},
+			queueToUpdate: &dao.PartitionQueueDAOInfo{
+				Partition:       "default",
+				QueueName:       "root",
+				CurrentPriority: 1,
+			},
+			expectedError: false,
+		},
+		{
+			name:           "Update root queue when root queue does not exist",
+			existingQueues: nil,
+			queueToUpdate: &dao.PartitionQueueDAOInfo{
+				Partition:       "default",
+				QueueName:       "root",
+				CurrentPriority: 1,
+			},
+			expectedError: true,
+		},
+		{
+			name: "Update when child queues has changed",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition:       "default",
+					QueueName:       "root",
+					CurrentPriority: 0,
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							Partition:       "default",
+							QueueName:       "root.org",
+							Parent:          "root",
+							IsLeaf:          true,
+							CurrentPriority: 100,
+						},
+						{
+							Partition:       "default",
+							QueueName:       "root.system",
+							Parent:          "root",
+							IsLeaf:          true,
+							CurrentPriority: 150,
+						},
+					},
+				},
+			},
+			queueToUpdate: &dao.PartitionQueueDAOInfo{
+				Partition:       "default",
+				QueueName:       "root",
+				CurrentPriority: 0,
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						Partition:       "default",
+						QueueName:       "root.org",
+						Parent:          "root",
+						IsLeaf:          true,
+						CurrentPriority: 200,
+					},
+					{
+						Partition:       "default",
+						QueueName:       "root.system",
+						Parent:          "root",
+						IsLeaf:          true,
+						CurrentPriority: 200,
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Update when new child queues has been added",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition:       "default",
+					QueueName:       "root",
+					CurrentPriority: 0,
+				},
+			},
+			queueToUpdate: &dao.PartitionQueueDAOInfo{
+				Partition:       "default",
+				QueueName:       "root",
+				CurrentPriority: 0,
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						Partition:       "default",
+						QueueName:       "root.org",
+						Parent:          "root",
+						IsLeaf:          true,
+						CurrentPriority: 200,
+					},
+					{
+						Partition:       "default",
+						QueueName:       "root.system",
+						Parent:          "root",
+						IsLeaf:          true,
+						CurrentPriority: 200,
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Update when both parent queue changed and new child queues has been added",
+			existingQueues: []*dao.PartitionQueueDAOInfo{
+				{
+					Partition:       "default",
+					QueueName:       "root",
+					CurrentPriority: 0,
+				},
+			},
+			queueToUpdate: &dao.PartitionQueueDAOInfo{
+				Partition:       "default",
+				QueueName:       "root",
+				CurrentPriority: 100,
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						Partition:       "default",
+						QueueName:       "root.org",
+						Parent:          "root",
+						IsLeaf:          true,
+						CurrentPriority: 200,
+					},
+					{
+						Partition:       "default",
+						QueueName:       "root.system",
+						Parent:          "root",
+						IsLeaf:          true,
+						CurrentPriority: 200,
+					},
+				},
+			},
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			t.Cleanup(func() {
+				_, err := connPool.Exec(ctx, "DELETE FROM queues")
+				require.NoError(t, err)
+			})
+			// seed the existing queues
+			if tt.existingQueues != nil {
+				if err := repo.AddQueues(ctx, nil, tt.existingQueues); err != nil {
+					t.Fatalf("could not seed queue: %v", err)
+				}
+			}
+			// update the new queue
+			err := repo.UpdateQueue(ctx, tt.queueToUpdate)
+			if tt.expectedError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			// check if the queue is updated along with its children
+			queueFromDB, err := repo.GetQueue(ctx, tt.queueToUpdate.Partition, tt.queueToUpdate.QueueName)
+			require.NoError(t, err)
+			assert.Equal(t, tt.queueToUpdate.QueueName, queueFromDB.QueueName)
+			assert.Equal(t, tt.queueToUpdate.Partition, queueFromDB.Partition)
+			assert.Equal(t, tt.queueToUpdate.CurrentPriority, queueFromDB.CurrentPriority)
+			// compare the children
+			for i, child := range tt.queueToUpdate.Children {
+				assert.Equal(t, child.CurrentPriority, queueFromDB.Children[i].CurrentPriority)
+			}
+
+		})
+	}
+}
+
 func seedQueues(t *testing.T, repo *PostgresRepository) {
 	t.Helper()
 
