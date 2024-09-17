@@ -8,6 +8,7 @@ import (
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
+	"github.com/rs/cors"
 
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
@@ -29,6 +30,21 @@ type YHSConfig struct {
 	Port int
 	// AssetsDir specifies the directory where the static assets are stored.
 	AssetsDir string
+	// DataSyncInterval specifies the interval at which the data is synced from the Yunikorn API.
+	DataSyncInterval time.Duration
+	// CORSConfig specifies the configuration for the CORS middleware.
+	CORSConfig cors.Options
+}
+
+func (c *YHSConfig) Validate() error {
+	var errorMessages []string
+	if c.Port < 1 {
+		errorMessages = append(errorMessages, "yhs config validation error: port is required")
+	}
+	if len(errorMessages) > 0 {
+		return fmt.Errorf("yhs config validation errors: %v", errorMessages)
+	}
+	return nil
 }
 
 type PostgresConfig struct {
@@ -45,12 +61,49 @@ type PostgresConfig struct {
 	Schema              string
 }
 
+func (c *PostgresConfig) Validate() error {
+	var errorMessages []string
+	if c.Host == "" {
+		errorMessages = append(errorMessages, "db host is required")
+	}
+	if c.DbName == "" {
+		errorMessages = append(errorMessages, "db name is required")
+	}
+	if c.Username == "" {
+		errorMessages = append(errorMessages, "db user is required")
+	}
+	if c.Password == "" {
+		errorMessages = append(errorMessages, "db password is required")
+	}
+	if c.Port < 1 {
+		errorMessages = append(errorMessages, "db port is required")
+	}
+	if len(errorMessages) > 0 {
+		return fmt.Errorf("postgres config validation errors: %v", errorMessages)
+	}
+	return nil
+}
+
 // YunikornConfig specifies the configuration for the Yunikorn API.
 type YunikornConfig struct {
 	Host string
 	Port int
 	// Secure indicates whether the connection to the Yunikorn API is using encryption or not.
 	Secure bool
+}
+
+func (c *YunikornConfig) Validate() error {
+	var errorMessages []string
+	if c.Host == "" {
+		errorMessages = append(errorMessages, "yunikorn host is required")
+	}
+	if c.Port < 1 {
+		errorMessages = append(errorMessages, "yunikorn port is required")
+	}
+	if len(errorMessages) > 0 {
+		return fmt.Errorf("yunikorn config validation errors: %v", errorMessages)
+	}
+	return nil
 }
 
 type LogConfig struct {
@@ -66,44 +119,53 @@ func New(path string) (*Config, error) {
 		return nil, err
 	}
 
-	assetsDir := k.String("yhs.assets_dir")
+	assetsDir := k.String("yhs_assets_dir")
 	if assetsDir == "" {
 		assetsDir = "assets"
 	}
+	dataSyncInterval := k.Duration("yhs_data_sync_interval")
+	if dataSyncInterval == 0 {
+		dataSyncInterval = 5 * time.Minute
+	}
+	corsConfig := cors.Options{
+		AllowedOrigins: k.Strings("yhs_cors_allowed_origins"),
+		AllowedMethods: k.Strings("yhs_cors_allowed_methods"),
+		AllowedHeaders: k.Strings("yhs_cors_allowed_headers"),
+	}
+
 	yhsConfig := YHSConfig{
-		Port:      k.Int("yhs.port"),
-		AssetsDir: assetsDir,
+		Port:             k.Int("yhs_port"),
+		AssetsDir:        assetsDir,
+		DataSyncInterval: dataSyncInterval,
+		CORSConfig:       corsConfig,
+	}
+	if err := yhsConfig.Validate(); err != nil {
+		return nil, err
 	}
 
 	yunikornConfig := YunikornConfig{
-		Host:   k.String("yunikorn.host"),
-		Port:   k.Int("yunikorn.port"),
-		Secure: k.Bool("yunikorn.secure"),
+		Host:   k.String("yunikorn_host"),
+		Port:   k.Int("yunikorn_port"),
+		Secure: k.Bool("yunikorn_secure"),
 	}
 
 	logConfig := LogConfig{
-		JSONFormat: k.Bool("log.json_format"),
-		LogLevel:   k.String("log.level"),
+		JSONFormat: k.Bool("log_json_format"),
+		LogLevel:   k.String("log_level"),
 	}
 
 	postgresConfig := PostgresConfig{
-		Host:     k.String("db.host"),
-		Port:     k.Int("db.port"),
-		Username: k.String("db.user"),
-		Password: k.String("db.password"),
-		DbName:   k.String("db.dbname"),
-	}
-	if k.Int("db.pool_max_conns") > 0 {
-		postgresConfig.PoolMaxConns = k.Int("db.pool_max_conns")
-	}
-	if k.Int("db.pool_min_conns") > 0 {
-		postgresConfig.PoolMinConns = k.Int("db.pool_min_conns")
-	}
-	if k.Duration("db.pool_max_conn_lifetime") > time.Duration(0) {
-		postgresConfig.PoolMaxConnLifetime = k.Duration("db.pool_max_conn_lifetime")
-	}
-	if k.Duration("db.pool_max_conn_idletime") > time.Duration(0) {
-		postgresConfig.PoolMaxConnIdleTime = k.Duration("db.pool_max_conn_idletime")
+		Host:                k.String("db_host"),
+		Port:                k.Int("db_port"),
+		Username:            k.String("db_user"),
+		Password:            k.String("db_password"),
+		DbName:              k.String("db_dbname"),
+		SSLMode:             k.String("db_sslmode"),
+		Schema:              k.String("db_schema"),
+		PoolMaxConnLifetime: k.Duration("db_pool_max_conn_lifetime"),
+		PoolMaxConnIdleTime: k.Duration("db_pool_max_conn_idletime"),
+		PoolMaxConns:        k.Int("db_pool_max_conns"),
+		PoolMinConns:        k.Int("db_pool_min_conns"),
 	}
 
 	config := &Config{
@@ -118,7 +180,10 @@ func New(path string) (*Config, error) {
 // loadConfig loads the configuration from a config file if provided,
 // otherwise it loads the configuration from environment variables prefixed with YHS_.
 func loadConfig(cfgFile string) (*koanf.Koanf, error) {
-	k := koanf.New(".")
+	k := koanf.NewWithConf(koanf.Conf{
+		Delim:       "_",
+		StrictMerge: true,
+	})
 
 	if cfgFile != "" {
 		if _, err := os.Stat(cfgFile); err != nil {
@@ -129,20 +194,14 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 		}
 	}
 
-	if err := k.Load(env.Provider("YHS_", ".", processEnvVar), nil); err != nil {
+	if err := k.Load(env.Provider("YHS_", "_", processEnvVar), nil); err != nil {
 		return nil, fmt.Errorf("error loading environment variables: %v", err)
 	}
 
 	return k, nil
 }
 
-// Removes the prefix "YHS_" and replaces the first "_" with "."
-// YHS_PARENT1_CHILD1_NAME will be converted into "parent1.child1_name"
+// Removes the prefix "YHS_" and converts the value to lowercase
 func processEnvVar(s string) string {
-	s = strings.TrimPrefix(s, "YHS_")
-	firstIndex := strings.Index(s, "_")
-	if firstIndex > -1 {
-		s = s[:firstIndex] + "." + s[firstIndex+1:]
-	}
-	return strings.ToLower(s)
+	return strings.ToLower(strings.TrimPrefix(s, "YHS_"))
 }

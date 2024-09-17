@@ -9,12 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/webservice"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
-	"github.com/G-Research/yunikorn-history-server/test/k8s"
-	"github.com/G-Research/yunikorn-history-server/test/util"
+	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
@@ -23,6 +18,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
+
+	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
+	"github.com/G-Research/yunikorn-history-server/internal/health"
+	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/yunikorn-history-server/test/k8s"
+	"github.com/G-Research/yunikorn-history-server/test/util"
 )
 
 const (
@@ -30,8 +31,10 @@ const (
 	serverURL           = "http://localhost:8989"
 )
 
-var ctx context.Context
-var cancel context.CancelFunc
+var (
+	ctx    context.Context
+	cancel context.CancelFunc
+)
 
 func TestMain(m *testing.M) {
 	// Setup
@@ -42,8 +45,50 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Teardown
-	cancel()
+	defer cancel()
 	os.Exit(code)
+}
+
+func TestYunikornApp_E2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e test in short mode")
+	}
+	ctx, cancel = context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	ns := createTestNamespace(ctx, t, k8s.GetTestK8sClient(t))
+	t.Cleanup(func() {
+		deleteTestNamespace(context.Background(), t, k8s.GetTestK8sClient(t), ns)
+	})
+
+	assert.Eventually(t, func() bool {
+		healthy, err := getReadinessStatus(serverURL)
+		return healthy && err == nil
+	}, 10*time.Second, 500*time.Millisecond)
+
+	// sleep for 2 seconds just in case so all goroutines are ready
+	time.Sleep(2 * time.Second)
+
+	k8sClient := k8s.GetTestK8sClient(t)
+	appID := "yunikorn-app-test-pod"
+
+	_, err := k8sClient.CoreV1().Pods(ns).Create(ctx, testApp(appID), metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("error creating test app: %v", err)
+	}
+	assert.Eventually(t, func() bool {
+		appsResponse, err := getApps(serverURL, ns)
+		if err != nil {
+			return false
+		}
+		for _, app := range appsResponse {
+			fmt.Println(app.ApplicationID)
+			if app.ApplicationID == appID {
+				return true
+			}
+		}
+		return false
+	}, 400*time.Second, 5*time.Second)
 }
 
 func TestYunikornEventStream_E2E(t *testing.T) {
@@ -146,7 +191,7 @@ func TestYunikornQueueCreation_E2E(t *testing.T) {
 		if err != nil {
 			return false
 		}
-		for _, queue := range queuesResponse.Queues {
+		for _, queue := range queuesResponse {
 			if queue.QueueName == "root" {
 				for _, childQueue := range queue.Children {
 					if childQueue.QueueName == "root."+queueName {
@@ -200,13 +245,22 @@ func getEventStatistics(serverURL string) (model.EventTypeCounts, error) {
 	return counts, nil
 }
 
-func getQueues(serverURL string) (webservice.QueuesResponse, error) {
-	var queues webservice.QueuesResponse
+func getQueues(serverURL string) ([]*dao.PartitionQueueDAOInfo, error) {
+	var queues []*dao.PartitionQueueDAOInfo
 	url := fmt.Sprintf("%s/ws/v1/partition/default/queues", serverURL)
 	if err := httpGet(url, &queues); err != nil {
-		return webservice.QueuesResponse{}, err
+		return nil, err
 	}
 	return queues, nil
+}
+
+func getApps(serverURL string, namespace string) ([]*dao.ApplicationDAOInfo, error) {
+	var apps []*dao.ApplicationDAOInfo
+	url := fmt.Sprintf("%s/ws/v1/partition/default/queue/root.%s/applications", serverURL, namespace)
+	if err := httpGet(url, &apps); err != nil {
+		return nil, err
+	}
+	return apps, nil
 }
 
 // httpGet performs an HTTP GET request and decodes the response into the provided out parameter.
@@ -290,6 +344,37 @@ partitions:
         queues:
           - name: %s
 `, queue),
+		},
+	}
+}
+
+func testApp(appID string) *corev1.Pod {
+	return &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Pod",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "yunikorn-nginx-pod",
+			Labels: map[string]string{
+				"app":           "nginx",
+				"applicationId": appID,
+			},
+		},
+		Spec: corev1.PodSpec{
+			SchedulerName: "yunikorn",
+			Containers: []corev1.Container{
+				{
+					Name:  "nginx",
+					Image: "nginx:latest",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+							corev1.ResourceMemory: resource.MustParse("20M"),
+						},
+					},
+				},
+			},
 		},
 	}
 }

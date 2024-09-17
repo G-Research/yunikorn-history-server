@@ -3,11 +3,13 @@ package workqueue
 import (
 	"context"
 	"errors"
-	"github.com/G-Research/yunikorn-history-server/test/log"
-	"github.com/google/uuid"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/G-Research/yunikorn-history-server/test/log"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +35,7 @@ func TestAdd(t *testing.T) {
 		processed := false
 		job := func(ctx context.Context) error { processed = true; return nil }
 
-		go wq.Run(ctx)
+		go func() { _ = wq.Run(ctx) }()
 
 		assert.Eventually(t, func() bool {
 			return wq.started
@@ -98,7 +100,7 @@ func TestRunAndExecuteWithRetry(t *testing.T) {
 
 	wq := NewWorkQueue(WithInitialDelay(50 * time.Millisecond))
 
-	go wq.Run(ctx)
+	go func() { _ = wq.Run(ctx) }()
 
 	assert.Eventually(t, func() bool {
 		return wq.started
@@ -128,7 +130,7 @@ func TestRun_Shutdown(t *testing.T) {
 
 	wq := NewWorkQueue(WithInitialDelay(50 * time.Millisecond))
 
-	go wq.Run(ctx)
+	go func() { _ = wq.Run(ctx) }()
 
 	assert.Eventually(t, func() bool {
 		return wq.started
@@ -163,7 +165,7 @@ func TestJobExecutionStopsOnContextCancel(t *testing.T) {
 		return errors.New("some error")
 	}
 
-	go wq.Run(ctx)
+	go func() { _ = wq.Run(ctx) }()
 
 	assert.Eventually(t, func() bool {
 		return wq.started
@@ -195,7 +197,7 @@ func TestJobExecutionStopsOnContextCancelWithGracefulShutdown(t *testing.T) {
 		return nil
 	}
 
-	go wq.Run(ctx)
+	go func() { _ = wq.Run(ctx) }()
 
 	assert.Eventually(t, func() bool {
 		return wq.started
@@ -226,7 +228,7 @@ func TestJobExecutionStopsOnShutdownWithGracefulShutdown(t *testing.T) {
 		return nil
 	}
 
-	go wq.Run(ctx)
+	go func() { _ = wq.Run(ctx) }()
 
 	assert.Eventually(t, func() bool {
 		return wq.started

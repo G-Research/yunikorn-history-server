@@ -1,0 +1,145 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  line-height: 1.5rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 1rem;
+
+      img {
+        height: 2.5rem;
+        width: auto;
+        vertical-align: middle;
+      }
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      .nav-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        cursor: pointer;
+        margin: 0 0.5rem;
+        line-height: 2rem;
+        color: black;
+        font-weight: 400;
+        font-size: 1rem;
+
+        a {
+          text-decoration: none;
+          color: black;
+        }
+
+        img {
+          height: 2rem;
+          width: auto;
+        }
+
+        &:first-child {
+          margin-left: 0;
+        }
+
+        &:last-child {
+          margin-right: 2rem;
+        }
+      }
+    }
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+    max-width: 800px;
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem;
+
+      img {
+        width: 100%;
+        padding: 1rem;
+      }
+
+      .hero-text {
+        font-size: 1rem;
+        margin: 1rem;
+
+        p {
+          &:first-child {
+            margin-top: 0;
+            padding-bottom: 1rem;
+            border-bottom: #ddd 1px solid;
+          }
+        }
+      }
+    }
+
+    .docs {
+      display: flex;
+      flex-direction: column;
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem;
+      font-size: 0.9rem;
+
+      &:first-child {
+        border-top: 1px solid #ddd;
+      }
+
+      .code {
+        font-family: monospace;
+        font-size: 0.8rem;
+        text-decoration: none;
+        font-style: normal;
+        font-weight: 600;
+        background-color: #e8e9ec;
+        padding: 4px;
+        border-radius: 3px;
+      }
+
+      .code-box {
+        position: relative;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        background-color: white;
+        margin: 1rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+        .code-copy {
+          padding: 0.5rem;
+          width: 1rem;
+          height: auto;
+          position: absolute;
+          right: 0;
+          top: 0;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

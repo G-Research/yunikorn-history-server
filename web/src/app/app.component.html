@@ -1,1 +1,64 @@
-<h1>Hello YHS!</h1>
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <img src="assets/images/nav-logo-2.svg" alt="logo" />
+    </div>
+    <div class="nav">
+      <div class="nav-item">
+        <img src="assets/images/github-mark.svg" alt="github" />
+      </div>
+      <div class="nav-item">
+        <a href="https://github.com/G-Research/yunikorn-history-server" target="_blank"
+          >Yunikorn History Server</a
+        >
+      </div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="hero">
+      <div class="hero-image">
+        <img src="assets/images/logo.svg" alt="hero" />
+      </div>
+      <div class="hero-text">
+        <p>
+          Yunikorn History Server (YHS) is an ancillary service for K8S Clusters using the Yunikorn
+          Scheduler to persist the state of a Yunikorn-managed cluster to a database, allowing for
+          long-term access to historical data of the cluster's operations (e.g. to view past
+          Applications, resource usage, etc.).
+        </p>
+
+        <a href="https://github.com/G-Research/yunikorn-history-server" target="_blank"
+          >Get Started</a
+        >
+      </div>
+    </div>
+    <div class="docs">
+      <h2>Web Setup</h2>
+      <p>
+        YHS Web is utilising a
+        <a href="https://nx.dev/concepts/module-federation/module-federation-and-nx" target="_blank"
+          >Module Federation</a
+        >
+        to load custom components in the YuniKorn Web. Setup is done in a few steps:
+      </p>
+      <p>
+        1. Locate <em class="code">envconfig.json</em> in the <b>YuniKorn Web</b> project.<br />
+        2. Add the following parameters with values:
+      </p>
+      <p class="code code-box">
+        <img
+          src="assets/images/code-copy.svg"
+          alt="code-box"
+          class="code-copy"
+          (click)="copyWebEnvToClipboard()"
+        />
+        "moduleFederationRemoteEntry": "{{ remoteEntry }}", "allocationsDrawerRemoteComponent":
+        "./AllocationsDrawerComponent", "schedulerService": "./SchedulerService"
+      </p>
+      <p>
+        3. Build YuniKorn Web with the following command: <em class="code">make build-prod</em
+        ><br />
+      </p>
+    </div>
+  </div>
+</div>

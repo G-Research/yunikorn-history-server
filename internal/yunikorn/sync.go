@@ -3,10 +3,11 @@ package yunikorn
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
-	"sync"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/uuid"
@@ -150,6 +151,10 @@ func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo
 	for _, q := range qs {
 		queues = append(queues, q)
 		if len(q.Children) > 0 {
+			// update partitionName for children #148
+			for i := range q.Children {
+				q.Children[i].Partition = q.Partition
+			}
 			queues = append(queues, flattenQueues(util.ToPtrSlice(q.Children))...)
 		}
 	}

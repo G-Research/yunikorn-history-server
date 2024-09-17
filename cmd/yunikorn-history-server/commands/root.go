@@ -3,19 +3,17 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"os/signal"
 	"syscall"
 
 	"github.com/oklog/run"
-
 	"github.com/spf13/cobra"
 
 	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info"
-
 	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/webservice"
 	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
@@ -27,10 +25,6 @@ var rootCmd = &cobra.Command{
 	Short: "Yunikorn History Server warehouses Yunikorn events.",
 	Long:  `Yunikorn History Server is a service that listens for events from the Yunikorn Scheduler and stores them in a database.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := validate(); err != nil {
-			return err
-		}
-
 		cfg, err := config.New(ConfigFile)
 		if err != nil {
 			return err
@@ -68,7 +62,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 	g := run.Group{}
 
 	client := yunikorn.NewRESTClient(&cfg.YunikornConfig)
-	service := yunikorn.NewService(ctx, mainRepository, eventRepository, client)
+	service := yunikorn.NewService(mainRepository, eventRepository, client, yunikorn.WithSyncInterval(cfg.YHSConfig.DataSyncInterval))
 	g.Add(
 		func() error {
 			return service.Run(ctx)
