@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"go.uber.org/multierr"
+
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
-	"go.uber.org/multierr"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/uuid"
