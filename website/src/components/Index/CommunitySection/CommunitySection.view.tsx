@@ -12,7 +12,7 @@ export default function CommunitySectionView(): React.JSX.Element {
                 <h2 id="community" className={clsx("section__ref")}>Community</h2>
                 <p className={clsx("padding-horiz--xl", styles.description)}>
                     The Yunikorn History Server is an open-source project and we welcome contributions from the community. If you have any
-                    questions, suggestions, or feedback, please feel free to react out to us on GitHub.
+                    questions, suggestions, or feedback, please feel free to reach out to us on GitHub.
                 </p>
                 <Link
                     className="button button--primary button--lg"
