@@ -8,6 +8,7 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
+	"go.uber.org/multierr"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/uuid"
@@ -102,52 +103,79 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 	wg := sync.WaitGroup{}
 	wg.Add(len(partitions))
 
-	// Protect the queues and errors slices with a mutex so multiple goroutines can safely append queues
-	mutex := sync.Mutex{}
-
-	var errs []error
-	var queues []*dao.PartitionQueueDAOInfo
+	// Create channels for collecting errors and queues
+	errCh := make(chan error, len(partitions))
+	queueCh := make(chan *dao.PartitionQueueDAOInfo, len(partitions))
 
 	processPartition := func(p *dao.PartitionInfo) {
 		defer wg.Done()
-		queue, err := s.client.GetPartitionQueues(ctx, p.Name)
-		mutex.Lock()
-		defer mutex.Unlock()
-		if err != nil {
-			errs = append(errs, fmt.Errorf("could not get queues for partition %s: %v", p.Name, err))
-		} else {
-			//queues = append(queues, queue)
-			err = s.workqueue.Add(func(ctx context.Context) error {
-				// Only one root queue is expected per partition
-				logger.Infow("upserting queue for partition", "partition", p.Name, "queue", queue.QueueName)
-				err = s.repo.UpdateQueue(ctx, queue)
-				if err != nil {
-					// try adding the queue
-					err = s.repo.AddQueues(ctx, nil, []*dao.PartitionQueueDAOInfo{queue})
-				}
-				return err
-			}, workqueue.WithJobName(fmt.Sprintf("upsert_queue_for_partition_%s", p.Name)))
-			if err != nil {
-				logger.Errorf("could not add upsert_queue_for_partition_%s job to workqueue: %v", p.Name, err)
-				errs = append(errs, fmt.Errorf("could not add upsert_queue_for_partition_%s job to workqueue: %v", p.Name, err))
-			} else {
-				queues = append(queues, queue)
+
+		// Recover in case of panic
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Errorf("panic in processPartition for partition %s: %v", p.Name, r)
+				errCh <- fmt.Errorf("panic in partition %s: %v", p.Name, r)
 			}
+		}()
+
+		// Check if context is already canceled
+		if ctx.Err() != nil {
+			errCh <- fmt.Errorf("context canceled for partition %s", p.Name)
+			return
 		}
+
+		// Fetch partition queue
+		queue, err := s.client.GetPartitionQueues(ctx, p.Name)
+		if err != nil {
+			errCh <- fmt.Errorf("could not get queues for partition %s: %v", p.Name, err)
+			return
+		}
+
+		// Add a job to the workqueue for upserting the queue, but check if the context is canceled first
+		err = s.workqueue.Add(func(ctx context.Context) error {
+			logger.Infow("upserting queue for partition", "partition", p.Name, "queue", queue.QueueName)
+
+			// Try updating the queue, fall back to adding if it doesn't exist
+			if err := s.repo.UpdateQueue(ctx, queue); err != nil {
+				if addErr := s.repo.AddQueues(ctx, nil, []*dao.PartitionQueueDAOInfo{queue}); addErr != nil {
+					logger.Errorf("failed to add queue for partition %s: %v", p.Name, addErr)
+					return addErr
+				}
+			}
+			return nil
+		}, workqueue.WithJobName(fmt.Sprintf("upsert_queue_for_partition_%s", p.Name)))
+
+		if err != nil {
+			logger.Errorf("could not add upsert_queue_for_partition_%s job to workqueue: %v", p.Name, err)
+			return
+		}
+
+		queueCh <- queue
 	}
 
 	for _, p := range partitions {
 		go processPartition(p)
 	}
 
-	// wait for all partitions to be processed
 	wg.Wait()
+	close(errCh)
+	close(queueCh)
 
-	if len(errs) > 0 {
-		return nil, fmt.Errorf("failed to get queues for some partitions: %v", errs)
+	// Process errors
+	var errs error
+	for err := range errCh {
+		errs = multierr.Append(errs, err)
+	}
+	if errs != nil {
+		return nil, fmt.Errorf("failed to process some partitions: %w", errs)
 	}
 
-	// Flatten the queues hierarchy into a single list
+	// Collect all the processed queues
+	var queues []*dao.PartitionQueueDAOInfo
+	for queue := range queueCh {
+		queues = append(queues, queue)
+	}
+
 	queues = flattenQueues(queues)
 	return queues, nil
 }
