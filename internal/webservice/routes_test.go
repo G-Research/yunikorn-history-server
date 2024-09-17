@@ -8,11 +8,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/G-Research/yunikorn-history-server/internal/config"
 )
 
 func TestWebServiceServeSPA(t *testing.T) {
 	ws := &WebService{
-		assetsDir: "testdir",
+		config: config.YHSConfig{
+			AssetsDir: "testdir",
+		},
 	}
 
 	tt := map[string]struct {

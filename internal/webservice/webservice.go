@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/cors"
-
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 	"github.com/G-Research/yunikorn-history-server/internal/health"
@@ -19,12 +17,11 @@ type WebService struct {
 	repository      repository.Repository
 	eventRepository repository.EventRepository
 	healthService   health.Interface
-	assetsDir       string
-	corsConfig      cors.Options
+	config          config.YHSConfig
 }
 
 func NewWebService(
-	cfg *config.YHSConfig,
+	cfg config.YHSConfig,
 	repository repository.Repository,
 	eventRepository repository.EventRepository,
 	healthService health.Interface,
@@ -37,8 +34,7 @@ func NewWebService(
 		repository:      repository,
 		eventRepository: eventRepository,
 		healthService:   healthService,
-		assetsDir:       cfg.AssetsDir,
-		corsConfig:      cfg.CORSConfig,
+		config:          cfg,
 	}
 }
 
