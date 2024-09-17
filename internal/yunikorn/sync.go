@@ -34,7 +34,7 @@ func (s *Service) sync(ctx context.Context) error {
 
 	go func() {
 		defer wg.Done()
-		queues, err := s.upsertPartitionQueues(ctx, partitions)
+		queues, err := s.syncQueues(ctx, partitions)
 		if err != nil {
 			addErr(fmt.Errorf("error getting and upserting queues: %v", err))
 			return
@@ -95,8 +95,8 @@ func (s *Service) upsertPartitions(ctx context.Context) ([]*dao.PartitionInfo, e
 	return partitions, nil
 }
 
-// upsertPartitionQueues fetches queues for each partition and upserts them into the database
-func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
+// syncQueues fetches queues for each partition and upserts them into the database
+func (s *Service) syncQueues(ctx context.Context, partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
 	logger := log.FromContext(ctx)
 
 	// Create a wait group as a separate goroutine will be spawned for each partition
