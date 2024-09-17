@@ -116,7 +116,23 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 		if err != nil {
 			errs = append(errs, fmt.Errorf("could not get queues for partition %s: %v", p.Name, err))
 		} else {
-			queues = append(queues, queue)
+			//queues = append(queues, queue)
+			err = s.workqueue.Add(func(ctx context.Context) error {
+				// Only one root queue is expected per partition
+				logger.Infow("upserting queue for partition", "partition", p.Name, "queue", queue.QueueName)
+				err = s.repo.UpdateQueue(ctx, queue)
+				if err != nil {
+					// try adding the queue
+					err = s.repo.AddQueues(ctx, nil, []*dao.PartitionQueueDAOInfo{queue})
+				}
+				return err
+			}, workqueue.WithJobName(fmt.Sprintf("upsert_queue_for_partition_%s", p.Name)))
+			if err != nil {
+				logger.Errorf("could not add upsert_queue_for_partition_%s job to workqueue: %v", p.Name, err)
+				errs = append(errs, fmt.Errorf("could not add upsert_queue_for_partition_%s job to workqueue: %v", p.Name, err))
+			} else {
+				queues = append(queues, queue)
+			}
 		}
 	}
 
@@ -131,15 +147,8 @@ func (s *Service) upsertPartitionQueues(ctx context.Context, partitions []*dao.P
 		return nil, fmt.Errorf("failed to get queues for some partitions: %v", errs)
 	}
 
+	// Flatten the queues hierarchy into a single list
 	queues = flattenQueues(queues)
-	err := s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("upserting queues", "count", len(queues))
-		return s.repo.UpsertQueues(ctx, queues)
-	}, workqueue.WithJobName("upsert_queues"))
-	if err != nil {
-		logger.Errorf("could not add upsert queues job to workqueue: %v", err)
-	}
-
 	return queues, nil
 }
 
