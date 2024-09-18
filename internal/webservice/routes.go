@@ -241,14 +241,14 @@ func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.
 		errorResponse(req, resp, err)
 		return
 	}
-	root, err := buildPartitionQueueTree(ctx, queues)
+	root, err := buildPartitionQueueTrees(ctx, queues)
 	if err != nil {
 		errorResponse(req, resp, err)
 	}
 	jsonResponse(resp, root)
 }
 
-func buildPartitionQueueTree(ctx context.Context, queues []*model.PartitionQueueDAOInfo) (*dao.PartitionQueueDAOInfo, error) {
+func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueueDAOInfo) ([]*dao.PartitionQueueDAOInfo, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -262,10 +262,10 @@ func buildPartitionQueueTree(ctx context.Context, queues []*model.PartitionQueue
 		queueMap[queue.Id] = &queue.PartitionQueueDAOInfo
 	}
 
-	var rootID string
+	var rootIDs []string
 	for _, queue := range queues {
 		if !queue.ParentId.Valid {
-			rootID = queue.Id
+			rootIDs = append(rootIDs, queue.Id)
 			continue
 		}
 
@@ -276,7 +276,7 @@ func buildPartitionQueueTree(ctx context.Context, queues []*model.PartitionQueue
 		parent.Children = append(parent.Children, queue.PartitionQueueDAOInfo)
 	}
 
-	if rootID == "" {
+	if len(rootIDs) == 0 {
 		return nil, fmt.Errorf("root queue not found")
 	}
 
@@ -284,7 +284,12 @@ func buildPartitionQueueTree(ctx context.Context, queues []*model.PartitionQueue
 		return nil, err
 	}
 
-	return queueMap[rootID], nil
+	roots := make([]*dao.PartitionQueueDAOInfo, 0, len(rootIDs))
+	for _, id := range rootIDs {
+		roots = append(roots, queueMap[id])
+	}
+
+	return roots, nil
 }
 
 // getAppsPerPartitionPerQueue returns all applications for a given partition and queue.

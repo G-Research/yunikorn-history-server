@@ -68,7 +68,7 @@ func TestWebServiceServeSPA(t *testing.T) {
 func TestBuildPartitionQueueTree(t *testing.T) {
 	tt := map[string]struct {
 		queues  []*model.PartitionQueueDAOInfo
-		want    *dao.PartitionQueueDAOInfo
+		want    []*dao.PartitionQueueDAOInfo
 		wantErr bool
 	}{
 		"no queues": {
@@ -84,8 +84,10 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 			},
-			want: &dao.PartitionQueueDAOInfo{
-				QueueName: "root",
+			want: []*dao.PartitionQueueDAOInfo{
+				{
+					QueueName: "root",
+				},
 			},
 		},
 		"two level tree": {
@@ -107,11 +109,13 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 			},
-			want: &dao.PartitionQueueDAOInfo{
-				QueueName: "root",
-				Children: []dao.PartitionQueueDAOInfo{
-					{
-						QueueName: "child",
+			want: []*dao.PartitionQueueDAOInfo{
+				{
+					QueueName: "root",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							QueueName: "child",
+						},
 					},
 				},
 			},
@@ -132,11 +136,65 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			wantErr: true,
 			want:    nil,
 		},
+		"multiple root queues": {
+			queues: []*model.PartitionQueueDAOInfo{
+				{
+					Id: "2",
+					ParentId: sql.NullString{
+						String: "1",
+						Valid:  true,
+					},
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "child-1",
+					},
+				},
+				{
+					Id: "1",
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root-1",
+					},
+				},
+				{
+					Id: "22",
+					ParentId: sql.NullString{
+						String: "11",
+						Valid:  true,
+					},
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "child-2",
+					},
+				},
+				{
+					Id: "11",
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root-2",
+					},
+				},
+			},
+			want: []*dao.PartitionQueueDAOInfo{
+				{
+					QueueName: "root-1",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							QueueName: "child-1",
+						},
+					},
+				},
+				{
+					QueueName: "root-2",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							QueueName: "child-2",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tt {
 		t.Run(name, func(t *testing.T) {
-			got, err := buildPartitionQueueTree(context.TODO(), tc.queues)
+			got, err := buildPartitionQueueTrees(context.TODO(), tc.queues)
 			assert.Equal(t, tc.wantErr, err != nil)
 			assert.Equal(t, tc.want, got)
 		})
