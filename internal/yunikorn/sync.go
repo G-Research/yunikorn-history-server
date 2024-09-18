@@ -132,6 +132,12 @@ func (s *Service) syncQueues(ctx context.Context, partitions []*dao.PartitionInf
 			return
 		}
 
+		// TODO: mark deleted queues in the database
+		// Steps
+		// 1. flatten the queue we got from the yunikorn API
+		// 2. get all the queues from the database for that partition as a flat list
+		// 3. compare the two lists and delete the queues that are not in the list from the YK API
+
 		// Add a job to the workqueue for upserting the queue, but check if the context is canceled first
 		err = s.workqueue.Add(func(ctx context.Context) error {
 			logger.Infow("upserting queue for partition", "partition", p.Name, "queue", queue.QueueName)
