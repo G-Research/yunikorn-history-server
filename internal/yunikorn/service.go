@@ -5,14 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/oklog/run"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
-
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-
 	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
 )
 
 type Service struct {
@@ -20,7 +18,8 @@ type Service struct {
 	eventRepository repository.EventRepository
 	client          Client
 	// eventHandler is a function that handles events from the Yunikorn event stream.
-	eventHandler EventHandler
+	eventHandler        EventHandler
+	queueAddAccumulator *accumulator
 	// appMap is a map of application IDs to their respective DAOs.
 	appMap map[string]*dao.ApplicationDAOInfo
 	// syncInterval is the interval at which the service will sync the state of the applications with the Yunikorn API.
@@ -47,6 +46,10 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 		workqueue:       workqueue.NewWorkQueue(workqueue.WithName("yunikorn_data_sync")),
 	}
 	s.eventHandler = s.handleEvent
+	s.queueAddAccumulator = newAccumulator(
+		s.handleQueueEvents,
+		1*time.Second,
+	)
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -59,6 +62,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 	g.Add(func() error {
 		return s.workqueue.Run(ctx)
+	}, func(err error) {},
+	)
+
+	g.Add(func() error {
+		return s.queueAddAccumulator.run(ctx)
 	}, func(err error) {},
 	)
 
