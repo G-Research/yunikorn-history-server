@@ -238,19 +238,8 @@ func (s *Service) handleAppRemoveEvent(ctx context.Context, ev *si.EventRecord) 
 
 func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 	logger := log.FromContext(ctx)
-
-	switch ev.GetEventChangeType() {
-	case si.EventRecord_ADD:
-		s.queueAddAccumulator.add(ev)
-	case si.EventRecord_SET:
-		// Ignored for now
-	case si.EventRecord_REMOVE:
-		// Ignored for now
-	case si.EventRecord_NONE:
-	default:
-		// should be warning
-		logger.Warnf("unknown event EventChangeType for an Event of type QUEUE: %v", ev.GetEventChangeType())
-	}
+	logger.Debugf("adding queue event to accumulator: %v", ev)
+	s.queueEventAccumulator.add(ev)
 }
 
 func (s *Service) handleQueueEvents(ctx context.Context, events []*si.EventRecord) {

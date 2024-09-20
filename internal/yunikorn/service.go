@@ -18,8 +18,10 @@ type Service struct {
 	eventRepository repository.EventRepository
 	client          Client
 	// eventHandler is a function that handles events from the Yunikorn event stream.
-	eventHandler        EventHandler
-	queueAddAccumulator *accumulator
+	eventHandler EventHandler
+	// queueEventAccumulator is responsible for accumulating all queue events.
+	// After event stream is idle, it triggers the sync which should handle all event types.
+	queueEventAccumulator *accumulator
 	// appMap is a map of application IDs to their respective DAOs.
 	appMap map[string]*dao.ApplicationDAOInfo
 	// syncInterval is the interval at which the service will sync the state of the applications with the Yunikorn API.
@@ -46,7 +48,7 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 		workqueue:       workqueue.NewWorkQueue(workqueue.WithName("yunikorn_data_sync")),
 	}
 	s.eventHandler = s.handleEvent
-	s.queueAddAccumulator = newAccumulator(
+	s.queueEventAccumulator = newAccumulator(
 		s.handleQueueEvents,
 		1*time.Second,
 	)
@@ -66,7 +68,7 @@ func (s *Service) Run(ctx context.Context) error {
 	)
 
 	g.Add(func() error {
-		return s.queueAddAccumulator.run(ctx)
+		return s.queueEventAccumulator.run(ctx)
 	}, func(err error) {},
 	)
 
