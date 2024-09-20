@@ -3,9 +3,11 @@ package webservice
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
@@ -16,7 +18,8 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/health"
 	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+	ykmodel "github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
 )
 
 const (
@@ -64,8 +67,8 @@ func (ws *WebService) init(ctx context.Context) {
 					DataType("string"),
 			).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.PartitionQueueDAOInfo{}).
-			Returns(200, "OK", []dao.PartitionQueueDAOInfo{}).
+			Writes([]*model.PartitionQueueDAOInfo{}).
+			Returns(200, "OK", []*model.PartitionQueueDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get all queues for a partition"),
 	)
@@ -133,8 +136,8 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeEventStatistics).
 			To(ws.getEventStatistics).
 			Produces(restful.MIME_JSON).
-			Writes(model.EventTypeCounts{}).
-			Returns(200, "OK", model.EventTypeCounts{}).
+			Writes(ykmodel.EventTypeCounts{}).
+			Returns(200, "OK", ykmodel.EventTypeCounts{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get event statistics"),
 	)
@@ -239,11 +242,57 @@ func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.
 		errorResponse(req, resp, err)
 		return
 	}
-	daoQueues := make([]*dao.PartitionQueueDAOInfo, 0, len(queues))
-	for _, queue := range queues {
-		daoQueues = append(daoQueues, &queue.PartitionQueueDAOInfo)
+	root, err := buildPartitionQueueTrees(ctx, queues)
+	if err != nil {
+		errorResponse(req, resp, err)
 	}
-	jsonResponse(resp, daoQueues)
+	jsonResponse(resp, root)
+}
+
+func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueueDAOInfo) ([]*model.PartitionQueueDAOInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(queues) == 0 {
+		return nil, nil
+	}
+
+	queueMap := make(map[string]*model.PartitionQueueDAOInfo)
+	for _, queue := range queues {
+		queueMap[queue.Id] = queue
+	}
+
+	var rootIDs []string
+	for _, queue := range queues {
+		if queue.ParentId == nil {
+			rootIDs = append(rootIDs, queue.Id)
+			continue
+		}
+
+		parent, ok := queueMap[*queue.ParentId]
+		if !ok {
+			return nil, fmt.Errorf("parent queue %q not found", queue.Parent)
+		}
+		parent.Children = append(parent.Children, queue)
+	}
+
+	if len(rootIDs) == 0 {
+		return nil, fmt.Errorf("root queue not found")
+	}
+
+	sort.Strings(rootIDs)
+
+	roots := make([]*model.PartitionQueueDAOInfo, 0, len(rootIDs))
+	for _, id := range rootIDs {
+		roots = append(roots, queueMap[id])
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	return roots, nil
 }
 
 // getAppsPerPartitionPerQueue returns all applications for a given partition and queue.

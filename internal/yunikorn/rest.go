@@ -102,8 +102,8 @@ func (c *RESTClient) GetPartitionQueues(ctx context.Context, partitionName strin
 }
 
 func (c *RESTClient) GetApplications(ctx context.Context, partitionName, queueName string) (
-	[]*dao.ApplicationDAOInfo, error) {
-
+	[]*dao.ApplicationDAOInfo, error,
+) {
 	if partitionName == "" {
 		partitionName = "default"
 	}
@@ -139,7 +139,6 @@ func (c *RESTClient) GetApplication(
 	ctx context.Context,
 	partitionName, queueName, appID string,
 ) (*dao.ApplicationDAOInfo, error) {
-
 	if partitionName == "" {
 		partitionName = "default"
 	}
