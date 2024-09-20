@@ -140,7 +140,6 @@ func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, qu
 
 		var id string
 		err = row.Scan(&id)
-
 		if err != nil {
 			return fmt.Errorf("could not add queue %s into DB: %v", q.QueueName, err)
 		}
@@ -281,22 +280,21 @@ func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.Partiti
 	return queues, nil
 }
 
-// GetQueuesPerPartition returns all top level queues for a given partition
-// child queues are nested in the queue.Children field
+// GetQueuesPerPartition returns all the queues associated with the partition as a flat list
+// It is left to the caller to build the hierarchy of the queues
 func (s *PostgresRepository) GetQueuesPerPartition(
 	ctx context.Context,
 	parition string,
 ) ([]*model.PartitionQueueDAOInfo, error) {
 	selectSQL := `SELECT * FROM queues WHERE partition = $1`
 
-	var queues []*model.PartitionQueueDAOInfo
-	childrenMap := make(map[string][]*model.PartitionQueueDAOInfo)
-
 	rows, err := s.dbpool.Query(ctx, selectSQL, parition)
 	if err != nil {
 		return nil, fmt.Errorf("could not get queues from DB: %v", err)
 	}
 	defer rows.Close()
+
+	var queues []*model.PartitionQueueDAOInfo
 	for rows.Next() {
 		var q model.PartitionQueueDAOInfo
 		err = rows.Scan(
@@ -327,15 +325,13 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 		if err != nil {
 			return nil, fmt.Errorf("could not scan queue from DB: %v", err)
 		}
-		if q.ParentId.Valid {
-			childrenMap[q.ParentId.String] = append(childrenMap[q.ParentId.String], &q)
-		} else {
-			queues = append(queues, &q)
-		}
+		queues = append(queues, &q)
 	}
-	for _, queue := range queues {
-		queue.Children = getChildrenFromMap(queue.Id, childrenMap)
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("could not get queues from DB: %v", err)
 	}
+
 	return queues, nil
 }
 
@@ -409,9 +405,9 @@ func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName 
 		// Track the root queue for the current query
 		if rootQueue == nil && generationNumber == 0 {
 			rootQueue = &q
-		} else if q.ParentId.Valid {
+		} else if q.ParentId != nil {
 			// Otherwise, add the queue to the children map
-			childrenMap[q.ParentId.String] = append(childrenMap[q.ParentId.String], &q)
+			childrenMap[*q.ParentId] = append(childrenMap[*q.ParentId], &q)
 		}
 	}
 

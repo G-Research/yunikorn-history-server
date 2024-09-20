@@ -13,6 +13,7 @@ import (
 type Client interface {
 	GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error)
 	GetPartitionQueues(ctx context.Context, partitionName string) (*dao.PartitionQueueDAOInfo, error)
+	GetPartitionQueue(ctx context.Context, partitionName, queueName string) (*dao.PartitionQueueDAOInfo, error)
 	GetApplications(ctx context.Context, partitionName, queueName string) ([]*dao.ApplicationDAOInfo, error)
 	GetApplication(ctx context.Context, partitionName, queueName, appID string) (*dao.ApplicationDAOInfo, error)
 	GetPartitionNodes(ctx context.Context, partitionName string) ([]*dao.NodeDAOInfo, error)

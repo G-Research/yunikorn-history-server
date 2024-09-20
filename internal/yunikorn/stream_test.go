@@ -12,12 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-
-	"go.uber.org/mock/gomock"
-
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
 )
 
 func TestFetchEventStream(t *testing.T) {
