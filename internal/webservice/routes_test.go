@@ -2,7 +2,6 @@ package webservice
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/G-Research/yunikorn-history-server/internal/util"
 )
 
 func TestWebServiceServeSPA(t *testing.T) {
@@ -68,7 +68,7 @@ func TestWebServiceServeSPA(t *testing.T) {
 func TestBuildPartitionQueueTree(t *testing.T) {
 	tt := map[string]struct {
 		queues  []*model.PartitionQueueDAOInfo
-		want    []*dao.PartitionQueueDAOInfo
+		want    []*model.PartitionQueueDAOInfo
 		wantErr bool
 	}{
 		"no queues": {
@@ -84,24 +84,7 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 			},
-			want: []*dao.PartitionQueueDAOInfo{
-				{
-					QueueName: "root",
-				},
-			},
-		},
-		"two level tree": {
-			queues: []*model.PartitionQueueDAOInfo{
-				{
-					Id: "2",
-					ParentId: sql.NullString{
-						String: "1",
-						Valid:  true,
-					},
-					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						QueueName: "child",
-					},
-				},
+			want: []*model.PartitionQueueDAOInfo{
 				{
 					Id: "1",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
@@ -109,25 +92,12 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 			},
-			want: []*dao.PartitionQueueDAOInfo{
-				{
-					QueueName: "root",
-					Children: []dao.PartitionQueueDAOInfo{
-						{
-							QueueName: "child",
-						},
-					},
-				},
-			},
 		},
 		"no root queue": {
 			queues: []*model.PartitionQueueDAOInfo{
 				{
-					Id: "2",
-					ParentId: sql.NullString{
-						String: "1",
-						Valid:  true,
-					},
+					Id:       "2",
+					ParentId: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child",
 					},
@@ -139,11 +109,8 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 		"multiple root queues": {
 			queues: []*model.PartitionQueueDAOInfo{
 				{
-					Id: "2",
-					ParentId: sql.NullString{
-						String: "1",
-						Valid:  true,
-					},
+					Id:       "2",
+					ParentId: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child-1",
 					},
@@ -155,11 +122,8 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 				{
-					Id: "22",
-					ParentId: sql.NullString{
-						String: "11",
-						Valid:  true,
-					},
+					Id:       "22",
+					ParentId: util.ToPtr("11"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child-2",
 					},
@@ -171,20 +135,34 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 			},
-			want: []*dao.PartitionQueueDAOInfo{
+			want: []*model.PartitionQueueDAOInfo{
 				{
-					QueueName: "root-1",
-					Children: []dao.PartitionQueueDAOInfo{
+					Id: "1",
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root-1",
+					},
+					Children: []*model.PartitionQueueDAOInfo{
 						{
-							QueueName: "child-1",
+							Id:       "2",
+							ParentId: util.ToPtr("1"),
+							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+								QueueName: "child-1",
+							},
 						},
 					},
 				},
 				{
-					QueueName: "root-2",
-					Children: []dao.PartitionQueueDAOInfo{
+					Id: "11",
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root-2",
+					},
+					Children: []*model.PartitionQueueDAOInfo{
 						{
-							QueueName: "child-2",
+							Id:       "22",
+							ParentId: util.ToPtr("11"),
+							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+								QueueName: "child-2",
+							},
 						},
 					},
 				},

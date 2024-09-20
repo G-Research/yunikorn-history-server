@@ -405,9 +405,9 @@ func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName 
 		// Track the root queue for the current query
 		if rootQueue == nil && generationNumber == 0 {
 			rootQueue = &q
-		} else if q.ParentId.Valid {
+		} else if q.ParentId != nil {
 			// Otherwise, add the queue to the children map
-			childrenMap[q.ParentId.String] = append(childrenMap[q.ParentId.String], &q)
+			childrenMap[*q.ParentId] = append(childrenMap[*q.ParentId], &q)
 		}
 	}
 

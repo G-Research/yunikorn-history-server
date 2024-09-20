@@ -1,7 +1,7 @@
 ARG NODE_VERSION=20
 ARG ALPINE_VERSION=3.20
 
-FROM node:${NODE_VERSION} as builder
+FROM node:${NODE_VERSION} AS builder
 
 COPY web /build/src
 

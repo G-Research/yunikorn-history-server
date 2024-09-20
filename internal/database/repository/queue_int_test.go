@@ -217,7 +217,7 @@ func TestDeleteQueues_Integration(t *testing.T) {
 			// count the deleted queues
 			var delQueues int
 			for _, q := range queues {
-				if q.DeletedAt.Valid && q.Partition == tt.partition {
+				if q.DeletedAt != nil && q.Partition == tt.partition {
 					delQueues++
 				}
 			}
@@ -670,7 +670,6 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			for i, child := range tt.queueToUpdate.Children {
 				assert.Equal(t, child.CurrentPriority, queueFromDB.Children[i].CurrentPriority)
 			}
-
 		})
 	}
 }

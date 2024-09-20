@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
@@ -66,8 +67,8 @@ func (ws *WebService) init(ctx context.Context) {
 					DataType("string"),
 			).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.PartitionQueueDAOInfo{}).
-			Returns(200, "OK", []dao.PartitionQueueDAOInfo{}).
+			Writes([]*model.PartitionQueueDAOInfo{}).
+			Returns(200, "OK", []*model.PartitionQueueDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get all queues for a partition"),
 	)
@@ -248,7 +249,7 @@ func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.
 	jsonResponse(resp, root)
 }
 
-func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueueDAOInfo) ([]*dao.PartitionQueueDAOInfo, error) {
+func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueueDAOInfo) ([]*model.PartitionQueueDAOInfo, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -257,36 +258,38 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueu
 		return nil, nil
 	}
 
-	queueMap := make(map[string]*dao.PartitionQueueDAOInfo)
+	queueMap := make(map[string]*model.PartitionQueueDAOInfo)
 	for _, queue := range queues {
-		queueMap[queue.Id] = &queue.PartitionQueueDAOInfo
+		queueMap[queue.Id] = queue
 	}
 
 	var rootIDs []string
 	for _, queue := range queues {
-		if !queue.ParentId.Valid {
+		if queue.ParentId == nil {
 			rootIDs = append(rootIDs, queue.Id)
 			continue
 		}
 
-		parent, ok := queueMap[queue.ParentId.String]
+		parent, ok := queueMap[*queue.ParentId]
 		if !ok {
 			return nil, fmt.Errorf("parent queue %q not found", queue.Parent)
 		}
-		parent.Children = append(parent.Children, queue.PartitionQueueDAOInfo)
+		parent.Children = append(parent.Children, queue)
 	}
 
 	if len(rootIDs) == 0 {
 		return nil, fmt.Errorf("root queue not found")
 	}
 
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
+	sort.Strings(rootIDs)
 
-	roots := make([]*dao.PartitionQueueDAOInfo, 0, len(rootIDs))
+	roots := make([]*model.PartitionQueueDAOInfo, 0, len(rootIDs))
 	for _, id := range rootIDs {
 		roots = append(roots, queueMap[id])
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 
 	return roots, nil
