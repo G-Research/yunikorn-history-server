@@ -23,27 +23,6 @@ const (
 	endpointHealthcheck       = "/ws/v1/scheduler/healthcheck"
 )
 
-var (
-	endpointPartitionNodes = func(partitionName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/nodes", partitionName)
-	}
-	endpointQueues = func(partitionName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/queues", partitionName)
-	}
-	endpointApplicationsByPartition = func(partitionName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/applications/active", partitionName)
-	}
-	endpointApplicationsByQueue = func(partitionName, queueName string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/applications", partitionName, queueName)
-	}
-	endpointApplicationByPartition = func(partitionName, appID string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/application/%s", partitionName, appID)
-	}
-	endpointApplicationByQueue = func(partitionName, queueName, appID string) string {
-		return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/application/%s", partitionName, queueName, appID)
-	}
-)
-
 // RESTClient implements the Client interface which defines functions to interact with the Yunikorn REST API
 type RESTClient struct {
 	protocol string
@@ -84,6 +63,25 @@ func (c *RESTClient) GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, e
 
 func (c *RESTClient) GetPartitionQueues(ctx context.Context, partitionName string) (*dao.PartitionQueueDAOInfo, error) {
 	resp, err := c.get(ctx, endpointQueues(partitionName))
+	if err != nil {
+		return nil, err
+	}
+	defer closeBody(ctx, resp)
+
+	if resp.StatusCode != 200 {
+		return nil, handleNonOKResponse(ctx, resp)
+	}
+
+	var queues *dao.PartitionQueueDAOInfo
+	if err = unmarshallBody(ctx, resp, &queues); err != nil {
+		return nil, err
+	}
+
+	return queues, nil
+}
+
+func (c *RESTClient) GetPartitionQueue(ctx context.Context, partitionName, queueName string) (*dao.PartitionQueueDAOInfo, error) {
+	resp, err := c.get(ctx, endpointQueue(partitionName, queueName))
 	if err != nil {
 		return nil, err
 	}
@@ -334,3 +332,31 @@ func closeBody(ctx context.Context, resp *http.Response) {
 }
 
 var _ Client = &RESTClient{}
+
+func endpointPartitionNodes(partitionName string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/nodes", partitionName)
+}
+
+func endpointQueues(partitionName string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/queues", partitionName)
+}
+
+func endpointQueue(partitionName, queueName string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/queue/%s", partitionName, queueName)
+}
+
+func endpointApplicationsByPartition(partitionName string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/applications/active", partitionName)
+}
+
+func endpointApplicationsByQueue(partitionName, queueName string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/applications", partitionName, queueName)
+}
+
+func endpointApplicationByPartition(partitionName, appID string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/application/%s", partitionName, appID)
+}
+
+func endpointApplicationByQueue(partitionName, queueName, appID string) string {
+	return fmt.Sprintf("/ws/v1/partition/%s/queue/%s/application/%s", partitionName, queueName, appID)
+}

@@ -11,16 +11,16 @@ import (
 
 func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
 	upsertSQL := `INSERT INTO partitions (
-		id, 
+		id,
 		cluster_id,
-		name, 
+		name,
 		capacity,
-		used_capacity, 
+		used_capacity,
 		utilization,
-		total_nodes, 
+		total_nodes,
 		applications,
 		total_containers,
-		state, 
+		state,
 		last_state_transition_time) VALUES (@id, @cluster_id, @name, @capacity, @used_capacity, @utilization,
 			@total_nodes, @applications, @total_containers, @state, @last_state_transition_time)
 	ON CONFLICT (name) DO UPDATE SET
@@ -55,16 +55,17 @@ func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []
 }
 
 func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
-	var partitions []*dao.PartitionInfo
 	rows, err := s.dbpool.Query(ctx, "SELECT * FROM partitions")
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
 	}
 	defer rows.Close()
+
+	var partitions []*dao.PartitionInfo
 	for rows.Next() {
 		var p dao.PartitionInfo
 		var id string
-		err = rows.Scan(
+		if err := rows.Scan(
 			&id,
 			&p.ClusterID,
 			&p.Name,
@@ -76,11 +77,14 @@ func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*dao.Parti
 			&p.TotalContainers,
 			&p.State,
 			&p.LastStateTransitionTime,
-		)
-		partitions = append(partitions, &p)
-		if err != nil {
+		); err != nil {
 			return nil, fmt.Errorf("could not scan partition from DB: %v", err)
 		}
+		partitions = append(partitions, &p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to read rows: %v", err)
 	}
 	return partitions, nil
 }
