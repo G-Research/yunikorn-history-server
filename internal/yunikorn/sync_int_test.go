@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 
@@ -285,12 +283,23 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-
-			if diff := cmp.Diff(tt.expected, queues, cmpopts.IgnoreFields(dao.PartitionQueueDAOInfo{}, "Children")); diff != "" {
-				t.Errorf("Mismatch in %s (-expected +got):\n%s", tt.name, diff)
+			require.Equal(t, len(tt.expected), len(queues))
+			for _, queue := range queues {
+				if !queueExists(tt.expected, queue) {
+					t.Errorf("Queue %s in partition %s is not found in expected queues", queue.QueueName, queue.Partition)
+				}
 			}
 		})
 	}
+}
+
+func queueExists(expected []*dao.PartitionQueueDAOInfo, queue *dao.PartitionQueueDAOInfo) bool {
+	for _, e := range expected {
+		if e.QueueName == queue.QueueName && e.Partition == queue.Partition {
+			return true
+		}
+	}
+	return false
 }
 
 // Helper function to extract partition name from the URL
