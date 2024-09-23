@@ -188,6 +188,9 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *dao.Partiti
         allocating_accepted_apps = @allocating_accepted_apps
     WHERE queue_name = @queue_name AND partition = @partition AND deleted_at IS NULL
 `
+	if queue.Partition == "" {
+		return fmt.Errorf("partition is required for queue %s", queue.QueueName)
+	}
 
 	result, err := s.dbpool.Exec(ctx, updateSQL,
 		pgx.NamedArgs{
@@ -223,6 +226,9 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *dao.Partiti
 	// If there are children, recursively update them
 	if len(queue.Children) > 0 {
 		for _, child := range queue.Children {
+			// add parent partition to the child
+			// yunikorn does not provide partition for child queues
+			child.Partition = queue.Partition
 			err := s.UpdateQueue(ctx, util.ToPtr(child))
 			// if the child queue does not exist, we should add it
 			if err != nil {
