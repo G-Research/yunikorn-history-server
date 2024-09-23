@@ -4,12 +4,14 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
@@ -32,7 +34,7 @@ func TestClient_sync_Integration(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	repo, cleanupDB := setupDatabase(t, ctx)
+	_, repo, cleanupDB := setupDatabase(t, ctx)
 	t.Cleanup(cleanupDB)
 	eventRepository := repository.NewInMemoryEventRepository()
 
@@ -69,24 +71,26 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	repo, cleanupDB := setupDatabase(t, ctx)
+	pool, repo, cleanupDB := setupDatabase(t, ctx)
 	t.Cleanup(cleanupDB)
 	eventRepository := repository.NewInMemoryEventRepository()
 
 	tests := []struct {
-		name           string
-		setup          func() *httptest.Server
-		partitions     []*dao.PartitionInfo
-		existingQueues []*dao.PartitionQueueDAOInfo
-		expected       []*dao.PartitionQueueDAOInfo
-		wantErr        bool
+		name          string
+		setup         func() *httptest.Server
+		partitions    []*dao.PartitionInfo
+		existingQueue *dao.PartitionQueueDAOInfo
+		expected      []*dao.PartitionQueueDAOInfo
+		wantErr       bool
 	}{
 		{
 			name: "Sync queues with no existing queues",
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
 					response := dao.PartitionQueueDAOInfo{
 						QueueName: "root",
+						Partition: partitionName,
 						Children: []dao.PartitionQueueDAOInfo{
 							{
 								QueueName: "root.child-1",
@@ -101,16 +105,14 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				}))
 			},
 			partitions: []*dao.PartitionInfo{
-				{
-					Name: "default",
-				},
+				{Name: "default"},
 			},
-			existingQueues: nil,
+			existingQueue: nil,
 			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root"},
-				{QueueName: "root.child-1"},
-				{QueueName: "root.child-1.1"},
-				{QueueName: "root.child-1.2"},
+				{QueueName: "root", Partition: "default"},
+				{QueueName: "root.child-1", Partition: "default"},
+				{QueueName: "root.child-1.1", Partition: "default"},
+				{QueueName: "root.child-1.2", Partition: "default"},
 			},
 			wantErr: false,
 		},
@@ -118,8 +120,11 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			name: "Sync queues with existing queues in DB",
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+
 					response := dao.PartitionQueueDAOInfo{
 						QueueName: "root",
+						Partition: partitionName,
 						Children: []dao.PartitionQueueDAOInfo{
 							{
 								QueueName: "root.child-2",
@@ -130,17 +135,20 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				}))
 			},
 			partitions: []*dao.PartitionInfo{
-				{
-					Name: "default",
+				{Name: "default"},
+			},
+			existingQueue: &dao.PartitionQueueDAOInfo{
+				QueueName: "root",
+				Partition: "default",
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						QueueName: "root.child-1",
+					},
 				},
 			},
-			existingQueues: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root"},
-				{QueueName: "root.child-1"},
-			},
 			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root"},
-				{QueueName: "root.child-2"},
+				{QueueName: "root", Partition: "default"},
+				{QueueName: "root.child-2", Partition: "default"},
 			},
 			wantErr: false,
 		},
@@ -151,17 +159,19 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					http.Error(w, "internal server error", http.StatusInternalServerError)
 				}))
 			},
-			partitions:     []*dao.PartitionInfo{{Name: "default"}},
-			existingQueues: nil,
-			expected:       nil,
-			wantErr:        true,
+			partitions:    []*dao.PartitionInfo{{Name: "default"}},
+			existingQueue: nil,
+			expected:      nil,
+			wantErr:       true,
 		},
 		{
 			name: "Sync queues with multiple partitions",
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
 					response := dao.PartitionQueueDAOInfo{
 						QueueName: "root",
+						Partition: partitionName,
 						Children: []dao.PartitionQueueDAOInfo{
 							{QueueName: "root.child-1"},
 							{QueueName: "root.child-2"},
@@ -173,15 +183,19 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			partitions: []*dao.PartitionInfo{
 				{Name: "default"},
 				{Name: "secondary"},
+				{Name: "third"},
 			},
-			existingQueues: nil,
+			existingQueue: nil,
 			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root"},
-				{QueueName: "root.child-1"},
-				{QueueName: "root.child-2"},
-				{QueueName: "root"},
-				{QueueName: "root.child-1"},
-				{QueueName: "root.child-2"},
+				{QueueName: "root", Partition: "default"},
+				{QueueName: "root.child-1", Partition: "default"},
+				{QueueName: "root.child-2", Partition: "default"},
+				{QueueName: "root", Partition: "secondary"},
+				{QueueName: "root.child-1", Partition: "secondary"},
+				{QueueName: "root.child-2", Partition: "secondary"},
+				{QueueName: "root", Partition: "third"},
+				{QueueName: "root.child-1", Partition: "third"},
+				{QueueName: "root.child-2", Partition: "third"},
 			},
 			wantErr: false,
 		},
@@ -189,8 +203,11 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			name: "Sync queues with deeply nested queues",
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+
 					response := dao.PartitionQueueDAOInfo{
 						QueueName: "root",
+						Partition: partitionName,
 						Children: []dao.PartitionQueueDAOInfo{
 							{
 								QueueName: "root.child-1",
@@ -209,14 +226,14 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					writeResponse(t, w, response)
 				}))
 			},
-			partitions:     []*dao.PartitionInfo{{Name: "default"}},
-			existingQueues: nil,
+			partitions:    []*dao.PartitionInfo{{Name: "default"}},
+			existingQueue: nil,
 			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root"},
-				{QueueName: "root.child-1"},
-				{QueueName: "root.child-1.1"},
-				{QueueName: "root.child-1.1.1"},
-				{QueueName: "root.child-1.1.2"},
+				{QueueName: "root", Partition: "default"},
+				{QueueName: "root.child-1", Partition: "default"},
+				{QueueName: "root.child-1.1", Partition: "default"},
+				{QueueName: "root.child-1.1.1", Partition: "default"},
+				{QueueName: "root.child-1.1.2", Partition: "default"},
 			},
 			wantErr: false,
 		},
@@ -224,6 +241,18 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			t.Cleanup(func() {
+				_, err := pool.Exec(ctx, "DELETE FROM queues")
+				require.NoError(t, err)
+			})
+			// seed the existing queues
+			if tt.existingQueue != nil {
+				if err := repo.AddQueues(ctx, nil, []*dao.PartitionQueueDAOInfo{tt.existingQueue}); err != nil {
+					t.Fatalf("could not seed queue: %v", err)
+				}
+			}
+
 			ts := tt.setup()
 			defer ts.Close()
 
@@ -258,13 +287,23 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.expected, queues, cmpopts.IgnoreFields(dao.PartitionQueueDAOInfo{}, "Children")); diff != "" {
-				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+				t.Errorf("Mismatch in %s (-expected +got):\n%s", tt.name, diff)
 			}
 		})
 	}
 }
 
-func setupDatabase(t *testing.T, ctx context.Context) (repository.Repository, func()) {
+// Helper function to extract partition name from the URL
+func extractPartitionNameFromURL(urlPath string) string {
+	// Assume URL is like: /ws/v1/partition/{partitionName}/queues
+	parts := strings.Split(urlPath, "/")
+	if len(parts) > 4 {
+		return parts[4]
+	}
+	return ""
+}
+
+func setupDatabase(t *testing.T, ctx context.Context) (*pgxpool.Pool, repository.Repository, func()) {
 	schema := database.CreateTestSchema(ctx, t)
 	cfg := config.GetTestPostgresConfig()
 	cfg.Schema = schema
@@ -293,5 +332,5 @@ func setupDatabase(t *testing.T, ctx context.Context) (repository.Repository, fu
 		database.DropTestSchema(ctx, t, schema)
 	}
 
-	return repo, cleanup
+	return pool, repo, cleanup
 }
