@@ -5,11 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 func TestSync_findDeleteCandidates(t *testing.T) {
