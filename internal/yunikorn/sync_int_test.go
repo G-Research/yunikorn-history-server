@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
+
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 
