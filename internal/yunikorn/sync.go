@@ -99,55 +99,42 @@ func (s *Service) upsertPartitions(ctx context.Context) ([]*dao.PartitionInfo, e
 func (s *Service) syncQueues(ctx context.Context, partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
 	logger := log.FromContext(ctx)
 
-	var errs []error
-	var allQueues []*dao.PartitionQueueDAOInfo
-	var mu sync.Mutex
+	errs := make(chan error, len(partitions))
+	partitionQueues := make(chan []*dao.PartitionQueueDAOInfo, len(partitions))
 	var wg sync.WaitGroup
-
-	addErr := func(err error) {
-		mu.Lock()
-		defer mu.Unlock()
-		errs = append(errs, err)
-	}
-
-	addQueues := func(queues []*dao.PartitionQueueDAOInfo) {
-		mu.Lock()
-		defer mu.Unlock()
-		allQueues = append(allQueues, queues...)
-	}
-
-	addJob := func(partition *dao.PartitionInfo) {
-		wg.Add(1)
-		jobName := fmt.Sprintf("sync_queues_for_partition_%s", partition.Name)
-
-		err := s.workqueue.Add(func(ctx context.Context) error {
-			defer wg.Done()
-
-			queues, err := s.syncPartitionQueues(ctx, partition)
-			if err != nil {
-				addErr(fmt.Errorf("error syncing partition queues for partition %s: %w", partition.Name, err))
-			} else {
-				addQueues(queues)
-			}
-			return nil
-		}, workqueue.WithJobName(jobName))
-
-		if err != nil {
-			logger.Errorf("could not add sync queues job for partition %s: %v", partition.Name, err)
-		}
-	}
+	wg.Add(len(partitions))
 
 	for _, partition := range partitions {
-		addJob(partition)
+		go func() {
+			defer wg.Done()
+			logger.Infow("syncing queues for partition", "partition", partition.Name)
+			queues, err := s.syncPartitionQueues(ctx, partition)
+			if err != nil {
+				errs <- err
+				return
+			}
+			partitionQueues <- queues
+		}()
 	}
-
 	wg.Wait()
+	close(errs)
+	close(partitionQueues)
 
-	if len(errs) > 0 {
-		return nil, fmt.Errorf("some errors encountered while syncing queues: %v", errs)
+	var syncErrors []error
+	for err := range errs {
+		syncErrors = append(syncErrors, err)
 	}
 
-	return allQueues, nil
+	if len(syncErrors) > 0 {
+		return nil, fmt.Errorf("some errors encountered while syncing queues: %v", syncErrors)
+	}
+
+	// retrieve all queues from the channel
+	var queues []*dao.PartitionQueueDAOInfo
+	for qs := range partitionQueues {
+		queues = append(queues, qs...)
+	}
+	return queues, nil
 }
 
 func (s *Service) syncPartitionQueues(ctx context.Context, partition *dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {

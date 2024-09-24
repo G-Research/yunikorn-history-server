@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
@@ -73,12 +74,13 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 	t.Cleanup(cleanupDB)
 	eventRepository := repository.NewInMemoryEventRepository()
 
+	now := time.Now().Unix()
 	tests := []struct {
 		name          string
 		setup         func() *httptest.Server
 		partitions    []*dao.PartitionInfo
 		existingQueue *dao.PartitionQueueDAOInfo
-		expected      []*dao.PartitionQueueDAOInfo
+		expected      []*model.PartitionQueueDAOInfo
 		wantErr       bool
 	}{
 		{
@@ -106,11 +108,31 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				{Name: "default"},
 			},
 			existingQueue: nil,
-			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root", Partition: "default"},
-				{QueueName: "root.child-1", Partition: "default"},
-				{QueueName: "root.child-1.1", Partition: "default"},
-				{QueueName: "root.child-1.2", Partition: "default"},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.2",
+						Partition: "default",
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -120,6 +142,60 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					partitionName := extractPartitionNameFromURL(r.URL.Path)
 
+					response := dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: partitionName,
+						Children: []dao.PartitionQueueDAOInfo{
+							{
+								QueueName: "root.child-1",
+							},
+							{
+								QueueName: "root.child-2",
+							},
+						},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*dao.PartitionInfo{
+				{Name: "default"},
+			},
+			existingQueue: &dao.PartitionQueueDAOInfo{
+				QueueName: "root",
+				Partition: "default",
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						QueueName: "root.child-1",
+					},
+				},
+			},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "default",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sync queues when queue is deleted",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
 					response := dao.PartitionQueueDAOInfo{
 						QueueName: "root",
 						Partition: partitionName,
@@ -144,9 +220,26 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					},
 				},
 			},
-			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root", Partition: "default"},
-				{QueueName: "root.child-2", Partition: "default"},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+					DeletedAt: &now,
+				},
 			},
 			wantErr: false,
 		},
@@ -184,17 +277,63 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				{Name: "third"},
 			},
 			existingQueue: nil,
-			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root", Partition: "default"},
-				{QueueName: "root.child-1", Partition: "default"},
-				{QueueName: "root.child-2", Partition: "default"},
-				{QueueName: "root", Partition: "secondary"},
-				{QueueName: "root.child-1", Partition: "secondary"},
-				{QueueName: "root.child-2", Partition: "secondary"},
-				{QueueName: "root", Partition: "third"},
-				{QueueName: "root.child-1", Partition: "third"},
-				{QueueName: "root.child-2", Partition: "third"},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "secondary",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "secondary",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "secondary",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "third",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "third",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "third",
+					},
+				},
 			},
+
 			wantErr: false,
 		},
 		{
@@ -226,12 +365,37 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			},
 			partitions:    []*dao.PartitionInfo{{Name: "default"}},
 			existingQueue: nil,
-			expected: []*dao.PartitionQueueDAOInfo{
-				{QueueName: "root", Partition: "default"},
-				{QueueName: "root.child-1", Partition: "default"},
-				{QueueName: "root.child-1.1", Partition: "default"},
-				{QueueName: "root.child-1.1.1", Partition: "default"},
-				{QueueName: "root.child-1.1.2", Partition: "default"},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1.1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1.2",
+						Partition: "default",
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -277,25 +441,30 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				s.workqueue.Shutdown()
 			})
 
-			queues, err := s.syncQueues(context.Background(), tt.partitions)
+			_, err := s.syncQueues(context.Background(), tt.partitions)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, len(tt.expected), len(queues))
-			for _, queue := range queues {
-				if !queueExists(tt.expected, queue) {
-					t.Errorf("Queue %s in partition %s is not found in expected queues", queue.QueueName, queue.Partition)
+			queuesInDB, err := s.repo.GetAllQueues(ctx)
+			require.NoError(t, err)
+			for _, target := range tt.expected {
+				if !isQueuePresent(queuesInDB, target) {
+					t.Errorf("Queue %s in partition %s is not found in the DB", target.QueueName, target.Partition)
 				}
 			}
 		})
 	}
 }
 
-func queueExists(expected []*dao.PartitionQueueDAOInfo, queue *dao.PartitionQueueDAOInfo) bool {
-	for _, e := range expected {
-		if e.QueueName == queue.QueueName && e.Partition == queue.Partition {
+func isQueuePresent(queuesInDB []*model.PartitionQueueDAOInfo, targetQueue *model.PartitionQueueDAOInfo) bool {
+	for _, dbQueue := range queuesInDB {
+		if dbQueue.QueueName == targetQueue.QueueName && dbQueue.Partition == targetQueue.Partition {
+			// Check if DeletedAt fields are either both nil or both non-nil
+			if (dbQueue.DeletedAt == nil && targetQueue.DeletedAt != nil) || (dbQueue.DeletedAt != nil && targetQueue.DeletedAt == nil) {
+				return false // If one is nil and the other is not, return false
+			}
 			return true
 		}
 	}
