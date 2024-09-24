@@ -129,11 +129,16 @@ define yq_get_db
     $(shell $(call yq_get, .db.$(1)))
 endef
 
-DB_USER ?= $(strip $(call yq_get_db,user))
-DB_PASSWORD ?= $(strip $(call yq_get_db,password))
-DB_HOST ?= $(strip $(call yq_get_db,host))
+define url_escape
+    $(shell printf "%s" $(1) | go run hack/url/main.go)
+endef
+
+
+DB_USER ?= $(strip $(call url_escape,$(strip $(call yq_get_db,user))))
+DB_PASSWORD ?= $(strip $(call url_escape,$(strip $(call yq_get_db,password))))
+DB_HOST ?= $(strip $(call url_escape,$(strip $(call yq_get_db,host))))
 DB_PORT ?= $(strip $(call yq_get_db,port))
-DB_NAME ?= $(strip $(call yq_get_db,dbname))
+DB_NAME ?= $(strip $(call url_escape,$(strip $(call yq_get_db,dbname))))
 
 define database_url
 	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable

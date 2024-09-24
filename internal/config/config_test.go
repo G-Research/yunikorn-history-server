@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rs/cors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +33,7 @@ func TestNew(t *testing.T) {
 					Port:             8080,
 					AssetsDir:        "assets",
 					DataSyncInterval: 5 * time.Minute,
-					CORSConfig: cors.Options{
+					CORSConfig: CORSConfig{
 						AllowedOrigins: []string{"*"},
 						AllowedMethods: []string{"GET"},
 						AllowedHeaders: []string{"*"},

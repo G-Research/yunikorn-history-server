@@ -72,7 +72,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 
 	healthService := health.New(info.Version, health.NewYunikornComponent(client), health.NewPostgresComponent(pool))
 
-	ws := webservice.NewWebService(&cfg.YHSConfig, mainRepository, eventRepository, healthService)
+	ws := webservice.NewWebService(cfg.YHSConfig, mainRepository, eventRepository, healthService)
 	g.Add(
 		func() error {
 			return ws.Start(ctx)

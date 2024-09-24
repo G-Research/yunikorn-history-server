@@ -146,6 +146,21 @@ func (mr *MockClientMockRecorder) GetPartitionNodes(arg0, arg1 any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPartitionNodes", reflect.TypeOf((*MockClient)(nil).GetPartitionNodes), arg0, arg1)
 }
 
+// GetPartitionQueue mocks base method.
+func (m *MockClient) GetPartitionQueue(arg0 context.Context, arg1, arg2 string) (*dao.PartitionQueueDAOInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPartitionQueue", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*dao.PartitionQueueDAOInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPartitionQueue indicates an expected call of GetPartitionQueue.
+func (mr *MockClientMockRecorder) GetPartitionQueue(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPartitionQueue", reflect.TypeOf((*MockClient)(nil).GetPartitionQueue), arg0, arg1, arg2)
+}
+
 // GetPartitionQueues mocks base method.
 func (m *MockClient) GetPartitionQueues(arg0 context.Context, arg1 string) (*dao.PartitionQueueDAOInfo, error) {
 	m.ctrl.T.Helper()
