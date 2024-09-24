@@ -130,7 +130,7 @@ define yq_get_db
 endef
 
 define url_escape
-    $(shell echo -n $(1) | go run hack/url/main.go)
+    $(shell printf "%s" $(1) | go run hack/url/main.go)
 endef
 
 
