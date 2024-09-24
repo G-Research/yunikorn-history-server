@@ -166,6 +166,10 @@ func (s *PostgresRepository) AddQueues(ctx context.Context, parentId *string, qu
 // If provided child queue does not exist, the function will add it.
 // The function returns an error if the update operation fails.
 func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *dao.PartitionQueueDAOInfo) error {
+	if queue.Partition == "" {
+		return fmt.Errorf("partition is required for queue %s", queue.QueueName)
+	}
+
 	updateSQL := `
     UPDATE queues SET
         status = @status,
@@ -188,10 +192,6 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *dao.Partiti
         allocating_accepted_apps = @allocating_accepted_apps
     WHERE queue_name = @queue_name AND partition = @partition AND deleted_at IS NULL
 `
-	if queue.Partition == "" {
-		return fmt.Errorf("partition is required for queue %s", queue.QueueName)
-	}
-
 	result, err := s.dbpool.Exec(ctx, updateSQL,
 		pgx.NamedArgs{
 			"queue_name":               queue.QueueName,
