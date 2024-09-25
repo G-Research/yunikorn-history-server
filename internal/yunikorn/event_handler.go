@@ -263,8 +263,8 @@ func (s *Service) handleQueueAddEvent(ctx context.Context) {
 		return
 	}
 
-	if _, err := s.upsertPartitionQueues(ctx, partitions); err != nil {
-		logger.Errorf("could not get and upsert queues: %v", err)
+	if _, err := s.syncQueues(ctx, partitions); err != nil {
+		logger.Errorf("could not get and sync queues: %v", err)
 		return
 	}
 }
