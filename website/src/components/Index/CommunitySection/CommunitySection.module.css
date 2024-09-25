@@ -1,0 +1,10 @@
+@media screen and (max-width: 996px) {
+    .sectionDiv {
+        padding-bottom: 3.5rem !important;
+    }
+
+    .description {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}

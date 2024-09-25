@@ -1,0 +1,131 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+
+/* TOP BANNER */
+
+.topBanner {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.topBannerTitle {
+    font-size: 54px;
+    background: linear-gradient(
+            0deg,
+            #00459d 0%,
+            #00a3a6 75%,
+            #00a3a6 100%
+    );
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@media only screen and (max-width: 768px) {
+    .topBannerTitle {
+        font-size: 40px;
+        background: radial-gradient(circle at center, #00a3a6 25%, #00459d 100%);
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+/* TOP BANNER */
+
+
+/* BANNER */
+.hero {
+    background: linear-gradient(
+            0deg,
+            #00459d 0%,
+            #00a3a6 100%
+    );
+}
+
+.heroInner {
+    color: #fff;
+    font-size: 60px;
+    line-height: normal;
+    font-weight: bolder;
+}
+
+.heroTitle b {
+    color: #010f2e;
+}
+
+@keyframes heroLogoAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(0.1) rotate(30deg);
+        transform-origin: center bottom;
+    }
+
+    50% {
+        transform: rotate(-10deg);
+    }
+
+    70% {
+        transform: rotate(3deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.heroLogo {
+    animation-duration: 2s;
+    animation-name: heroLogoAnimation;
+    float: right;
+    height: auto;
+}
+
+.heroCtas {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.gitHubButtonWrapper {
+    display: flex;
+}
+
+.gitHubButton {
+    overflow: hidden;
+}
+
+@media only screen and (max-width: 768px) {
+    .hero {
+        padding-top: 2rem !important;
+        padding-bottom: 3rem !important;
+    }
+
+    .heroInner {
+        font-size: 36px;
+        text-align: center;
+    }
+
+    .heroLogo {
+        display: block;
+        float: none;
+        margin: 0 auto 24px;
+        padding: 0 !important;
+    }
+
+    .heroCtas {
+        gap: 1.5rem;
+        justify-content: center;
+    }
+
+    .gitHubButtonWrapper {
+        display: none;
+    }
+}
+
+/* BANNER */
