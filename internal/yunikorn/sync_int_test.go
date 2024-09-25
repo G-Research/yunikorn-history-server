@@ -2,8 +2,17 @@ package yunikorn
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/stretchr/testify/require"
+
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 
@@ -25,11 +34,456 @@ func TestClient_sync_Integration(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	schema := database.CreateTestSchema(ctx, t)
-	t.Cleanup(func() {
-		database.DropTestSchema(ctx, t, schema)
-	})
+	_, repo, cleanupDB := setupDatabase(t, ctx)
+	t.Cleanup(cleanupDB)
+	eventRepository := repository.NewInMemoryEventRepository()
 
+	c := NewRESTClient(config.GetTestYunikornConfig())
+	s := NewService(repo, eventRepository, c)
+
+	go func() { _ = s.Run(ctx) }()
+
+	assert.Eventually(t, func() bool {
+		return s.workqueue.Started()
+	}, 500*time.Millisecond, 50*time.Millisecond)
+
+	time.Sleep(100 * time.Millisecond)
+
+	err := s.sync(ctx)
+	if err != nil {
+		t.Errorf("error starting up client: %v", err)
+	}
+
+	assert.Eventually(t, func() bool {
+		partitions, err := repo.GetAllPartitions(ctx)
+		if err != nil {
+			t.Logf("error getting partitions: %v", err)
+		}
+		return len(partitions) > 0
+	}, 10*time.Second, 250*time.Millisecond)
+}
+
+func TestSync_syncQueues_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	pool, repo, cleanupDB := setupDatabase(t, ctx)
+	t.Cleanup(cleanupDB)
+	eventRepository := repository.NewInMemoryEventRepository()
+
+	now := time.Now().Unix()
+	tests := []struct {
+		name          string
+		setup         func() *httptest.Server
+		partitions    []*dao.PartitionInfo
+		existingQueue *dao.PartitionQueueDAOInfo
+		expected      []*model.PartitionQueueDAOInfo
+		wantErr       bool
+	}{
+		{
+			name: "Sync queues with no existing queues",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+					response := dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: partitionName,
+						Children: []dao.PartitionQueueDAOInfo{
+							{
+								QueueName: "root.child-1",
+								Children: []dao.PartitionQueueDAOInfo{
+									{QueueName: "root.child-1.1"},
+									{QueueName: "root.child-1.2"},
+								},
+							},
+						},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*dao.PartitionInfo{
+				{Name: "default"},
+			},
+			existingQueue: nil,
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.2",
+						Partition: "default",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sync queues with existing queues in DB",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+
+					response := dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: partitionName,
+						Children: []dao.PartitionQueueDAOInfo{
+							{
+								QueueName: "root.child-1",
+							},
+							{
+								QueueName: "root.child-2",
+							},
+						},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*dao.PartitionInfo{
+				{Name: "default"},
+			},
+			existingQueue: &dao.PartitionQueueDAOInfo{
+				QueueName: "root",
+				Partition: "default",
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						QueueName: "root.child-1",
+					},
+				},
+			},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "default",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sync queues when queue is deleted",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+					response := dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: partitionName,
+						Children: []dao.PartitionQueueDAOInfo{
+							{
+								QueueName: "root.child-2",
+							},
+						},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*dao.PartitionInfo{
+				{Name: "default"},
+			},
+			existingQueue: &dao.PartitionQueueDAOInfo{
+				QueueName: "root",
+				Partition: "default",
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						QueueName: "root.child-1",
+					},
+				},
+			},
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+					DeletedAt: &now,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sync queues with HTTP error",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					http.Error(w, "internal server error", http.StatusInternalServerError)
+				}))
+			},
+			partitions:    []*dao.PartitionInfo{{Name: "default"}},
+			existingQueue: nil,
+			expected:      nil,
+			wantErr:       true,
+		},
+		{
+			name: "Sync queues with multiple partitions",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+					response := dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: partitionName,
+						Children: []dao.PartitionQueueDAOInfo{
+							{QueueName: "root.child-1"},
+							{QueueName: "root.child-2"},
+						},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*dao.PartitionInfo{
+				{Name: "default"},
+				{Name: "secondary"},
+				{Name: "third"},
+			},
+			existingQueue: nil,
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "secondary",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "secondary",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "secondary",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "third",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "third",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-2",
+						Partition: "third",
+					},
+				},
+			},
+
+			wantErr: false,
+		},
+		{
+			name: "Sync queues with deeply nested queues",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+
+					response := dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: partitionName,
+						Children: []dao.PartitionQueueDAOInfo{
+							{
+								QueueName: "root.child-1",
+								Children: []dao.PartitionQueueDAOInfo{
+									{
+										QueueName: "root.child-1.1",
+										Children: []dao.PartitionQueueDAOInfo{
+											{QueueName: "root.child-1.1.1"},
+											{QueueName: "root.child-1.1.2"},
+										},
+									},
+								},
+							},
+						},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions:    []*dao.PartitionInfo{{Name: "default"}},
+			existingQueue: nil,
+			expected: []*model.PartitionQueueDAOInfo{
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1.1",
+						Partition: "default",
+					},
+				},
+				{
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						QueueName: "root.child-1.1.2",
+						Partition: "default",
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			t.Cleanup(func() {
+				_, err := pool.Exec(ctx, "DELETE FROM queues")
+				require.NoError(t, err)
+			})
+			// seed the existing queues
+			if tt.existingQueue != nil {
+				if err := repo.AddQueues(ctx, nil, []*dao.PartitionQueueDAOInfo{tt.existingQueue}); err != nil {
+					t.Fatalf("could not seed queue: %v", err)
+				}
+			}
+
+			ts := tt.setup()
+			defer ts.Close()
+
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
+			s := NewService(repo, eventRepository, client)
+
+			// Create a cancellable context for this specific service
+			ctx, cancel := context.WithCancel(context.Background())
+
+			// Start the service in a goroutine
+			go func() {
+				_ = s.Run(ctx)
+			}()
+
+			// Ensure workqueue is started
+			assert.Eventually(t, func() bool {
+				return s.workqueue.Started()
+			}, 500*time.Millisecond, 50*time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
+
+			// Cleanup after each test case
+			t.Cleanup(func() {
+				cancel()
+				s.workqueue.Shutdown()
+			})
+
+			_, err := s.syncQueues(context.Background(), tt.partitions)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			queuesInDB, err := s.repo.GetAllQueues(ctx)
+			require.NoError(t, err)
+			for _, target := range tt.expected {
+				if !isQueuePresent(queuesInDB, target) {
+					t.Errorf("Queue %s in partition %s is not found in the DB", target.QueueName, target.Partition)
+				}
+			}
+		})
+	}
+}
+
+func isQueuePresent(queuesInDB []*model.PartitionQueueDAOInfo, targetQueue *model.PartitionQueueDAOInfo) bool {
+	for _, dbQueue := range queuesInDB {
+		if dbQueue.QueueName == targetQueue.QueueName && dbQueue.Partition == targetQueue.Partition {
+			// Check if DeletedAt fields are either both nil or both non-nil
+			if (dbQueue.DeletedAt == nil && targetQueue.DeletedAt != nil) || (dbQueue.DeletedAt != nil && targetQueue.DeletedAt == nil) {
+				return false // If one is nil and the other is not, return false
+			}
+			return true
+		}
+	}
+	return false
+}
+
+// Helper function to extract partition name from the URL
+func extractPartitionNameFromURL(urlPath string) string {
+	// Assume URL is like: /ws/v1/partition/{partitionName}/queues
+	parts := strings.Split(urlPath, "/")
+	if len(parts) > 4 {
+		return parts[4]
+	}
+	return ""
+}
+
+func setupDatabase(t *testing.T, ctx context.Context) (*pgxpool.Pool, repository.Repository, func()) {
+	schema := database.CreateTestSchema(ctx, t)
 	cfg := config.GetTestPostgresConfig()
 	cfg.Schema = schema
 	m, err := migrations.New(cfg, "../../migrations")
@@ -52,29 +506,10 @@ func TestClient_sync_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating postgres repository: %v", err)
 	}
-	eventRepository := repository.NewInMemoryEventRepository()
 
-	c := NewRESTClient(config.GetTestYunikornConfig())
-	s := NewService(repo, eventRepository, c)
-
-	go func() { _ = s.Run(ctx) }()
-
-	assert.Eventually(t, func() bool {
-		return s.workqueue.Started()
-	}, 500*time.Millisecond, 50*time.Millisecond)
-
-	time.Sleep(100 * time.Millisecond)
-
-	err = s.sync(ctx)
-	if err != nil {
-		t.Errorf("error starting up client: %v", err)
+	cleanup := func() {
+		database.DropTestSchema(ctx, t, schema)
 	}
 
-	assert.Eventually(t, func() bool {
-		partitions, err := repo.GetAllPartitions(ctx)
-		if err != nil {
-			t.Logf("error getting partitions: %v", err)
-		}
-		return len(partitions) > 0
-	}, 10*time.Second, 250*time.Millisecond)
+	return pool, repo, cleanup
 }
