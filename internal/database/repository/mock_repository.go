@@ -13,10 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
-	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
+
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
@@ -221,17 +221,17 @@ func (mr *MockRepositoryMockRecorder) GetQueuesPerPartition(arg0, arg1 any) *gom
 }
 
 // InsertNodeUtilizations mocks base method.
-func (m *MockRepository) InsertNodeUtilizations(arg0 context.Context, arg1 uuid.UUID, arg2 []*dao.PartitionNodesUtilDAOInfo) error {
+func (m *MockRepository) InsertNodeUtilizations(arg0 context.Context, arg1 []*dao.PartitionNodesUtilDAOInfo) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertNodeUtilizations", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "InsertNodeUtilizations", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InsertNodeUtilizations indicates an expected call of InsertNodeUtilizations.
-func (mr *MockRepositoryMockRecorder) InsertNodeUtilizations(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) InsertNodeUtilizations(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).InsertNodeUtilizations), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).InsertNodeUtilizations), arg0, arg1)
 }
 
 // UpdateHistory mocks base method.
