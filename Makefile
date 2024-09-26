@@ -425,6 +425,9 @@ helm-install-yhs-local: kind-load-image ## build & install yunikorn-history-serv
 		--namespace $(NAMESPACE)  			 \
 		--create-namespace
 
+helm-uninstall-yhs-local:
+	helm uninstall yunikorn-history-server --namespace $(NAMESPACE)
+
 .PHONY: helm-repos
 helm-repos: helm
 	$(HELM) repo add gresearch https://g-research.github.io/charts
