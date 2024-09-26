@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Injectable, Input, OnInit, Output, ViewChild } from "@angular/core";
+import { FormControl } from "@angular/forms";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatDrawer } from "@angular/material/sidenav";
 import { MatSort } from "@angular/material/sort";
@@ -27,14 +28,34 @@ export class AllocationsDrawerComponent implements OnInit {
 
   @Output() removeRowSelection = new EventEmitter<void>();
 
+
+  disableSelect = new FormControl(false);
+  selectedAllocation: any;
+  showDetails: boolean = false;
   allocColumnDef: ColumnDef[] = [];
   allocColumnIds: string[] = [];
   selectedAllocationsRow: number = -1;
 
+  displayedColumns: string[] = ['key', 'value'];
+
+  dataSource = new MatTableDataSource<{ key: string, value: string|undefined }>([]);
+
+  filteredDataSource = new MatTableDataSource<AllocationInfo & { expanded: boolean }>([]);
+
+  selectedState: string = '';
+  selectedNode: string = '';
+  selectedInstance: string = '';
+
+  states = ['Running', 'Unknown', 'Failed', 'Succeeded'];
+  nodes = ['lima-rancher-desktop', 'Custom name 1', 'Custom name 2', 'Custom name 3'];
+  instances: string[] = [];
+
   ngOnChanges(): void {
     if (this.allocDataSource) {
+      this.updateInstances();
       this.allocDataSource.paginator = this.allocPaginator;
       this.allocDataSource.sort = this.allocSort;
+      this.applyFilter();
     }
   }
   constructor(private envConfig: EnvConfigService) {}
@@ -42,23 +63,32 @@ export class AllocationsDrawerComponent implements OnInit {
   ngOnInit(): void {
     this.allocColumnDef = [
       { colId: "displayName", colName: "Display Name", colWidth: 1 },
-      { colId: "allocationKey", colName: "Allocation Key", colWidth: 1 },
+      { colId: "resource", colName: "Resource", colWidth: 1, colFormatter: CommonUtil.resourceColumnFormatter },
       { colId: "nodeId", colName: "Node ID", colWidth: 1 },
-      {
-        colId: "log",
-        colName: "Log Link",
-        colWidth: 1,
-      },
-      {
-        colId: "resource",
-        colName: "Resource",
-        colFormatter: CommonUtil.resourceColumnFormatter,
-        colWidth: 1,
-      },
-      { colId: "priority", colName: "Priority", colWidth: 0.5 },
+      { colId: "state", colName: "State", colWidth: 1 },
     ];
     this.allocColumnIds = this.allocColumnDef.map((col) => col.colId);
     this.externalLogsBaseUrl = this.envConfig.getExternalLogsBaseUrl();
+  }
+
+  applyFilter(): void {
+    this.filteredDataSource.data = this.allocDataSource.data.filter(item => {
+      /*
+      const matchesState = this.selectedState ? item.state === this.selectedState : true;
+      const matchesNode = this.selectedNode ? item.node === this.selectedNode : true;
+      const matchesInstance = this.selectedInstance ? item.instance === this.selectedInstance : true;
+      return matchesState && matchesNode && matchesInstance;
+
+    */
+    const matchesInstance = this.selectedInstance ? item.displayName === this.selectedInstance : true;
+    return matchesInstance;
+    });
+  }
+  
+  updateInstances(): void {
+    if (this.allocDataSource && this.allocDataSource.data) {
+      this.instances = [...new Set(this.allocDataSource.data.map(item => item.displayName))];
+    }
   }
 
   formatResources(colValue: string): string[] {
@@ -72,10 +102,10 @@ export class AllocationsDrawerComponent implements OnInit {
     if (!hasMemory) {
       arr.unshift("Memory: n/a");
     }
-
+    
     // Concatenate the two arrays, with "cpu" and "Memory" elements first
-    const cpuAndMemoryElements = arr.filter((item) => item.toLowerCase().includes("CPU") || item.toLowerCase().includes("Memory"));
-    const otherElements = arr.filter((item) => !item.toLowerCase().includes("CPU") && !item.toLowerCase().includes("Memory"));
+    const cpuAndMemoryElements = arr.filter((item) => item.toLowerCase().includes("cpu") || item.toLowerCase().includes("memory"));
+    const otherElements = arr.filter((item) => !item.toLowerCase().includes("cpu") && !item.toLowerCase().includes("memory"));
     const result = cpuAndMemoryElements.concat(otherElements);
 
     return result;
@@ -85,7 +115,23 @@ export class AllocationsDrawerComponent implements OnInit {
     return this.allocDataSource?.data && this.allocDataSource.data.length === 0;
   }
 
-  allocationsDetailToggle(row: number) {
+  allocationsDetailToggle(row: any) {
+    this.showDetails = true;
+    this.selectedAllocation = row;
+    const newData = [
+      { key: 'User', value: undefined },
+      { key: 'Name', value: undefined },
+      { key: 'Application Type', value: "spark" },
+      { key: 'Application Tags', value: undefined },
+      { key: 'YarnApplication State', value: this.selectedRow?.applicationState },
+      { key: 'FinalStatus Reported by AM', value: undefined },
+      { key: 'Started', value: undefined },
+      { key: 'Launched', value: undefined },
+      { key: 'Finished', value: undefined },
+      { key: 'Elapsed', value: undefined },
+    ];
+
+    this.dataSource.data = newData;
     if (this.selectedAllocationsRow !== -1) {
       if (this.selectedAllocationsRow !== row) {
         this.allocDataSource.data[this.selectedAllocationsRow].expanded = false;
@@ -101,6 +147,10 @@ export class AllocationsDrawerComponent implements OnInit {
     }
   }
 
+  goBackToTable(){
+    this.showDetails = false;
+  }
+  
   closeDrawer() {
     this.selectedAllocationsRow = -1;
     this.matDrawer.close();
