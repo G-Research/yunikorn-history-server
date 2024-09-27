@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/uuid"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -321,7 +320,7 @@ func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
 
 	err = s.workqueue.Add(func(ctx context.Context) error {
 		logger.Infow("upserting node utilizations", "count", len(nus))
-		return s.repo.InsertNodeUtilizations(ctx, uuid.New(), nus)
+		return s.repo.InsertNodeUtilizations(ctx, nus)
 	}, workqueue.WithJobName("upsert_node_utilizations"))
 	if err != nil {
 		logger.Errorf("could not add insert node utilizations job to workqueue: %v", err)

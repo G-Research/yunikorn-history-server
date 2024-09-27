@@ -7,6 +7,7 @@ import (
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error {
@@ -53,7 +54,6 @@ func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeD
 
 func (s *PostgresRepository) InsertNodeUtilizations(
 	ctx context.Context,
-	u uuid.UUID,
 	nus []*dao.PartitionNodesUtilDAOInfo,
 ) error {
 
@@ -63,7 +63,7 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 	for _, nu := range nus {
 		_, err := s.dbpool.Exec(ctx, insertSQL,
 			pgx.NamedArgs{
-				"id":              u.String(),
+				"id":              ulid.Make(),
 				"cluster_id":      nu.ClusterID,
 				"partition":       nu.Partition,
 				"nodes_util_list": nu.NodesUtilList,

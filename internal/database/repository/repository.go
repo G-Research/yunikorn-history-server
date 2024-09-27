@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/uuid"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
@@ -22,7 +21,7 @@ type Repository interface {
 	GetApplicationsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error)
 	GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error)
 	UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error
-	InsertNodeUtilizations(ctx context.Context, uuid uuid.UUID, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
+	InsertNodeUtilizations(ctx context.Context, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
 	GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error)
 	GetNodesPerPartition(ctx context.Context, partition string) ([]*dao.NodeDAOInfo, error)
 	UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error
