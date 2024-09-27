@@ -55,6 +55,20 @@ func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
 }
 
+// DeletePartitions mocks base method.
+func (m *MockRepository) DeletePartitions(arg0 context.Context, arg1 []*model.PartitionInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePartitions", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePartitions indicates an expected call of DeletePartitions.
+func (mr *MockRepositoryMockRecorder) DeletePartitions(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePartitions", reflect.TypeOf((*MockRepository)(nil).DeletePartitions), arg0, arg1)
+}
+
 // DeleteQueues mocks base method.
 func (m *MockRepository) DeleteQueues(arg0 context.Context, arg1 []*model.PartitionQueueDAOInfo) error {
 	m.ctrl.T.Helper()
@@ -85,10 +99,10 @@ func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0, arg1 any) *gomock
 }
 
 // GetAllPartitions mocks base method.
-func (m *MockRepository) GetAllPartitions(arg0 context.Context) ([]*dao.PartitionInfo, error) {
+func (m *MockRepository) GetAllPartitions(arg0 context.Context) ([]*model.PartitionInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllPartitions", arg0)
-	ret0, _ := ret[0].([]*dao.PartitionInfo)
+	ret0, _ := ret[0].([]*model.PartitionInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -20,3 +20,9 @@ type PartitionQueueDAOInfo struct {
 	CreatedAt                 *int64                   `json:"createdAt,omitempty"`
 	DeletedAt                 *int64                   `json:"deletedAt,omitempty"`
 }
+
+type PartitionInfo struct {
+	Id                string `json:"id"`
+	dao.PartitionInfo `json:",inline"`
+	DeletedAt         *int64 `json:"deletedAt,omitempty"`
+}

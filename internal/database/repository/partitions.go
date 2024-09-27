@@ -3,10 +3,13 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
+
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
@@ -54,19 +57,18 @@ func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []
 	return nil
 }
 
-func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
+func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*model.PartitionInfo, error) {
 	rows, err := s.dbpool.Query(ctx, "SELECT * FROM partitions")
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
 	}
 	defer rows.Close()
 
-	var partitions []*dao.PartitionInfo
+	var partitions []*model.PartitionInfo
 	for rows.Next() {
-		var p dao.PartitionInfo
-		var id string
+		var p model.PartitionInfo
 		if err := rows.Scan(
-			&id,
+			&p.Id,
 			&p.ClusterID,
 			&p.Name,
 			&p.Capacity.Capacity,
@@ -77,6 +79,7 @@ func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*dao.Parti
 			&p.TotalContainers,
 			&p.State,
 			&p.LastStateTransitionTime,
+			&p.DeletedAt,
 		); err != nil {
 			return nil, fmt.Errorf("could not scan partition from DB: %v", err)
 		}
@@ -87,4 +90,20 @@ func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*dao.Parti
 		return nil, fmt.Errorf("failed to read rows: %v", err)
 	}
 	return partitions, nil
+}
+
+func (s *PostgresRepository) DeletePartitions(ctx context.Context, partitions []*model.PartitionInfo) error {
+	partitionNames := make([]string, len(partitions))
+	for i, p := range partitions {
+		partitionNames[i] = p.Name
+	}
+
+	deletedAt := time.Now().Unix()
+	query := `UPDATE partitions SET deleted_at = $1 WHERE name = ANY($2)`
+	_, err := s.dbpool.Exec(ctx, query, deletedAt, partitionNames)
+	if err != nil {
+		return fmt.Errorf("could not mark partitions as deleted in DB: %w", err)
+	}
+
+	return nil
 }
