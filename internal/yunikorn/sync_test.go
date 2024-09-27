@@ -98,7 +98,7 @@ func TestSync_findDeleteCandidates(t *testing.T) {
 				repo: mockRepo,
 			}
 
-			deleteCandidates, err := s.findDeleteCandidates(ctx, partition, tt.apiQueues)
+			deleteCandidates, err := s.findQueueDeleteCandidates(ctx, partition, tt.apiQueues)
 
 			if tt.expectedErr != nil {
 				require.Error(t, err)

@@ -8,11 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
-
-	"github.com/G-Research/yunikorn-history-server/internal/model"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
 
@@ -459,6 +458,122 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 	}
 }
 
+func TestSync_syncPartitions_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	pool, repo, cleanupDB := setupDatabase(t, ctx)
+	t.Cleanup(cleanupDB)
+	eventRepository := repository.NewInMemoryEventRepository()
+
+	now := time.Now().Unix()
+
+	tests := []struct {
+		name               string
+		setup              func() *httptest.Server
+		existingPartitions []*dao.PartitionInfo
+		expected           []*model.PartitionInfo
+		wantErr            bool
+	}{
+		{
+			name: "Sync partition with no existing partitions in DB",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					response := []*dao.PartitionInfo{
+						{Name: "default"},
+						{Name: "secondary"},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			existingPartitions: nil,
+			expected: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "default"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "secondary"}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Should mark secondary partition as deleted in DB",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					response := []*dao.PartitionInfo{
+						{Name: "default"},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			existingPartitions: []*dao.PartitionInfo{
+				{Name: "default"},
+				{Name: "secondary"},
+			},
+			expected: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "default"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "secondary"}, DeletedAt: &now},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			t.Cleanup(func() {
+				_, err := pool.Exec(ctx, "DELETE FROM partitions")
+				require.NoError(t, err)
+			})
+			// seed the existing partitions
+			if tt.existingPartitions != nil {
+				if err := repo.UpsertPartitions(ctx, tt.existingPartitions); err != nil {
+					t.Fatalf("could not seed partition: %v", err)
+				}
+			}
+
+			ts := tt.setup()
+			defer ts.Close()
+
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
+			s := NewService(repo, eventRepository, client)
+
+			// Start the service
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				_ = s.Run(ctx)
+			}()
+
+			// Ensure workqueue is started
+			assert.Eventually(t, func() bool {
+				return s.workqueue.Started()
+			}, 500*time.Millisecond, 50*time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
+
+			// Cleanup after each test case
+			t.Cleanup(func() {
+				cancel()
+				s.workqueue.Shutdown()
+			})
+
+			_, err := s.syncPartitions(ctx)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			partitionsInDB, err := s.repo.GetAllPartitions(ctx)
+			require.NoError(t, err)
+			for _, target := range tt.expected {
+				if !isPartitionPresent(partitionsInDB, target) {
+					t.Errorf("Partition %s is not found in the DB", target.Name)
+				}
+			}
+		})
+	}
+}
+
 func isQueuePresent(queuesInDB []*model.PartitionQueueDAOInfo, targetQueue *model.PartitionQueueDAOInfo) bool {
 	for _, dbQueue := range queuesInDB {
 		if dbQueue.QueueName == targetQueue.QueueName && dbQueue.Partition == targetQueue.Partition {
@@ -480,6 +595,19 @@ func extractPartitionNameFromURL(urlPath string) string {
 		return parts[4]
 	}
 	return ""
+}
+
+func isPartitionPresent(partitionsInDB []*model.PartitionInfo, targetPartition *model.PartitionInfo) bool {
+	for _, dbPartition := range partitionsInDB {
+		if dbPartition.Name == targetPartition.Name {
+			// Check if DeletedAt fields match
+			if (dbPartition.DeletedAt == nil && targetPartition.DeletedAt != nil) || (dbPartition.DeletedAt != nil && targetPartition.DeletedAt == nil) {
+				return false
+			}
+			return true
+		}
+	}
+	return false
 }
 
 func setupDatabase(t *testing.T, ctx context.Context) (*pgxpool.Pool, repository.Repository, func()) {

@@ -257,7 +257,7 @@ func (s *Service) handleQueueEvents(ctx context.Context, events []*si.EventRecor
 func (s *Service) handleQueueAddEvent(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
-	partitions, err := s.upsertPartitions(ctx)
+	partitions, err := s.syncPartitions(ctx)
 	if err != nil {
 		logger.Errorf("could not get partitions: %v", err)
 		return
