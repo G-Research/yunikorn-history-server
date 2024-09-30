@@ -13,7 +13,7 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
-func TestSync_findDeleteCandidates(t *testing.T) {
+func TestSync_findQueueDeleteCandidates(t *testing.T) {
 	tests := []struct {
 		name           string
 		apiQueues      []*dao.PartitionQueueDAOInfo
@@ -110,6 +110,106 @@ func TestSync_findDeleteCandidates(t *testing.T) {
 			// Check the QueueName of delete candidates
 			for i, expectedQueueName := range tt.expectedDelete {
 				require.Equal(t, expectedQueueName, deleteCandidates[i].QueueName)
+			}
+		})
+	}
+}
+
+func TestSync_findPartitionDeleteCandidates(t *testing.T) {
+	tests := []struct {
+		name           string
+		apiPartitions  []*dao.PartitionInfo
+		dbPartitions   []*model.PartitionInfo
+		expectedDelete []string
+		expectedErr    error
+	}{
+		{
+			name: "Single partition in DB not present in API",
+			apiPartitions: []*dao.PartitionInfo{
+				{Name: "partition1"},
+			},
+			dbPartitions: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}},
+			},
+			expectedDelete: []string{"partition3"},
+			expectedErr:    nil,
+		},
+		{
+			name: "Multiple partitions, no delete candidates",
+			apiPartitions: []*dao.PartitionInfo{
+				{Name: "partition1"},
+				{Name: "partition2"},
+			},
+			dbPartitions: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}},
+			},
+			expectedDelete: nil,
+			expectedErr:    nil,
+		},
+		{
+			name: "Multiple delete candidates in DB",
+			apiPartitions: []*dao.PartitionInfo{
+				{Name: "partition1"},
+			},
+			dbPartitions: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}},
+			},
+			expectedDelete: []string{"partition2", "partition3"},
+			expectedErr:    nil,
+		},
+		{
+			name:           "No partitions in API or DB",
+			apiPartitions:  []*dao.PartitionInfo{},
+			dbPartitions:   []*model.PartitionInfo{},
+			expectedDelete: nil,
+			expectedErr:    nil,
+		},
+		{
+			name: "DB returns error",
+			apiPartitions: []*dao.PartitionInfo{
+				{Name: "partition1"},
+			},
+			dbPartitions:   nil, // Simulate an error from the DB
+			expectedDelete: nil,
+			expectedErr:    errors.New("db error"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mockRepo := repository.NewMockRepository(mockCtrl)
+
+			if tt.expectedErr != nil {
+				mockRepo.EXPECT().GetAllPartitions(ctx).Return(nil, tt.expectedErr)
+			} else {
+				mockRepo.EXPECT().GetAllPartitions(ctx).Return(tt.dbPartitions, nil)
+			}
+
+			s := &Service{
+				repo: mockRepo,
+			}
+
+			deleteCandidates, err := s.findPartitionDeleteCandidates(ctx, tt.apiPartitions)
+
+			if tt.expectedErr != nil {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, len(tt.expectedDelete), len(deleteCandidates))
+
+			// Check the Name of delete candidates
+			for i, expectedPartitionName := range tt.expectedDelete {
+				require.Equal(t, expectedPartitionName, deleteCandidates[i].Name)
 			}
 		})
 	}
