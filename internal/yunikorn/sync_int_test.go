@@ -602,7 +602,8 @@ func isPartitionPresent(partitionsInDB []*model.PartitionInfo, targetPartition *
 	for _, dbPartition := range partitionsInDB {
 		if dbPartition.Name == targetPartition.Name {
 			// Check if DeletedAt fields match
-			if (dbPartition.DeletedAt == nil && targetPartition.DeletedAt != nil) || (dbPartition.DeletedAt != nil && targetPartition.DeletedAt == nil) {
+			if (dbPartition.DeletedAt == nil && targetPartition.DeletedAt != nil) ||
+				(dbPartition.DeletedAt != nil && targetPartition.DeletedAt == nil) {
 				return false
 			}
 			return true
