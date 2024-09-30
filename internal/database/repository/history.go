@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 func (s *PostgresRepository) UpdateHistory(
@@ -23,7 +23,7 @@ func (s *PostgresRepository) UpdateHistory(
 	for _, app := range apps {
 		_, err := s.dbpool.Exec(ctx, appSQL,
 			pgx.NamedArgs{
-				"id":           uuid.NewString(),
+				"id":           ulid.Make(),
 				"total_number": app.TotalApplications,
 				"timestamp":    app.Timestamp,
 			})
@@ -34,7 +34,7 @@ func (s *PostgresRepository) UpdateHistory(
 	for _, container := range containers {
 		_, err := s.dbpool.Exec(ctx, containerSQL,
 			pgx.NamedArgs{
-				"id":           uuid.NewString(),
+				"id":           ulid.Make(),
 				"total_number": container.TotalContainers,
 				"timestamp":    container.Timestamp,
 			})

@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oklog/ulid/v2"
+
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -80,7 +81,7 @@ func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao
 		}
 		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                   uuid.NewString(),
+				"id":                   ulid.Make(),
 				"app_id":               a.ApplicationID,
 				"used_resource":        a.UsedResource,
 				"max_used_resource":    a.MaxUsedResource,
