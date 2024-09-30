@@ -7,7 +7,7 @@ COPY web /build/src
 
 WORKDIR /build/src
 
-RUN npm install -g @angular/cli@17 && \
+RUN npm install -g @angular/cli@18 && \
     npm install                    && \
     npm run build
 
