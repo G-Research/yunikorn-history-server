@@ -111,7 +111,7 @@ func (s *Service) findPartitionDeleteCandidates(ctx context.Context, apiPartitio
 	}
 
 	// Fetch partitions from the database
-	dbPartitions, err := s.repo.GetAllPartitions(ctx)
+	dbPartitions, err := s.repo.GetActivePartitions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve partitions from DB: %w", err)
 	}
@@ -119,7 +119,7 @@ func (s *Service) findPartitionDeleteCandidates(ctx context.Context, apiPartitio
 	// Identify active partitions in the database that are not present in the API response
 	var deleteCandidates []*model.PartitionInfo
 	for _, dbPartition := range dbPartitions {
-		if _, found := apiPartitionMap[dbPartition.Name]; !found && dbPartition.DeletedAt == nil {
+		if _, found := apiPartitionMap[dbPartition.Name]; !found {
 			deleteCandidates = append(deleteCandidates, dbPartition)
 		}
 	}

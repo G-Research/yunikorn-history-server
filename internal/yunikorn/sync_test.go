@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/require"
@@ -117,21 +116,19 @@ func TestSync_findQueueDeleteCandidates(t *testing.T) {
 }
 
 func TestSync_findPartitionDeleteCandidates(t *testing.T) {
-	now := time.Now().Unix()
-
 	tests := []struct {
-		name           string
-		apiPartitions  []*dao.PartitionInfo
-		dbPartitions   []*model.PartitionInfo
-		expectedDelete []*model.PartitionInfo
-		expectedErr    error
+		name                 string
+		apiPartitions        []*dao.PartitionInfo
+		activePartitionsInDB []*model.PartitionInfo
+		expectedDelete       []*model.PartitionInfo
+		expectedErr          error
 	}{
 		{
 			name: "Single partition in DB not present in API",
 			apiPartitions: []*dao.PartitionInfo{
 				{Name: "partition1"},
 			},
-			dbPartitions: []*model.PartitionInfo{
+			activePartitionsInDB: []*model.PartitionInfo{
 				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
 				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}, Id: "p3"},
 			},
@@ -146,7 +143,7 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 				{Name: "partition1"},
 				{Name: "partition2"},
 			},
-			dbPartitions: []*model.PartitionInfo{
+			activePartitionsInDB: []*model.PartitionInfo{
 				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
 				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p2"},
 			},
@@ -158,7 +155,7 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 			apiPartitions: []*dao.PartitionInfo{
 				{Name: "partition1"},
 			},
-			dbPartitions: []*model.PartitionInfo{
+			activePartitionsInDB: []*model.PartitionInfo{
 				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
 				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p2"},
 				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}, Id: "p3"},
@@ -174,9 +171,8 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 			apiPartitions: []*dao.PartitionInfo{
 				{Name: "partition1"},
 			},
-			dbPartitions: []*model.PartitionInfo{
+			activePartitionsInDB: []*model.PartitionInfo{
 				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
-				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, DeletedAt: &now, Id: "p2"},
 				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p3"},
 			},
 			expectedDelete: []*model.PartitionInfo{
@@ -185,20 +181,20 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:           "No partitions in API or DB",
-			apiPartitions:  []*dao.PartitionInfo{},
-			dbPartitions:   []*model.PartitionInfo{},
-			expectedDelete: nil,
-			expectedErr:    nil,
+			name:                 "No partitions in API or DB",
+			apiPartitions:        []*dao.PartitionInfo{},
+			activePartitionsInDB: []*model.PartitionInfo{},
+			expectedDelete:       nil,
+			expectedErr:          nil,
 		},
 		{
 			name: "DB returns error",
 			apiPartitions: []*dao.PartitionInfo{
 				{Name: "partition1"},
 			},
-			dbPartitions:   nil, // Simulate an error from the DB
-			expectedDelete: nil,
-			expectedErr:    errors.New("db error"),
+			activePartitionsInDB: nil, // Simulate an error from the DB
+			expectedDelete:       nil,
+			expectedErr:          errors.New("db error"),
 		},
 	}
 
@@ -212,9 +208,9 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 			mockRepo := repository.NewMockRepository(mockCtrl)
 
 			if tt.expectedErr != nil {
-				mockRepo.EXPECT().GetAllPartitions(ctx).Return(nil, tt.expectedErr)
+				mockRepo.EXPECT().GetActivePartitions(ctx).Return(nil, tt.expectedErr)
 			} else {
-				mockRepo.EXPECT().GetAllPartitions(ctx).Return(tt.dbPartitions, nil)
+				mockRepo.EXPECT().GetActivePartitions(ctx).Return(tt.activePartitionsInDB, nil)
 			}
 
 			s := &Service{

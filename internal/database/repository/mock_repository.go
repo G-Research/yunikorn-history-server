@@ -83,6 +83,21 @@ func (mr *MockRepositoryMockRecorder) DeleteQueues(arg0, arg1 any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueues", reflect.TypeOf((*MockRepository)(nil).DeleteQueues), arg0, arg1)
 }
 
+// GetActivePartitions mocks base method.
+func (m *MockRepository) GetActivePartitions(arg0 context.Context) ([]*model.PartitionInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetActivePartitions", arg0)
+	ret0, _ := ret[0].([]*model.PartitionInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActivePartitions indicates an expected call of GetActivePartitions.
+func (mr *MockRepositoryMockRecorder) GetActivePartitions(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivePartitions", reflect.TypeOf((*MockRepository)(nil).GetActivePartitions), arg0)
+}
+
 // GetAllApplications mocks base method.
 func (m *MockRepository) GetAllApplications(arg0 context.Context, arg1 ApplicationFilters) ([]*model.ApplicationDAOInfo, error) {
 	m.ctrl.T.Helper()

@@ -92,6 +92,41 @@ func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*model.Par
 	return partitions, nil
 }
 
+func (s *PostgresRepository) GetActivePartitions(ctx context.Context) ([]*model.PartitionInfo, error) {
+	rows, err := s.dbpool.Query(ctx, `SELECT * FROM partitions WHERE deleted_at IS NULL`)
+	if err != nil {
+		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
+	}
+	defer rows.Close()
+
+	var partitions []*model.PartitionInfo
+	for rows.Next() {
+		var p model.PartitionInfo
+		if err := rows.Scan(
+			&p.Id,
+			&p.ClusterID,
+			&p.Name,
+			&p.Capacity.Capacity,
+			&p.Capacity.UsedCapacity,
+			&p.Capacity.Utilization,
+			&p.TotalNodes,
+			&p.Applications,
+			&p.TotalContainers,
+			&p.State,
+			&p.LastStateTransitionTime,
+			&p.DeletedAt,
+		); err != nil {
+			return nil, fmt.Errorf("could not scan partition from DB: %v", err)
+		}
+		partitions = append(partitions, &p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to read rows: %v", err)
+	}
+	return partitions, nil
+}
+
 func (s *PostgresRepository) DeletePartitions(ctx context.Context, partitions []*model.PartitionInfo) error {
 	partitionIds := make([]string, len(partitions))
 	for i, p := range partitions {
