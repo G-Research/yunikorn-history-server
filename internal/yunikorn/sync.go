@@ -82,6 +82,10 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, err
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions: %v", err)
 	}
+	deleteCandidates, err := s.findPartitionDeleteCandidates(ctx, partitions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find delete candidates: %w", err)
+	}
 
 	err = s.workqueue.Add(func(ctx context.Context) error {
 		logger.Infow("syncing partitions", "count", len(partitions))
@@ -90,10 +94,6 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, err
 			return fmt.Errorf("could not upsert partitions: %w", err)
 		}
 		// Delete partitions that are not present in the API response
-		deleteCandidates, err := s.findPartitionDeleteCandidates(ctx, partitions)
-		if err != nil {
-			return fmt.Errorf("failed to find delete candidates: %w", err)
-		}
 		return s.repo.DeletePartitions(ctx, deleteCandidates)
 	}, workqueue.WithJobName("sync_partitions"))
 	if err != nil {
@@ -116,10 +116,10 @@ func (s *Service) findPartitionDeleteCandidates(ctx context.Context, apiPartitio
 		return nil, fmt.Errorf("failed to retrieve partitions from DB: %w", err)
 	}
 
-	// Identify partitions in the database that are not present in the API response
+	// Identify active partitions in the database that are not present in the API response
 	var deleteCandidates []*model.PartitionInfo
 	for _, dbPartition := range dbPartitions {
-		if _, found := apiPartitionMap[dbPartition.Name]; !found {
+		if _, found := apiPartitionMap[dbPartition.Name]; !found && dbPartition.DeletedAt == nil {
 			deleteCandidates = append(deleteCandidates, dbPartition)
 		}
 	}

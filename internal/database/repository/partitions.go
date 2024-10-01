@@ -58,7 +58,7 @@ func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []
 }
 
 func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*model.PartitionInfo, error) {
-	rows, err := s.dbpool.Query(ctx, "SELECT * FROM partitions")
+	rows, err := s.dbpool.Query(ctx, `SELECT * FROM partitions`)
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
 	}
@@ -93,14 +93,14 @@ func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*model.Par
 }
 
 func (s *PostgresRepository) DeletePartitions(ctx context.Context, partitions []*model.PartitionInfo) error {
-	partitionNames := make([]string, len(partitions))
+	partitionIds := make([]string, len(partitions))
 	for i, p := range partitions {
-		partitionNames[i] = p.Name
+		partitionIds[i] = p.Id
 	}
 
 	deletedAt := time.Now().Unix()
-	query := `UPDATE partitions SET deleted_at = $1 WHERE name = ANY($2)`
-	_, err := s.dbpool.Exec(ctx, query, deletedAt, partitionNames)
+	query := `UPDATE partitions SET deleted_at = $1 WHERE id = ANY($2)`
+	_, err := s.dbpool.Exec(ctx, query, deletedAt, partitionIds)
 	if err != nil {
 		return fmt.Errorf("could not mark partitions as deleted in DB: %w", err)
 	}

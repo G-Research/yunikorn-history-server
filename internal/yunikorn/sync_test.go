@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/require"
@@ -116,11 +117,13 @@ func TestSync_findQueueDeleteCandidates(t *testing.T) {
 }
 
 func TestSync_findPartitionDeleteCandidates(t *testing.T) {
+	now := time.Now().Unix()
+
 	tests := []struct {
 		name           string
 		apiPartitions  []*dao.PartitionInfo
 		dbPartitions   []*model.PartitionInfo
-		expectedDelete []string
+		expectedDelete []*model.PartitionInfo
 		expectedErr    error
 	}{
 		{
@@ -129,11 +132,13 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 				{Name: "partition1"},
 			},
 			dbPartitions: []*model.PartitionInfo{
-				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}},
-				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}, Id: "p3"},
 			},
-			expectedDelete: []string{"partition3"},
-			expectedErr:    nil,
+			expectedDelete: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}, Id: "p3"},
+			},
+			expectedErr: nil,
 		},
 		{
 			name: "Multiple partitions, no delete candidates",
@@ -142,8 +147,8 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 				{Name: "partition2"},
 			},
 			dbPartitions: []*model.PartitionInfo{
-				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}},
-				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p2"},
 			},
 			expectedDelete: nil,
 			expectedErr:    nil,
@@ -154,12 +159,30 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 				{Name: "partition1"},
 			},
 			dbPartitions: []*model.PartitionInfo{
-				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}},
-				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}},
-				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p2"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}, Id: "p3"},
 			},
-			expectedDelete: []string{"partition2", "partition3"},
-			expectedErr:    nil,
+			expectedDelete: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p2"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition3"}, Id: "p3"},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Previously deleted partition with same name in DB",
+			apiPartitions: []*dao.PartitionInfo{
+				{Name: "partition1"},
+			},
+			dbPartitions: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition1"}, Id: "p1"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, DeletedAt: &now, Id: "p2"},
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p3"},
+			},
+			expectedDelete: []*model.PartitionInfo{
+				{PartitionInfo: dao.PartitionInfo{Name: "partition2"}, Id: "p3"},
+			},
+			expectedErr: nil,
 		},
 		{
 			name:           "No partitions in API or DB",
@@ -207,10 +230,7 @@ func TestSync_findPartitionDeleteCandidates(t *testing.T) {
 			}
 			require.Equal(t, len(tt.expectedDelete), len(deleteCandidates))
 
-			// Check the Name of delete candidates
-			for i, expectedPartitionName := range tt.expectedDelete {
-				require.Equal(t, expectedPartitionName, deleteCandidates[i].Name)
-			}
+			require.Equal(t, tt.expectedDelete, deleteCandidates)
 		})
 	}
 }
