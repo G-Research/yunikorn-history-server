@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/stretchr/testify/require"
+
+	"github.com/G-Research/yunikorn-history-server/internal/util"
 )
 
 func TestGetUserQueryParam(t *testing.T) {
