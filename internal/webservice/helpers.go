@@ -65,8 +65,11 @@ func getUserQueryParam(r *http.Request) string {
 }
 
 func getGroupsQueryParam(r *http.Request) []string {
+	var groupsSlice []string
 	groups := r.URL.Query().Get(queryParamGroups)
-	groupsSlice := strings.Split(groups, ",")
+	if groups != "" {
+		groupsSlice = strings.Split(groups, ",")
+	}
 	return groupsSlice
 }
 
