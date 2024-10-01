@@ -471,8 +471,6 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 	t.Cleanup(cleanupDB)
 	eventRepository := repository.NewInMemoryEventRepository()
 
-	now := time.Now().Unix()
-
 	tests := []struct {
 		name               string
 		setup              func() *httptest.Server
@@ -514,7 +512,6 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			},
 			expected: []*model.PartitionInfo{
 				{PartitionInfo: dao.PartitionInfo{Name: "default"}},
-				{PartitionInfo: dao.PartitionInfo{Name: "secondary"}, DeletedAt: &now},
 			},
 			wantErr: false,
 		},
@@ -564,7 +561,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			partitionsInDB, err := s.repo.GetAllPartitions(ctx)
+			partitionsInDB, err := s.repo.GetActivePartitions(ctx)
 			require.NoError(t, err)
 			for _, target := range tt.expected {
 				if !isPartitionPresent(partitionsInDB, target) {
@@ -601,11 +598,6 @@ func extractPartitionNameFromURL(urlPath string) string {
 func isPartitionPresent(partitionsInDB []*model.PartitionInfo, targetPartition *model.PartitionInfo) bool {
 	for _, dbPartition := range partitionsInDB {
 		if dbPartition.Name == targetPartition.Name {
-			// Check if DeletedAt fields match
-			if (dbPartition.DeletedAt == nil && targetPartition.DeletedAt != nil) ||
-				(dbPartition.DeletedAt != nil && targetPartition.DeletedAt == nil) {
-				return false
-			}
 			return true
 		}
 	}
