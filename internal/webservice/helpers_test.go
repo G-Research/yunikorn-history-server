@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 )
 
@@ -36,23 +38,17 @@ func TestGetGroupsQueryParam(t *testing.T) {
 		query  string
 		result []string
 	}{
-		{"No groups param", "", []string{""}},
+		{"No groups param", "", nil},
 		{"Single group", "groups=admin", []string{"admin"}},
 		{"Multiple groups", "groups=admin,user,guest", []string{"admin", "user", "guest"}},
 	}
 
 	for _, tt := range tests {
 		req, err := http.NewRequest("GET", "/?"+tt.query, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		result := getGroupsQueryParam(req)
-		for i, group := range result {
-			if group != tt.result[i] {
-				t.Errorf("expected %v, got %v", tt.result, result)
-				break
-			}
-		}
+		require.Equal(t, tt.result, result)
 	}
 }
 
