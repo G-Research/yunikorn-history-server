@@ -1,6 +1,6 @@
 # Yunikorn History Server (YHS)
 
-**Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions. Please note that the supported version of YuniKorn is [1.5.2](https://yunikorn.apache.org/docs/1.5.2/) due to breaking changes in the YuniKorn API.
+**Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions.
 
 [![GoReport Widget]][GoReport Status]
 [![Latest Release](https://img.shields.io/github/v/release/G-Research/yunikorn-history-server?include_prereleases)](https://github.com/armadaproject/armada-operator/releases/latest)

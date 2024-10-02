@@ -1,6 +1,6 @@
 # YuniKorn Histry Server Components
 
-**Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions. Please note that the supported version of YuniKorn is [1.5.2](https://yunikorn.apache.org/docs/1.5.2/) due to breaking changes in the YuniKorn API.
+**Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions.
 
 YuniKorn History Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/apache/yunikorn-web/)
 
