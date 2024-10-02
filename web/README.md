@@ -1,6 +1,8 @@
 # YuniKorn Histry Server Components
 
-YuniKorn Histry Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/apache/yunikorn-web/)
+**Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions. Please note that the supported version of YuniKorn is [1.5.2](https://yunikorn.apache.org/docs/1.5.2/) due to breaking changes in the YuniKorn API.
+
+YuniKorn History Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/apache/yunikorn-web/)
 
 ## Development environment setup
 ### Dependencies
@@ -20,17 +22,17 @@ To run a mock server for local development, follow these steps:
 
 **Start the JSON Server**:
 
-   - **Using Makefile**: you can start the server by running:
-     ```sh
-     make mock-server
-     ```
+- **Using Makefile**: you can start the server by running:
+  ```sh
+  make mock-server
+  ```
 
-   - **Using npm**: If you are in the `./web` directory, you can run the JSON Server directly with npm by using:
-     ```sh
-     npm run start:json-server
-     ```
+- **Using npm**: If you are in the `./web` directory, you can run the JSON Server directly with npm by using:
+  ```sh
+  npm run start:json-server
+  ```
 
-   This will start the JSON Server and serve mock data. You can access it at `http://localhost:3000`.
+This will start the JSON Server and serve mock data. You can access it at `http://localhost:3000`.
 
 ### Build
 
