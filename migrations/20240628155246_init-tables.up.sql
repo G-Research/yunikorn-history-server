@@ -11,6 +11,7 @@ CREATE TABLE partitions(
     total_containers INTEGER,
     state TEXT,
     last_state_transition_time BIGINT,
+    deleted_at BIGINT,
     UNIQUE (id),
     UNIQUE (name),
     PRIMARY KEY (id)
