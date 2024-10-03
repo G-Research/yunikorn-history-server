@@ -82,10 +82,6 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, err
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions: %v", err)
 	}
-	deleteCandidates, err := s.findPartitionDeleteCandidates(ctx, partitions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find delete candidates: %w", err)
-	}
 
 	err = s.workqueue.Add(func(ctx context.Context) error {
 		logger.Infow("syncing partitions", "count", len(partitions))
@@ -94,37 +90,13 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, err
 			return fmt.Errorf("could not upsert partitions: %w", err)
 		}
 		// Delete partitions that are not present in the API response
-		return s.repo.DeletePartitions(ctx, deleteCandidates)
+		return s.repo.DeletePartitions(ctx, partitions)
 	}, workqueue.WithJobName("sync_partitions"))
 	if err != nil {
 		logger.Errorf("could not add sync_partitions job to workqueue: %v", err)
 	}
 
 	return partitions, nil
-}
-
-func (s *Service) findPartitionDeleteCandidates(ctx context.Context, apiPartitions []*dao.PartitionInfo) ([]*model.PartitionInfo, error) {
-
-	apiPartitionMap := make(map[string]*dao.PartitionInfo)
-	for _, p := range apiPartitions {
-		apiPartitionMap[p.Name] = p
-	}
-
-	// Fetch partitions from the database
-	dbPartitions, err := s.repo.GetActivePartitions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve partitions from DB: %w", err)
-	}
-
-	// Identify active partitions in the database that are not present in the API response
-	var deleteCandidates []*model.PartitionInfo
-	for _, dbPartition := range dbPartitions {
-		if _, found := apiPartitionMap[dbPartition.Name]; !found {
-			deleteCandidates = append(deleteCandidates, dbPartition)
-		}
-	}
-
-	return deleteCandidates, nil
 }
 
 // syncQueues fetches queues for each partition and upserts them into the database

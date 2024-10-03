@@ -127,18 +127,24 @@ func (s *PostgresRepository) GetActivePartitions(ctx context.Context) ([]*model.
 	return partitions, nil
 }
 
-func (s *PostgresRepository) DeletePartitions(ctx context.Context, partitions []*model.PartitionInfo) error {
-	partitionIds := make([]string, len(partitions))
+func (s *PostgresRepository) DeletePartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
+	partitionNames := make([]string, len(partitions))
 	for i, p := range partitions {
-		partitionIds[i] = p.Id
+		partitionNames[i] = p.Name
 	}
-
 	deletedAt := time.Now().Unix()
-	query := `UPDATE partitions SET deleted_at = $1 WHERE id = ANY($2)`
-	_, err := s.dbpool.Exec(ctx, query, deletedAt, partitionIds)
+	query := `
+		UPDATE partitions 
+		SET deleted_at = $1 
+		WHERE id IN (
+			SELECT id 
+			FROM partitions 
+			WHERE deleted_at IS NULL AND NOT(name = ANY($2))
+		)
+	`
+	_, err := s.dbpool.Exec(ctx, query, deletedAt, partitionNames)
 	if err != nil {
 		return fmt.Errorf("could not mark partitions as deleted in DB: %w", err)
 	}
-
 	return nil
 }

@@ -561,8 +561,15 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			partitionsInDB, err := s.repo.GetActivePartitions(ctx)
-			require.NoError(t, err)
+			var partitionsInDB []*model.PartitionInfo
+			assert.Eventually(t, func() bool {
+				partitionsInDB, err = s.repo.GetActivePartitions(ctx)
+				if err != nil {
+					t.Logf("error getting partitions: %v", err)
+				}
+				return len(partitionsInDB) == len(tt.expected)
+			}, 5*time.Second, 50*time.Millisecond)
+
 			for _, target := range tt.expected {
 				if !isPartitionPresent(partitionsInDB, target) {
 					t.Errorf("Partition %s is not found in the DB", target.Name)

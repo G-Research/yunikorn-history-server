@@ -56,7 +56,7 @@ func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Ca
 }
 
 // DeletePartitions mocks base method.
-func (m *MockRepository) DeletePartitions(arg0 context.Context, arg1 []*model.PartitionInfo) error {
+func (m *MockRepository) DeletePartitions(arg0 context.Context, arg1 []*dao.PartitionInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePartitions", arg0, arg1)
 	ret0, _ := ret[0].(error)

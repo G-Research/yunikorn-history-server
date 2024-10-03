@@ -27,7 +27,7 @@ type Repository interface {
 	UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error
 	GetAllPartitions(ctx context.Context) ([]*model.PartitionInfo, error)
 	GetActivePartitions(ctx context.Context) ([]*model.PartitionInfo, error)
-	DeletePartitions(ctx context.Context, partitions []*model.PartitionInfo) error
+	DeletePartitions(ctx context.Context, partitions []*dao.PartitionInfo) error
 	AddQueues(ctx context.Context, parentId *string, queues []*dao.PartitionQueueDAOInfo) error
 	UpdateQueue(ctx context.Context, queue *dao.PartitionQueueDAOInfo) error
 	UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error
