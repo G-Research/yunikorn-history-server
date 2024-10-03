@@ -23,7 +23,7 @@ func TestAccumulatorCallback(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func() {
-		acc.run(ctx)
+		require.NoError(t, acc.run(ctx))
 	}()
 
 	time.Sleep(wait)
