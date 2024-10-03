@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
@@ -35,7 +35,7 @@ func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []
 	for _, p := range partitions {
 		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                         uuid.NewString(),
+				"id":                         ulid.Make().String(),
 				"cluster_id":                 p.ClusterID,
 				"name":                       p.Name,
 				"capacity":                   p.Capacity.Capacity,
