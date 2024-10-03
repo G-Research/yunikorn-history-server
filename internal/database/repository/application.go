@@ -81,7 +81,7 @@ func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao
 		}
 		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                   ulid.Make(),
+				"id":                   ulid.Make().String(),
 				"app_id":               a.ApplicationID,
 				"used_resource":        a.UsedResource,
 				"max_used_resource":    a.MaxUsedResource,

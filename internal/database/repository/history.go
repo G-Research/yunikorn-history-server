@@ -23,7 +23,7 @@ func (s *PostgresRepository) UpdateHistory(
 	for _, app := range apps {
 		_, err := s.dbpool.Exec(ctx, appSQL,
 			pgx.NamedArgs{
-				"id":           ulid.Make(),
+				"id":           ulid.Make().String(),
 				"total_number": app.TotalApplications,
 				"timestamp":    app.Timestamp,
 			})
@@ -34,7 +34,7 @@ func (s *PostgresRepository) UpdateHistory(
 	for _, container := range containers {
 		_, err := s.dbpool.Exec(ctx, containerSQL,
 			pgx.NamedArgs{
-				"id":           ulid.Make(),
+				"id":           ulid.Make().String(),
 				"total_number": container.TotalContainers,
 				"timestamp":    container.Timestamp,
 			})

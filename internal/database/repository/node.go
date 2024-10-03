@@ -28,7 +28,7 @@ func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeD
 	for _, n := range nodes {
 		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":           ulid.Make(),
+				"id":           ulid.Make().String(),
 				"node_id":      n.NodeID,
 				"partition":    partition,
 				"host_name":    n.HostName,
@@ -62,7 +62,7 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 	for _, nu := range nus {
 		_, err := s.dbpool.Exec(ctx, insertSQL,
 			pgx.NamedArgs{
-				"id":              ulid.Make(),
+				"id":              ulid.Make().String(),
 				"cluster_id":      nu.ClusterID,
 				"partition":       nu.Partition,
 				"nodes_util_list": nu.NodesUtilList,

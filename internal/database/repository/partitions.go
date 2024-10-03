@@ -35,7 +35,7 @@ func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []
 	for _, p := range partitions {
 		_, err := s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                         ulid.Make(),
+				"id":                         ulid.Make().String(),
 				"cluster_id":                 p.ClusterID,
 				"name":                       p.Name,
 				"capacity":                   p.Capacity.Capacity,

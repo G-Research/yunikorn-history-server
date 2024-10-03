@@ -59,7 +59,7 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 		}
 		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                       ulid.Make(),
+				"id":                       ulid.Make().String(),
 				"parent_id":                parentId,
 				"queue_name":               q.QueueName,
 				"status":                   q.Status,
