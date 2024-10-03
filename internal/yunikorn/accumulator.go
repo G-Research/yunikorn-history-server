@@ -69,7 +69,7 @@ func (a *accumulator) run(ctx context.Context) error {
 				if len(events) == 0 {
 					timer.Stop()
 					a.events <- events
-					return
+					continue
 				}
 				timer.Reset(a.idleInterval)
 				a.events <- events
