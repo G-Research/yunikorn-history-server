@@ -5,16 +5,17 @@ import (
 	"testing"
 	"time"
 
+	"sync/atomic"
+
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/atomic"
 )
 
 func TestAccumulatorCallback(t *testing.T) {
-	callCount := atomic.NewInt32(0)
+	var callCount atomic.Int32
 	callback := func(ctx context.Context, events []*si.EventRecord) {
 		t.Logf("callback called with %d events", len(events))
-		callCount.Inc()
+		callCount.Add(1)
 	}
 	interval := 250 * time.Millisecond
 	wait := 300 * time.Millisecond
