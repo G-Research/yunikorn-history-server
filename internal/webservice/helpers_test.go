@@ -162,3 +162,57 @@ func TestGetEndQueryParam(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTimestampStartQueryParam(t *testing.T) {
+	tests := []struct {
+		name   string
+		query  string
+		result *time.Time
+		hasErr bool
+	}{
+		{"No start param", "", nil, false},
+		{"Valid start", "timestampStart=1625097600000", util.ToPtr(time.UnixMilli(1625097600000)), false},
+		{"Invalid start", "timestampStart=invalid", nil, true},
+	}
+
+	for _, tt := range tests {
+		req, err := http.NewRequest("GET", "/?"+tt.query, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result, err := getTimestampStartQueryParam(req)
+		if (err != nil) != tt.hasErr {
+			t.Errorf("expected error: %v, got: %v", tt.hasErr, err)
+		}
+		if result != nil && !result.Equal(*tt.result) {
+			t.Errorf("expected %v, got %v", tt.result, result)
+		}
+	}
+}
+
+func TestGetTimestampEndQueryParam(t *testing.T) {
+	tests := []struct {
+		name   string
+		query  string
+		result *time.Time
+		hasErr bool
+	}{
+		{"No start param", "", nil, false},
+		{"Valid start", "timestampEnd=1625097600000", util.ToPtr(time.UnixMilli(1625097600000)), false},
+		{"Invalid start", "timestampEnd=invalid", nil, true},
+	}
+
+	for _, tt := range tests {
+		req, err := http.NewRequest("GET", "/?"+tt.query, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result, err := getTimestampEndQueryParam(req)
+		if (err != nil) != tt.hasErr {
+			t.Errorf("expected error: %v, got: %v", tt.hasErr, err)
+		}
+		if result != nil && !result.Equal(*tt.result) {
+			t.Errorf("expected %v, got %v", tt.result, result)
+		}
+	}
+}

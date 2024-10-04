@@ -174,7 +174,7 @@ func getTimestampEndQueryParam(r *http.Request) (*time.Time, error) {
 func toTime(millisString string) (*time.Time, error) {
 	startMillis, err := strconv.ParseInt(millisString, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid 'start' query parameter: %v", err)
+		return nil, fmt.Errorf("invalid 'timestamp' in query parameter: %v", err)
 	}
 
 	// Convert milliseconds since epoch to a time.Time object
