@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
-	"github.com/G-Research/yunikorn-history-server/test/database"
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/require"
+
+	"github.com/G-Research/yunikorn-history-server/internal/util"
+	"github.com/G-Research/yunikorn-history-server/test/database"
 )
 
 func TestHistory_Integration(t *testing.T) {
