@@ -55,18 +55,18 @@ func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
 }
 
-// DeletePartitions mocks base method.
-func (m *MockRepository) DeletePartitions(arg0 context.Context, arg1 []*dao.PartitionInfo) error {
+// DeleteInactivePartitions mocks base method.
+func (m *MockRepository) DeleteInactivePartitions(arg0 context.Context, arg1 []*dao.PartitionInfo) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeletePartitions", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteInactivePartitions", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeletePartitions indicates an expected call of DeletePartitions.
-func (mr *MockRepositoryMockRecorder) DeletePartitions(arg0, arg1 any) *gomock.Call {
+// DeleteInactivePartitions indicates an expected call of DeleteInactivePartitions.
+func (mr *MockRepositoryMockRecorder) DeleteInactivePartitions(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePartitions", reflect.TypeOf((*MockRepository)(nil).DeletePartitions), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteInactivePartitions", reflect.TypeOf((*MockRepository)(nil).DeleteInactivePartitions), arg0, arg1)
 }
 
 // DeleteQueues mocks base method.

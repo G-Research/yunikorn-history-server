@@ -127,9 +127,10 @@ func (s *PostgresRepository) GetActivePartitions(ctx context.Context) ([]*model.
 	return partitions, nil
 }
 
-func (s *PostgresRepository) DeletePartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
-	partitionNames := make([]string, len(partitions))
-	for i, p := range partitions {
+// DeleteInactivePartitions deletes partitions that are not in the list of activePartitions.
+func (s *PostgresRepository) DeleteInactivePartitions(ctx context.Context, activePartitions []*dao.PartitionInfo) error {
+	partitionNames := make([]string, len(activePartitions))
+	for i, p := range activePartitions {
 		partitionNames[i] = p.Name
 	}
 	deletedAt := time.Now().Unix()

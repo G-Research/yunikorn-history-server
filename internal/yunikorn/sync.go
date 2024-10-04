@@ -90,7 +90,7 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, err
 			return fmt.Errorf("could not upsert partitions: %w", err)
 		}
 		// Delete partitions that are not present in the API response
-		return s.repo.DeletePartitions(ctx, partitions)
+		return s.repo.DeleteInactivePartitions(ctx, partitions)
 	}, workqueue.WithJobName("sync_partitions"))
 	if err != nil {
 		logger.Errorf("could not add sync_partitions job to workqueue: %v", err)
