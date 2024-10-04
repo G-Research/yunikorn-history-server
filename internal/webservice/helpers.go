@@ -17,6 +17,8 @@ const (
 	queryParamLimit               = "limit"
 	queryParamOffset              = "offset"
 	queryParamUser                = "user"
+	queryParamTimestampStart      = "timestampStart"
+	queryParamTimestampEnd        = "timestampEnd"
 )
 
 func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, error) {
@@ -56,6 +58,39 @@ func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, e
 	groups := getGroupsQueryParam(r)
 	if len(groups) > 0 {
 		filters.Groups = groups
+	}
+	return &filters, nil
+}
+
+func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
+	var filters repository.HistoryFilters
+	timestampStart, err := getTimestampStartQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if timestampStart != nil {
+		filters.TimestampStart = timestampStart
+	}
+	timestampEnd, err := getTimestampEndQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if timestampEnd != nil {
+		filters.TimestampEnd = timestampEnd
+	}
+	offset, err := getOffsetQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if offset != nil {
+		filters.Offset = offset
+	}
+	limit, err := getLimitQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if limit != nil {
+		filters.Limit = limit
 	}
 	return &filters, nil
 }
@@ -111,6 +146,24 @@ func getSubmissionStartTimeQueryParam(r *http.Request) (*time.Time, error) {
 
 func getSubmissionEndTimeQueryParam(r *http.Request) (*time.Time, error) {
 	endStr := r.URL.Query().Get(queryParamSubmissionEndTime)
+	if endStr == "" {
+		return nil, nil
+	}
+
+	return toTime(endStr)
+}
+
+func getTimestampStartQueryParam(r *http.Request) (*time.Time, error) {
+	startStr := r.URL.Query().Get(queryParamTimestampStart)
+	if startStr == "" {
+		return nil, nil
+	}
+
+	return toTime(startStr)
+}
+
+func getTimestampEndQueryParam(r *http.Request) (*time.Time, error) {
+	endStr := r.URL.Query().Get(queryParamTimestampEnd)
 	if endStr == "" {
 		return nil, nil
 	}
