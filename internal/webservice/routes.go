@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
@@ -191,8 +192,6 @@ func (ws *WebService) init(ctx context.Context) {
 	mux.HandleFunc("/", ws.serveSPA)
 	mux.HandleFunc("/swagger-ui/", ws.serveSwaggerUI)
 	mux.HandleFunc("/api/v1/", container.ServeHTTP)
-
-	// router.NotFound = http.HandlerFunc(ws.serveSPA)
 
 	ws.server.Handler = enrichRequestContextMiddleware(ctx, mux)
 }
@@ -392,6 +391,10 @@ func (ws *WebService) ReadinessHealthcheck(req *restful.Request, resp *restful.R
 func (ws *WebService) serveSPA(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(ws.config.AssetsDir, r.URL.Path)
 	fi, err := os.Stat(path)
+	w.Header().Set("Access-Control-Allow-Origin", strings.Join(ws.config.CORSConfig.AllowedOrigins, ","))
+	w.Header().Set("Access-Control-Allow-Methods", strings.Join(ws.config.CORSConfig.AllowedMethods, ","))
+	w.Header().Set("Access-Control-Allow-Headers", strings.Join(ws.config.CORSConfig.AllowedHeaders, ","))
+
 	if os.IsNotExist(err) || fi.IsDir() {
 		http.ServeFile(w, r, filepath.Join(ws.config.AssetsDir, "index.html"))
 		return
