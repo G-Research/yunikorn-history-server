@@ -15,7 +15,7 @@ import (
 
 // sync fetches the state of the applications from the Yunikorn API and upserts them into the database
 func (s *Service) sync(ctx context.Context) error {
-	partitions, err := s.upsertPartitions(ctx)
+	partitions, err := s.syncPartitions(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting and upserting partitions: %v", err)
 	}
@@ -74,8 +74,8 @@ func (s *Service) sync(ctx context.Context) error {
 	return nil
 }
 
-// upsertPartitions fetches partitions from the Yunikorn API and upserts them into the database
-func (s *Service) upsertPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
+// syncPartitions fetches partitions from the Yunikorn API and syncs them into the database
+func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
 	logger := log.FromContext(ctx)
 	// Get partitions from Yunikorn API and upsert into DB
 	partitions, err := s.client.GetPartitions(ctx)
@@ -84,11 +84,16 @@ func (s *Service) upsertPartitions(ctx context.Context) ([]*dao.PartitionInfo, e
 	}
 
 	err = s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("upserting partitions", "count", len(partitions))
-		return s.repo.UpsertPartitions(ctx, partitions)
-	}, workqueue.WithJobName("upsert_partitions"))
+		logger.Infow("syncing partitions", "count", len(partitions))
+		err := s.repo.UpsertPartitions(ctx, partitions)
+		if err != nil {
+			return fmt.Errorf("could not upsert partitions: %w", err)
+		}
+		// Delete partitions that are not present in the API response
+		return s.repo.DeleteInactivePartitions(ctx, partitions)
+	}, workqueue.WithJobName("sync_partitions"))
 	if err != nil {
-		logger.Errorf("could not add upsert partitions job to workqueue: %v", err)
+		logger.Errorf("could not add sync_partitions job to workqueue: %v", err)
 	}
 
 	return partitions, nil
@@ -152,7 +157,7 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *dao.Partit
 
 	queues := flattenQueues([]*dao.PartitionQueueDAOInfo{queue})
 	// Find candidates for deletion
-	deleteCandidates, err := s.findDeleteCandidates(ctx, partition, queues)
+	deleteCandidates, err := s.findQueueDeleteCandidates(ctx, partition, queues)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find delete candidates: %w", err)
 	}
@@ -165,7 +170,7 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *dao.Partit
 	return queues, nil
 }
 
-func (s *Service) findDeleteCandidates(
+func (s *Service) findQueueDeleteCandidates(
 	ctx context.Context,
 	partition *dao.PartitionInfo,
 	apiQueues []*dao.PartitionQueueDAOInfo) ([]*model.PartitionQueueDAOInfo, error) {
