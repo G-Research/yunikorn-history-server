@@ -19,11 +19,11 @@ yhs:
   data_sync_interval: 20s
   cors:
     allowed_origins:
-      - "*"
+      - ".*"
     allowed_methods:
       - "GET"
     allowed_headers:
-      - "*"
+      - ".*"
 
 log:
   level: "INFO"
