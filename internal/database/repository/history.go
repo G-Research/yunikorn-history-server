@@ -3,11 +3,31 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 )
+
+type HistoryFilters struct {
+	TimestampStart *time.Time
+	TimestampEnd   *time.Time
+	Offset         *int
+	Limit          *int
+}
+
+func applyHistoryFilters(builder *sql.Builder, filters HistoryFilters) {
+	if filters.TimestampStart != nil {
+		builder.Conditionp("timestamp", ">=", filters.TimestampStart.UnixMilli())
+	}
+	if filters.TimestampEnd != nil {
+		builder.Conditionp("timestamp", "<=", filters.TimestampEnd.UnixMilli())
+	}
+	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
+}
 
 func (s *PostgresRepository) UpdateHistory(
 	ctx context.Context,
@@ -45,44 +65,62 @@ func (s *PostgresRepository) UpdateHistory(
 	return nil
 }
 
-func (s *PostgresRepository) GetApplicationsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {
-	selectSQL := `SELECT * FROM history WHERE history_type = 'application'`
-	rows, err := s.dbpool.Query(ctx, selectSQL)
+func (s *PostgresRepository) GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error) {
+	queryBuilder := sql.NewBuilder().
+		SelectAll("history", "").
+		Conditionp("history_type", "=", "application").
+		OrderBy("timestamp", sql.OrderByDescending)
+	applyHistoryFilters(queryBuilder, filters)
+
+	var apps []*dao.ApplicationHistoryDAOInfo
+
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications history from DB: %v", err)
 	}
 	defer rows.Close()
 
-	var apps []*dao.ApplicationHistoryDAOInfo
 	for rows.Next() {
-		app := &dao.ApplicationHistoryDAOInfo{}
+		var app dao.ApplicationHistoryDAOInfo
 		var id string
 		err := rows.Scan(&id, nil, &app.TotalApplications, &app.Timestamp)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan applications history from DB: %v", err)
 		}
-		apps = append(apps, app)
+		apps = append(apps, &app)
 	}
 	return apps, nil
 }
 
-func (s *PostgresRepository) GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error) {
-	selectSQL := `SELECT * FROM history WHERE history_type = 'container'`
-	rows, err := s.dbpool.Query(ctx, selectSQL)
+func (s *PostgresRepository) GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error) {
+	queryBuilder := sql.NewBuilder().
+		SelectAll("history", "").
+		Conditionp("history_type", "=", "container").
+		OrderBy("timestamp", sql.OrderByDescending)
+	applyHistoryFilters(queryBuilder, filters)
+
+	var containers []*dao.ContainerHistoryDAOInfo
+
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
+
 	if err != nil {
-		return nil, fmt.Errorf("could not get containers history from DB: %v", err)
+		return nil, fmt.Errorf("could not get container history from DB: %v", err)
 	}
 	defer rows.Close()
 
-	var containers []*dao.ContainerHistoryDAOInfo
 	for rows.Next() {
-		container := &dao.ContainerHistoryDAOInfo{}
+		var container dao.ContainerHistoryDAOInfo
 		var id string
 		err := rows.Scan(&id, nil, &container.TotalContainers, &container.Timestamp)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan contaienrs history from DB: %v", err)
 		}
-		containers = append(containers, container)
+		containers = append(containers, &container)
 	}
 	return containers, nil
 }
