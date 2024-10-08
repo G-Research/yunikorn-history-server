@@ -25,7 +25,6 @@ yhs:
     allowed_headers:
       - "*"
 
-
 log:
   level: "INFO"
   json_format: false

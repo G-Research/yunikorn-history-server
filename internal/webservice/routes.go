@@ -187,6 +187,7 @@ func (ws *WebService) init(ctx context.Context) {
 		Container:      container,
 	}
 	container.Filter(cors.Filter)
+	container.Filter(container.OPTIONSFilter)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ws.serveSPA)
