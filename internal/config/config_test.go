@@ -34,9 +34,9 @@ func TestNew(t *testing.T) {
 					AssetsDir:        "assets",
 					DataSyncInterval: 5 * time.Minute,
 					CORSConfig: CORSConfig{
-						AllowedOrigins: []string{".*"},
+						AllowedOrigins: []string{"*"},
 						AllowedMethods: []string{"GET"},
-						AllowedHeaders: []string{".*"},
+						AllowedHeaders: []string{"*"},
 					},
 				},
 				YunikornConfig: YunikornConfig{
