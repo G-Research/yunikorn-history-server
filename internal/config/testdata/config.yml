@@ -28,4 +28,3 @@ db:
   pool_max_conns: 10
   pool_min_conns: 1
   sslmode: disable
-

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
@@ -179,22 +180,12 @@ func (ws *WebService) init(ctx context.Context) {
 	}
 	container.Add(restfulspec.NewOpenAPIService(config))
 
-	cors := restful.CrossOriginResourceSharing{
-		AllowedHeaders: ws.config.CORSConfig.AllowedHeaders,
-		AllowedMethods: ws.config.CORSConfig.AllowedMethods,
-		AllowedDomains: ws.config.CORSConfig.AllowedOrigins,
-		Container:      container,
-	}
-	container.Filter(cors.Filter)
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ws.serveSPA)
 	mux.HandleFunc("/swagger-ui/", ws.serveSwaggerUI)
 	mux.HandleFunc("/api/v1/", container.ServeHTTP)
 
-	// router.NotFound = http.HandlerFunc(ws.serveSPA)
-
-	ws.server.Handler = enrichRequestContextMiddleware(ctx, mux)
+	ws.server.Handler = enrichRequestContextMiddleware(ctx, ws.applyCORS(mux))
 }
 
 func enrichSwaggerObject(swo *spec.Swagger) {
@@ -220,6 +211,20 @@ func enrichRequestContextMiddleware(ctx context.Context, next http.Handler) http
 		logger = logger.With("request_id", rid)
 		ctx = log.ToContext(ctx, logger)
 		*r = *r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *WebService) applyCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", strings.Join(s.config.CORSConfig.AllowedOrigins, ","))
+		w.Header().Set("Access-Control-Allow-Methods", strings.Join(s.config.CORSConfig.AllowedMethods, ","))
+		w.Header().Set("Access-Control-Allow-Headers", strings.Join(s.config.CORSConfig.AllowedHeaders, ","))
+
+		if r.Method == http.MethodOptions {
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -392,6 +397,7 @@ func (ws *WebService) ReadinessHealthcheck(req *restful.Request, resp *restful.R
 func (ws *WebService) serveSPA(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(ws.config.AssetsDir, r.URL.Path)
 	fi, err := os.Stat(path)
+
 	if os.IsNotExist(err) || fi.IsDir() {
 		http.ServeFile(w, r, filepath.Join(ws.config.AssetsDir, "index.html"))
 		return
