@@ -21,6 +21,23 @@ type NodeFilters struct {
 	Limit       *int
 }
 
+type NodeUtilizationFilters struct {
+	ClusterID *string
+	Partition *string
+	Offset    *int
+	Limit     *int
+}
+
+func applyNodeUtilizationFilters(builder *sql.Builder, filters NodeUtilizationFilters) {
+	if filters.ClusterID != nil {
+		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
+	}
+	if filters.Partition != nil {
+		builder.Conditionp("partition", "=", *filters.Partition)
+	}
+	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
+}
+
 func applyNodeFilters(builder *sql.Builder, filters NodeFilters) {
 	if filters.NodeId != nil {
 		builder.Conditionp("node_id", "=", *filters.NodeId)
@@ -106,24 +123,35 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 	return nil
 }
 
-func (s *PostgresRepository) GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	selectSQL := `SELECT * FROM partition_nodes_util`
+func (s *PostgresRepository) GetNodeUtilizations(
+	ctx context.Context,
+	filters NodeUtilizationFilters,
+) ([]*dao.PartitionNodesUtilDAOInfo, error) {
+	queryBuilder := sql.NewBuilder().
+		SelectAll("partition_nodes_util", "").
+		OrderBy("id", sql.OrderByDescending)
 
-	rows, err := s.dbpool.Query(ctx, selectSQL)
+	applyNodeUtilizationFilters(queryBuilder, filters)
+
+	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
+
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
 	}
 	defer rows.Close()
 
-	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
 	for rows.Next() {
-		nu := &dao.PartitionNodesUtilDAOInfo{}
+		var nu dao.PartitionNodesUtilDAOInfo
 		var id string
 		err := rows.Scan(&id, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan node utilizations from DB: %v", err)
 		}
-		nodesUtil = append(nodesUtil, nu)
+		nodesUtil = append(nodesUtil, &nu)
 	}
 	return nodesUtil, nil
 }

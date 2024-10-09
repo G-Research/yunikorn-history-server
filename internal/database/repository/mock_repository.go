@@ -13,9 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	gomock "go.uber.org/mock/gomock"
+
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
@@ -189,18 +190,18 @@ func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0, arg1 any) *gomo
 }
 
 // GetNodeUtilizations mocks base method.
-func (m *MockRepository) GetNodeUtilizations(arg0 context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
+func (m *MockRepository) GetNodeUtilizations(arg0 context.Context, arg1 NodeUtilizationFilters) ([]*dao.PartitionNodesUtilDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNodeUtilizations", arg0)
+	ret := m.ctrl.Call(m, "GetNodeUtilizations", arg0, arg1)
 	ret0, _ := ret[0].([]*dao.PartitionNodesUtilDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNodeUtilizations indicates an expected call of GetNodeUtilizations.
-func (mr *MockRepositoryMockRecorder) GetNodeUtilizations(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetNodeUtilizations(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).GetNodeUtilizations), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).GetNodeUtilizations), arg0, arg1)
 }
 
 // GetNodesPerPartition mocks base method.
