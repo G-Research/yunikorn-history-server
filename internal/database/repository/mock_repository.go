@@ -13,10 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	gomock "go.uber.org/mock/gomock"
-
-	model "github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
