@@ -78,7 +78,7 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 		"root queue": {
 			queues: []*model.PartitionQueueDAOInfo{
 				{
-					Id: "1",
+					ID: "1",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root",
 					},
@@ -86,7 +86,7 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			},
 			want: []*model.PartitionQueueDAOInfo{
 				{
-					Id: "1",
+					ID: "1",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root",
 					},
@@ -96,8 +96,8 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 		"no root queue": {
 			queues: []*model.PartitionQueueDAOInfo{
 				{
-					Id:       "2",
-					ParentId: util.ToPtr("1"),
+					ID:       "2",
+					ParentID: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child",
 					},
@@ -109,27 +109,27 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 		"multiple root queues": {
 			queues: []*model.PartitionQueueDAOInfo{
 				{
-					Id:       "2",
-					ParentId: util.ToPtr("1"),
+					ID:       "2",
+					ParentID: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child-1",
 					},
 				},
 				{
-					Id: "1",
+					ID: "1",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-1",
 					},
 				},
 				{
-					Id:       "22",
-					ParentId: util.ToPtr("11"),
+					ID:       "22",
+					ParentID: util.ToPtr("11"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child-2",
 					},
 				},
 				{
-					Id: "11",
+					ID: "11",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-2",
 					},
@@ -137,14 +137,14 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			},
 			want: []*model.PartitionQueueDAOInfo{
 				{
-					Id: "1",
+					ID: "1",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-1",
 					},
 					Children: []*model.PartitionQueueDAOInfo{
 						{
-							Id:       "2",
-							ParentId: util.ToPtr("1"),
+							ID:       "2",
+							ParentID: util.ToPtr("1"),
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 								QueueName: "child-1",
 							},
@@ -152,14 +152,14 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 				{
-					Id: "11",
+					ID: "11",
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-2",
 					},
 					Children: []*model.PartitionQueueDAOInfo{
 						{
-							Id:       "22",
-							ParentId: util.ToPtr("11"),
+							ID:       "22",
+							ParentID: util.ToPtr("11"),
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 								QueueName: "child-2",
 							},
