@@ -265,17 +265,17 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueu
 
 	queueMap := make(map[string]*model.PartitionQueueDAOInfo)
 	for _, queue := range queues {
-		queueMap[queue.Id] = queue
+		queueMap[queue.ID] = queue
 	}
 
 	var rootIDs []string
 	for _, queue := range queues {
-		if queue.ParentId == nil {
-			rootIDs = append(rootIDs, queue.Id)
+		if queue.ParentID == nil {
+			rootIDs = append(rootIDs, queue.ID)
 			continue
 		}
 
-		parent, ok := queueMap[*queue.ParentId]
+		parent, ok := queueMap[*queue.ParentID]
 		if !ok {
 			return nil, fmt.Errorf("parent queue %q not found", queue.Parent)
 		}

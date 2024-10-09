@@ -51,6 +51,142 @@ func applyApplicationFilters(builder *sql.Builder, filters ApplicationFilters) {
 	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
 }
 
+func (s *PostgresRepository) InsertApplication(ctx context.Context, app *model.Application) error {
+	const q = `
+INSERT INTO applications
+(id, created_at, deleted_at, app_id, used_resource, max_used_resource, pending_resource, partition, queue_name, submission_time, finished_time, requests, allocations, state, "user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations, max_request_priority)
+VALUES
+(@id, @created_at, @deleted_at, @app_id, @used_resource, @max_used_resource, @pending_resource, @partition, @queue_name, @submission_time, @finished_time, @requests, @allocations, @state, @user, @groups, @rejected_message, @state_log, @place_holder_data, @has_reserved, @reservations, @max_request_priority)
+	`
+
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"id":                   app.ID,
+			"created_at":           app.CreatedAt,
+			"deleted_at":           app.DeletedAt,
+			"app_id":               app.ApplicationID,
+			"used_resource":        app.UsedResource,
+			"max_used_resource":    app.MaxUsedResource,
+			"pending_resource":     app.PendingResource,
+			"partition":            app.Partition,
+			"queue_name":           app.QueueName,
+			"submission_time":      app.SubmissionTime,
+			"finished_time":        app.FinishedTime,
+			"requests":             app.Requests,
+			"allocations":          app.Allocations,
+			"state":                app.State,
+			"user":                 app.User,
+			"groups":               app.Groups,
+			"rejected_message":     app.RejectedMessage,
+			"state_log":            app.StateLog,
+			"place_holder_data":    app.PlaceholderData,
+			"has_reserved":         app.HasReserved,
+			"reservations":         app.Reservations,
+			"max_request_priority": app.MaxRequestPriority,
+		})
+	return err
+}
+
+func (s *PostgresRepository) GetActiveApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error) {
+	const q = `
+SELECT id, created_at, deleted_at, app_id, used_resource, max_used_resource, pending_resource, partition, queue_name, submission_time, finished_time, requests, allocations, state, "user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations, max_request_priority
+FROM applications
+WHERE app_id = @app_id AND deleted_at IS NULL
+	`
+
+	var app model.Application
+	row := s.dbpool.QueryRow(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"app_id": appID,
+		},
+	)
+
+	if err := row.Scan(
+		&app.ID,
+		&app.CreatedAt,
+		&app.DeletedAt,
+		&app.ApplicationID,
+		&app.UsedResource,
+		&app.MaxUsedResource,
+		&app.PendingResource,
+		&app.Partition,
+		&app.QueueName,
+		&app.SubmissionTime,
+		&app.FinishedTime,
+		&app.Requests,
+		&app.Allocations,
+		&app.State,
+		&app.User,
+		&app.Groups,
+		&app.RejectedMessage,
+		&app.StateLog,
+		&app.PlaceholderData,
+		&app.HasReserved,
+		&app.Reservations,
+		&app.MaxRequestPriority,
+	); err != nil {
+		return nil, err
+	}
+
+	return &app, nil
+}
+
+func (s *PostgresRepository) UpdateApplication(ctx context.Context, app *model.Application) error {
+	const q = `
+UPDATE applications
+SET
+	deleted_at = @deleted_at,
+	used_resource = @used_resource,
+	max_used_resource = @max_used_resource,
+	pending_resource = @pending_resource,
+	finished_time = @finished_time,
+	requests = @requests,
+	allocations = @allocations,
+	state = @state,
+	rejected_message = @rejected_message,
+	state_log = @state_log,
+	place_holder_data = @place_holder_data,
+	has_reserved = @has_reserved,
+	reservations = @reservations,
+	max_request_priority = @max_request_priority
+WHERE id = @id
+	`
+
+	res, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"id":                   app.ID,
+			"deleted_at":           app.DeletedAt,
+			"used_resource":        app.UsedResource,
+			"max_used_resource":    app.MaxUsedResource,
+			"pending_resource":     app.PendingResource,
+			"finished_time":        app.FinishedTime,
+			"requests":             app.Requests,
+			"allocations":          app.Allocations,
+			"state":                app.State,
+			"rejected_message":     app.RejectedMessage,
+			"state_log":            app.StateLog,
+			"place_holder_data":    app.PlaceholderData,
+			"has_reserved":         app.HasReserved,
+			"reservations":         app.Reservations,
+			"max_request_priority": app.MaxRequestPriority,
+		})
+	if err != nil {
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("application with id %s not found", app.ID)
+	}
+
+	return nil
+}
+
 func (s *PostgresRepository) UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error {
 	upsertSQL := `INSERT INTO applications (id, app_id, used_resource, max_used_resource, pending_resource,
 			partition, queue_name, queue_id, submission_time, finished_time, requests, allocations, state,

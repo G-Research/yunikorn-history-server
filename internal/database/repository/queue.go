@@ -254,8 +254,8 @@ func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.Partiti
 	for rows.Next() {
 		var q model.PartitionQueueDAOInfo
 		err = rows.Scan(
-			&q.Id,
-			&q.ParentId,
+			&q.ID,
+			&q.ParentID,
 			&q.CreatedAt,
 			&q.DeletedAt,
 			&q.QueueName,
@@ -304,8 +304,8 @@ func (s *PostgresRepository) GetQueuesPerPartition(
 	for rows.Next() {
 		var q model.PartitionQueueDAOInfo
 		err = rows.Scan(
-			&q.Id,
-			&q.ParentId,
+			&q.ID,
+			&q.ParentID,
 			&q.CreatedAt,
 			&q.DeletedAt,
 			&q.QueueName,
@@ -379,8 +379,8 @@ func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName 
 		var q model.PartitionQueueDAOInfo
 		var generationNumber int
 		err = rows.Scan(
-			&q.Id,
-			&q.ParentId,
+			&q.ID,
+			&q.ParentID,
 			&q.CreatedAt,
 			&q.DeletedAt,
 			&q.QueueName,
@@ -411,9 +411,9 @@ func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName 
 		// Track the root queue for the current query
 		if rootQueue == nil && generationNumber == 0 {
 			rootQueue = &q
-		} else if q.ParentId != nil {
+		} else if q.ParentID != nil {
 			// Otherwise, add the queue to the children map
-			childrenMap[*q.ParentId] = append(childrenMap[*q.ParentId], &q)
+			childrenMap[*q.ParentID] = append(childrenMap[*q.ParentID], &q)
 		}
 	}
 
@@ -421,7 +421,7 @@ func (s *PostgresRepository) GetQueue(ctx context.Context, partition, queueName 
 		return nil, fmt.Errorf("queue not found: %s", queueName)
 	}
 	// Recursively populate the children for the root queue
-	rootQueue.Children = getChildrenFromMap(rootQueue.Id, childrenMap)
+	rootQueue.Children = getChildrenFromMap(rootQueue.ID, childrenMap)
 
 	return rootQueue, nil
 }
@@ -443,7 +443,7 @@ func getChildrenFromMap(queueID string, childrenMap map[string][]*model.Partitio
 	children := childrenMap[queueID]
 	var childrenResult []*model.PartitionQueueDAOInfo
 	for _, child := range children {
-		child.Children = getChildrenFromMap(child.Id, childrenMap)
+		child.Children = getChildrenFromMap(child.ID, childrenMap)
 		childrenResult = append(childrenResult, child)
 	}
 	return childrenResult
@@ -465,7 +465,7 @@ func (s *PostgresRepository) DeleteQueues(ctx context.Context, queues []*model.P
 		}
 
 		// Delete the current queue
-		_, err := s.dbpool.Exec(ctx, deleteSQL, time.Now().Unix(), q.Id)
+		_, err := s.dbpool.Exec(ctx, deleteSQL, time.Now().Unix(), q.ID)
 		if err != nil {
 			return fmt.Errorf("could not delete queue from DB: %v", err)
 		}

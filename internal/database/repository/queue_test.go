@@ -11,9 +11,9 @@ import (
 func TestGetChildrenFromMap(t *testing.T) {
 
 	childrenMap := make(map[string][]*model.PartitionQueueDAOInfo)
-	child1 := &model.PartitionQueueDAOInfo{Id: "child1"}
-	child2 := &model.PartitionQueueDAOInfo{Id: "child2"}
-	child3 := &model.PartitionQueueDAOInfo{Id: "child3"}
+	child1 := &model.PartitionQueueDAOInfo{ID: "child1"}
+	child2 := &model.PartitionQueueDAOInfo{ID: "child2"}
+	child3 := &model.PartitionQueueDAOInfo{ID: "child3"}
 
 	childrenMap["parent1"] = []*model.PartitionQueueDAOInfo{child1, child2}
 	childrenMap["parent2"] = []*model.PartitionQueueDAOInfo{child3}

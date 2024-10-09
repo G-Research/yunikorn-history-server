@@ -13,67 +13,6 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
 )
 
-// sync fetches the state of the applications from the Yunikorn API and upserts them into the database
-func (s *Service) sync(ctx context.Context) error {
-	partitions, err := s.syncPartitions(ctx)
-	if err != nil {
-		return fmt.Errorf("error getting and upserting partitions: %v", err)
-	}
-
-	var mu sync.Mutex
-	var allErrs []error
-	addErr := func(err error) {
-		mu.Lock()
-		defer mu.Unlock()
-		allErrs = append(allErrs, err)
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(4)
-
-	go func() {
-		defer wg.Done()
-		queues, err := s.syncQueues(ctx, partitions)
-		if err != nil {
-			addErr(fmt.Errorf("error getting and upserting queues: %v", err))
-			return
-		}
-
-		if err = s.upsertApplications(ctx, queues); err != nil {
-			addErr(fmt.Errorf("error getting and upserting applications: %v", err))
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if err = s.upsertPartitionNodes(ctx, partitions); err != nil {
-			addErr(fmt.Errorf("error getting and upserting nodes: %v", err))
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if err = s.upsertNodeUtilizations(ctx); err != nil {
-			addErr(fmt.Errorf("error getting and upserting node utilizations: %v", err))
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if err = s.updateAppsHistory(ctx); err != nil {
-			addErr(fmt.Errorf("error updating apps history: %v", err))
-		}
-	}()
-
-	wg.Wait()
-
-	if len(allErrs) > 0 {
-		return fmt.Errorf("some errors encountered while syncing data: %v", allErrs)
-	}
-
-	return nil
-}
-
 // syncPartitions fetches partitions from the Yunikorn API and syncs them into the database
 func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {
 	logger := log.FromContext(ctx)

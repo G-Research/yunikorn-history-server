@@ -54,15 +54,6 @@ func (s *Service) processStreamResponse(ctx context.Context, response []byte) er
 	if err := json.Unmarshal(response, &eventRecord); err != nil {
 		return fmt.Errorf("could not unmarshal event from stream: %w", err)
 	}
-	// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
-	// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
-	if err := s.eventHandler(ctx, &eventRecord); err != nil {
-		logger.Errorf("error handling event: %v", err)
-	}
-
-	if err := s.eventRepository.Record(ctx, &eventRecord); err != nil {
-		logger.Errorf("error recording event: %v", err)
-	}
 
 	logger.Infow(
 		"received event from yunikorn event stream",
@@ -73,7 +64,18 @@ func (s *Service) processStreamResponse(ctx context.Context, response []byte) er
 		"change_detail", eventRecord.GetEventChangeDetail(),
 		"reference_id", eventRecord.GetReferenceID(),
 		"resource", eventRecord.GetResource(),
+		"state", eventRecord.GetState(),
 	)
+
+	// TODO: This is Okayish for small number of events, but for large number of events this will be a bottleneck
+	// We should consider using a channel? or a pool of workers? or a different queuing system ? to handle events.
+	if err := s.eventHandler(ctx, &eventRecord); err != nil {
+		logger.Errorf("error handling event: %v", err)
+	}
+
+	if err := s.eventRepository.Record(ctx, &eventRecord); err != nil {
+		logger.Errorf("error recording event: %v", err)
+	}
 
 	return nil
 }
