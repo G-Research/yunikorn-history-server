@@ -229,9 +229,24 @@ func (s *WebService) applyCORS(next http.Handler) http.Handler {
 	})
 }
 
+// getPartitions returns all partitions in the scheduler.
+// Results are ordered by creation time in descending order.
+// Following query params are supported:
+// - name: filter by partition name
+// - clusterId: filter by clusterId
+// - state: filter by state
+// - lastStateTransitionTimeStart: filter from the lastStateTransitionTime
+// - lastStateTransitionTimeEnd: filter until the lastStateTransitionTime
+// - limit: limit the number of returned partitions
+// - offset: offset the returned partitions
 func (ws *WebService) getPartitions(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	partitions, err := ws.repository.GetAllPartitions(ctx)
+	filters, err := parsePartitionFilters(req.Request)
+	if err != nil {
+		badRequestResponse(req, resp, err)
+		return
+	}
+	partitions, err := ws.repository.GetAllPartitions(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
