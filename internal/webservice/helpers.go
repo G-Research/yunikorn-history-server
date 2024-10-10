@@ -19,6 +19,8 @@ const (
 	queryParamUser                = "user"
 	queryParamTimestampStart      = "timestampStart"
 	queryParamTimestampEnd        = "timestampEnd"
+	queryParamPartition           = "partition"
+	queryParamClusterID           = "clusterId"
 )
 
 func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, error) {
@@ -62,6 +64,28 @@ func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, e
 	return &filters, nil
 }
 
+func parseNodeUtilizationFilters(r *http.Request) (*repository.NodeUtilizationFilters, error) {
+	var filters repository.NodeUtilizationFilters
+
+	filters.ClusterID = getClusterIDQueryParam(r)
+	filters.Partition = getPartitionQueryParam(r)
+	limit, err := getLimitQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if limit != nil {
+		filters.Limit = limit
+	}
+	offset, err := getOffsetQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if offset != nil {
+		filters.Offset = offset
+	}
+	return &filters, nil
+}
+
 func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
 	var filters repository.HistoryFilters
 	timestampStart, err := getTimestampStartQueryParam(r)
@@ -93,6 +117,23 @@ func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
 		filters.Limit = limit
 	}
 	return &filters, nil
+}
+
+func getClusterIDQueryParam(r *http.Request) *string {
+	clusterId := r.URL.Query().Get(queryParamClusterID)
+	if clusterId != "" {
+		return &clusterId
+
+	}
+	return nil
+}
+
+func getPartitionQueryParam(r *http.Request) *string {
+	partitionName := r.URL.Query().Get(queryParamPartition)
+	if partitionName != "" {
+		return &partitionName
+	}
+	return nil
 }
 
 func getUserQueryParam(r *http.Request) string {
