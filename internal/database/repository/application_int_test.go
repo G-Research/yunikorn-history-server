@@ -262,7 +262,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 			QueueName:       "root.default",
 			SubmissionTime:  now.Add(-1 * time.Hour).UnixMilli(),
 			User:            "user1",
-			State:           si.EventRecord_APP_STARTING.String(),
+			State:           si.EventRecord_APP_COMPLETING.String(),
 			Groups:          []string{"group1", "group2"},
 		},
 		{
