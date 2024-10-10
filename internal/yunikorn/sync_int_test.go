@@ -55,7 +55,7 @@ func TestClient_sync_Integration(t *testing.T) {
 	}
 
 	assert.Eventually(t, func() bool {
-		partitions, err := repo.GetAllPartitions(ctx)
+		partitions, err := repo.GetAllPartitions(ctx, repository.PartitionFilters{})
 		if err != nil {
 			t.Logf("error getting partitions: %v", err)
 		}
