@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 

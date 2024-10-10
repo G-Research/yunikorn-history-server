@@ -2,7 +2,7 @@
 
 **Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions.
 
-YuniKorn History Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/apache/yunikorn-web/)
+YuniKorn History Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/G-Research/yunikorn-web/)
 
 ## Development environment setup
 ### Dependencies

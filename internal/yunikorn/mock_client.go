@@ -14,7 +14,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
-	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
+	dao "github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	gomock "go.uber.org/mock/gomock"
 )
 

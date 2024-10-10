@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 

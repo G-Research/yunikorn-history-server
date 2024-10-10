@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
@@ -265,17 +265,17 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueu
 
 	queueMap := make(map[string]*model.PartitionQueueDAOInfo)
 	for _, queue := range queues {
-		queueMap[queue.Id] = queue
+		queueMap[queue.ID] = queue
 	}
 
 	var rootIDs []string
 	for _, queue := range queues {
-		if queue.ParentId == nil {
-			rootIDs = append(rootIDs, queue.Id)
+		if queue.ParentID == nil {
+			rootIDs = append(rootIDs, queue.ID)
 			continue
 		}
 
-		parent, ok := queueMap[*queue.ParentId]
+		parent, ok := queueMap[*queue.ParentID]
 		if !ok {
 			return nil, fmt.Errorf("parent queue %q not found", queue.Parent)
 		}
