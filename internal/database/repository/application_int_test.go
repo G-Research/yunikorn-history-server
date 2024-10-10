@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

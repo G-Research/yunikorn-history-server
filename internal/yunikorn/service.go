@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/oklog/run"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"

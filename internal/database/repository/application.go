@@ -12,7 +12,7 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -89,11 +89,13 @@ VALUES
 	return err
 }
 
-func (s *PostgresRepository) GetActiveApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error) {
+func (s *PostgresRepository) GetLatestApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error) {
 	const q = `
 SELECT id, created_at, deleted_at, app_id, used_resource, max_used_resource, pending_resource, partition, queue_name, submission_time, finished_time, requests, allocations, state, "user", groups, rejected_message, state_log, place_holder_data, has_reserved, reservations, max_request_priority
 FROM applications
-WHERE app_id = @app_id AND deleted_at IS NULL
+WHERE app_id = @app_id
+ORDER BY id DESC
+LIMIT 1
 	`
 
 	var app model.Application

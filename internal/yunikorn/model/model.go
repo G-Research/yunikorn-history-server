@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 )
 
 // EventTypeCounts is a map of event types to their counts.

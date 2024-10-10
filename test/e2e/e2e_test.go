@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
