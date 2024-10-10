@@ -27,34 +27,24 @@ const (
 )
 
 func parsePartitionFilters(r *http.Request) (*repository.PartitionFilters, error) {
-	filters := repository.PartitionFilters{}
+	var filters repository.PartitionFilters
+
+	filters.Name = getNameQueryParam(r)
+	filters.ClusterID = getClusterIDQueryParam(r)
+	filters.State = getStateQueryParam(r)
+
 	lastStateTransitionTimeStart, err := getLastStateTransitionTimeStartQueryParam(r)
 	if err != nil {
 		return nil, err
 	}
-	if lastStateTransitionTimeStart != nil {
-		filters.LastStateTransitionTimeStart = lastStateTransitionTimeStart
-	}
+	filters.LastStateTransitionTimeStart = lastStateTransitionTimeStart
+
 	lastStateTransitionTimeEnd, err := getLastStateTransitionTimeEndQueryParam(r)
 	if err != nil {
 		return nil, err
 	}
-	if lastStateTransitionTimeEnd != nil {
-		filters.LastStateTransitionTimeEnd = lastStateTransitionTimeEnd
-	}
-	name := getNameQueryParam(r)
-	if name != "" {
-		filters.Name = &name
+	filters.LastStateTransitionTimeEnd = lastStateTransitionTimeEnd
 
-	}
-	clusterID := getClusterIDQueryParam(r)
-	if clusterID != "" {
-		filters.ClusterID = &clusterID
-	}
-	state := getStateQueryParam(r)
-	if state != "" {
-		filters.State = &state
-	}
 	offset, err := getOffsetQueryParam(r)
 	if err != nil {
 		return nil, err
@@ -62,6 +52,7 @@ func parsePartitionFilters(r *http.Request) (*repository.PartitionFilters, error
 	if offset != nil {
 		filters.Offset = offset
 	}
+
 	limit, err := getLimitQueryParam(r)
 	if err != nil {
 		return nil, err
@@ -69,6 +60,7 @@ func parsePartitionFilters(r *http.Request) (*repository.PartitionFilters, error
 	if limit != nil {
 		filters.Limit = limit
 	}
+
 	return &filters, nil
 }
 
@@ -146,14 +138,28 @@ func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
 	return &filters, nil
 }
 
-func getClusterIDQueryParam(r *http.Request) string {
-	return r.URL.Query().Get(queryParamClusterID)
+func getClusterIDQueryParam(r *http.Request) *string {
+	clusterId := r.URL.Query().Get(queryParamClusterID)
+	if clusterId != "" {
+		return &clusterId
+
+	}
+	return nil
 }
-func getStateQueryParam(r *http.Request) string {
-	return r.URL.Query().Get(queryParamState)
+func getStateQueryParam(r *http.Request) *string {
+	state := r.URL.Query().Get(queryParamState)
+	if state != "" {
+		return &state
+
+	}
+	return nil
 }
-func getNameQueryParam(r *http.Request) string {
-	return r.URL.Query().Get(queryParamName)
+func getNameQueryParam(r *http.Request) *string {
+	name := r.URL.Query().Get(queryParamName)
+	if name != "" {
+		return &name
+	}
+	return nil
 }
 
 func getUserQueryParam(r *http.Request) string {

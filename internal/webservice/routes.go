@@ -233,6 +233,8 @@ func (s *WebService) applyCORS(next http.Handler) http.Handler {
 // Results are ordered by creation time in descending order.
 // Following query params are supported:
 // - name: filter by partition name
+// - clusterId: filter by clusterId
+// - state: filter by state
 // - lastStateTransitionTimeStart: filter from the lastStateTransitionTime
 // - lastStateTransitionTimeEnd: filter until the lastStateTransitionTime
 // - limit: limit the number of returned partitions

@@ -32,7 +32,7 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 		{Name: "default", ClusterID: "cluster1", State: "Active", LastStateTransitionTime: now.Add(-1 * time.Hour).UnixMilli()},
 		{Name: "second", ClusterID: "cluster1", State: "Active", LastStateTransitionTime: now.Add(-2 * time.Hour).UnixMilli()},
 		{Name: "third", ClusterID: "cluster1", State: "Active", LastStateTransitionTime: now.Add(-3 * time.Hour).UnixMilli()},
-		{Name: "fourth", ClusterID: "cluster1", State: "Active", LastStateTransitionTime: now.Add(-4 * time.Hour).UnixMilli()},
+		{Name: "fourth", ClusterID: "cluster1", State: "FakeState", LastStateTransitionTime: now.Add(-4 * time.Hour).UnixMilli()},
 	}
 	err = repo.UpsertPartitions(ctx, partitions)
 	require.NoError(t, err)
@@ -78,6 +78,13 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 				Offset: util.ToPtr(3),
 			},
 			expected: 1,
+		},
+		{
+			name: "Filter By State",
+			filters: PartitionFilters{
+				State: util.ToPtr("Active"),
+			},
+			expected: 3,
 		},
 		{
 			name:     "No filters",
