@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
@@ -12,7 +12,7 @@ import (
 type Repository interface {
 	InsertApplication(ctx context.Context, app *model.Application) error
 	UpdateApplication(ctx context.Context, app *model.Application) error
-	GetActiveApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error)
+	GetLatestApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error)
 	UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error
 	GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.ApplicationDAOInfo, error)
 	GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.ApplicationDAOInfo, error)

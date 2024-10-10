@@ -60,7 +60,7 @@ func initialise(config *config.LogConfig) {
 // parseLevel parses a textual (or numeric) log level into a `zapcore.Level` instance.
 // Both numeric (-1 <= level <= 5)
 // and textual (DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL) are supported.
-// Ref: https://github.com/apache/yunikorn-core/blob/a786feb5761be28e802d08976d224c40639cd86b/pkg/log/logger.go#L301
+// Ref: https://github.com/G-Research/yunikorn-core/blob/a786feb5761be28e802d08976d224c40639cd86b/pkg/log/logger.go#L301
 func parseLevel(level string) *zapcore.Level {
 	// parse text
 	zapLevel, err := zapcore.ParseLevel(level)

@@ -3,32 +3,13 @@ package model
 import (
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 )
 
 type ModelMetadata struct {
 	ID        string `json:"id"`
 	CreatedAt int64  `json:"createdAt"`
 	DeletedAt *int64 `json:"deletedAt,omitempty"`
-}
-
-type Application struct {
-	ModelMetadata          `json:",inline"`
-	dao.ApplicationDAOInfo `json:",inline"`
-}
-
-func (app *Application) MergeFrom(appInfo dao.ApplicationDAOInfo) {
-	oldAppInfo := app.ApplicationDAOInfo
-	app.ApplicationDAOInfo = appInfo
-	if len(app.Allocations) < len(oldAppInfo.Allocations) {
-		app.Allocations = oldAppInfo.Allocations
-	}
-	if len(app.Requests) < len(oldAppInfo.Requests) {
-		app.Requests = oldAppInfo.Requests
-	}
-	if len(app.StateLog) < len(oldAppInfo.StateLog) {
-		app.StateLog = oldAppInfo.StateLog
-	}
 }
 
 type ApplicationDAOInfo struct {

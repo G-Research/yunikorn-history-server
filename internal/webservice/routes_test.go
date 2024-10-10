@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

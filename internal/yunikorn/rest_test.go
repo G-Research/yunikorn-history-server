@@ -16,7 +16,7 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/config"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

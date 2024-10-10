@@ -11,7 +11,7 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 )
 
 const (

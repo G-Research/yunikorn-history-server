@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	model "github.com/G-Research/yunikorn-history-server/internal/model"
-	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
+	dao "github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	gomock "go.uber.org/mock/gomock"
 )
 
