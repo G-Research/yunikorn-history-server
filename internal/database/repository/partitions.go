@@ -9,8 +9,39 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
 
+	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
+
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
+
+type PartitionFilters struct {
+	LastStateTransitionTimeStart *time.Time
+	LastStateTransitionTimeEnd   *time.Time
+	Name                         *string
+	ClusterID                    *string
+	State                        *string
+	Offset                       *int
+	Limit                        *int
+}
+
+func applyPartitionFilters(builder *sql.Builder, filters PartitionFilters) {
+	if filters.LastStateTransitionTimeStart != nil {
+		builder.Conditionp("last_state_transition_time", ">=", filters.LastStateTransitionTimeStart.UnixMilli())
+	}
+	if filters.LastStateTransitionTimeEnd != nil {
+		builder.Conditionp("last_state_transition_time", "<=", filters.LastStateTransitionTimeEnd.UnixMilli())
+	}
+	if filters.Name != nil {
+		builder.Conditionp("name", "=", *filters.Name)
+	}
+	if filters.ClusterID != nil {
+		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
+	}
+	if filters.State != nil {
+		builder.Conditionp("state", "=", *filters.State)
+	}
+	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
+}
 
 func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
 	upsertSQL := `INSERT INTO partitions (
@@ -57,8 +88,15 @@ func (s *PostgresRepository) UpsertPartitions(ctx context.Context, partitions []
 	return nil
 }
 
-func (s *PostgresRepository) GetAllPartitions(ctx context.Context) ([]*model.PartitionInfo, error) {
-	rows, err := s.dbpool.Query(ctx, `SELECT * FROM partitions`)
+func (s *PostgresRepository) GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.PartitionInfo, error) {
+	queryBuilder := sql.NewBuilder().
+		SelectAll("partitions", "").
+		OrderBy("id", sql.OrderByDescending)
+	applyPartitionFilters(queryBuilder, filters)
+
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
 	}

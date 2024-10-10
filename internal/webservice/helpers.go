@@ -11,15 +11,66 @@ import (
 )
 
 const (
-	queryParamSubmissionStartTime = "submissionStartTime"
-	queryParamSubmissionEndTime   = "submissionEndTime"
-	queryParamGroups              = "groups"
-	queryParamLimit               = "limit"
-	queryParamOffset              = "offset"
-	queryParamUser                = "user"
-	queryParamTimestampStart      = "timestampStart"
-	queryParamTimestampEnd        = "timestampEnd"
+	queryParamSubmissionStartTime          = "submissionStartTime"
+	queryParamSubmissionEndTime            = "submissionEndTime"
+	queryParamGroups                       = "groups"
+	queryParamLimit                        = "limit"
+	queryParamOffset                       = "offset"
+	queryParamUser                         = "user"
+	queryParamTimestampStart               = "timestampStart"
+	queryParamTimestampEnd                 = "timestampEnd"
+	queryParamClusterID                    = "clusterId"
+	queryParamState                        = "state"
+	queryParamName                         = "name"
+	queryParamLastStateTransitionTimeStart = "lastStateTransitionTimeStart"
+	queryParamLastStateTransitionTimeEnd   = "lastStateTransitionTimeEnd"
 )
+
+func parsePartitionFilters(r *http.Request) (*repository.PartitionFilters, error) {
+	filters := repository.PartitionFilters{}
+	lastStateTransitionTimeStart, err := getLastStateTransitionTimeStartQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if lastStateTransitionTimeStart != nil {
+		filters.LastStateTransitionTimeStart = lastStateTransitionTimeStart
+	}
+	lastStateTransitionTimeEnd, err := getLastStateTransitionTimeEndQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if lastStateTransitionTimeEnd != nil {
+		filters.LastStateTransitionTimeEnd = lastStateTransitionTimeEnd
+	}
+	name := getNameQueryParam(r)
+	if name != "" {
+		filters.Name = &name
+
+	}
+	clusterID := getClusterIDQueryParam(r)
+	if clusterID != "" {
+		filters.ClusterID = &clusterID
+	}
+	state := getStateQueryParam(r)
+	if state != "" {
+		filters.State = &state
+	}
+	offset, err := getOffsetQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if offset != nil {
+		filters.Offset = offset
+	}
+	limit, err := getLimitQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if limit != nil {
+		filters.Limit = limit
+	}
+	return &filters, nil
+}
 
 func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, error) {
 	filters := repository.ApplicationFilters{}
@@ -95,6 +146,16 @@ func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
 	return &filters, nil
 }
 
+func getClusterIDQueryParam(r *http.Request) string {
+	return r.URL.Query().Get(queryParamClusterID)
+}
+func getStateQueryParam(r *http.Request) string {
+	return r.URL.Query().Get(queryParamState)
+}
+func getNameQueryParam(r *http.Request) string {
+	return r.URL.Query().Get(queryParamName)
+}
+
 func getUserQueryParam(r *http.Request) string {
 	return r.URL.Query().Get(queryParamUser)
 }
@@ -133,6 +194,24 @@ func toInt(numberString string) (*int, error) {
 	}
 
 	return &offset, nil
+}
+
+func getLastStateTransitionTimeStartQueryParam(r *http.Request) (*time.Time, error) {
+	startStr := r.URL.Query().Get(queryParamLastStateTransitionTimeStart)
+	if startStr == "" {
+		return nil, nil
+	}
+
+	return toTime(startStr)
+}
+
+func getLastStateTransitionTimeEndQueryParam(r *http.Request) (*time.Time, error) {
+	endStr := r.URL.Query().Get(queryParamLastStateTransitionTimeEnd)
+	if endStr == "" {
+		return nil, nil
+	}
+
+	return toTime(endStr)
 }
 
 func getSubmissionStartTimeQueryParam(r *http.Request) (*time.Time, error) {
