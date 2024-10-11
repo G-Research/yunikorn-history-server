@@ -48,6 +48,9 @@ module.exports = {
           "@angular/material/table": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
           "@angular/material/tooltip": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
           "@angular/platform-browser": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/select": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/form-field": {singleton:true, strictVersion: true, requiredVersion: 'auto'},
+          "@angular/material/core": {singleton:true, strictVersion: true, requiredVersion: 'auto'},          
 
           ...sharedMappings.getDescriptors(),
         })

@@ -1,3 +1,5 @@
+@import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+@import "@angular/material/prebuilt-themes/deeppurple-amber.css"; 
 .mat-drawer-container {
   min-width: 430px;
   width: 55%;
@@ -83,6 +85,11 @@
       color: #f44336;
     }
   }
+
+  .arrow-btn {
+    font-size: 1.2em;
+    padding-right: 10px;
+  }
   .copy-btn {
     font-size: 1em;
     cursor: pointer;
@@ -135,6 +142,27 @@
   }
 
   .row {
-    min-height: unset;
+    min-height: 30px;
+  }
+  .mat-mdc-row:nth-child(even){
+    background-color: #f0f0f0;
+  }
+  
+  .label-column {
+    font-weight: bold; 
+  } 
+
+  .filters {
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+  }
+  
+  .first-field {
+    margin-right: auto;
+  }
+  
+  .right-align {
+    margin-left: 16px;
   }
 }
