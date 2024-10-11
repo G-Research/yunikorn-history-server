@@ -13,7 +13,7 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
-func TestSync_findDeleteCandidates(t *testing.T) {
+func TestSync_findQueueDeleteCandidates(t *testing.T) {
 	tests := []struct {
 		name           string
 		apiQueues      []*dao.PartitionQueueDAOInfo
@@ -98,7 +98,7 @@ func TestSync_findDeleteCandidates(t *testing.T) {
 				repo: mockRepo,
 			}
 
-			deleteCandidates, err := s.findDeleteCandidates(ctx, partition, tt.apiQueues)
+			deleteCandidates, err := s.findQueueDeleteCandidates(ctx, partition, tt.apiQueues)
 
 			if tt.expectedErr != nil {
 				require.Error(t, err)
