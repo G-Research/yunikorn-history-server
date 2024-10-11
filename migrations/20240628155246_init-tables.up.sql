@@ -1,6 +1,6 @@
 -- Create partitions table
 CREATE TABLE partitions(
-    id UUID,
+    id TEXT,
     cluster_id TEXT NOT NULL,
     name TEXT NOT NULL,
     capacity JSONB,
@@ -18,7 +18,7 @@ CREATE TABLE partitions(
 
 -- Create applications table
 CREATE TABLE applications(
-    id UUID,
+    id TEXT,
     app_id TEXT NOT NULL,
     used_resource JSONB,
     max_used_resource JSONB,
@@ -80,7 +80,7 @@ CREATE UNIQUE INDEX idx_partition_queue_name ON queues (partition, queue_name);
 
 -- Create nodes table
 CREATE TABLE nodes(
-    id UUID,
+    id TEXT,
     node_id TEXT NOT NULL,
     partition TEXT NOT NULL,
     host_name TEXT NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE nodes(
 
 -- Create partition_nodes_util table
 CREATE TABLE partition_nodes_util(
-    id UUID,
+    id TEXT,
     cluster_id TEXT NOT NULL,
     partition TEXT NOT NULL,
     nodes_util_list JSONB,
@@ -118,7 +118,7 @@ CREATE TYPE history_type AS ENUM ('container', 'application');
 
 -- Create history table
 CREATE TABLE history(
-    id UUID,
+    id TEXT,
     history_type history_type NOT NULL,
     total_number BIGINT NOT NULL,
     timestamp BIGINT NOT NULL,

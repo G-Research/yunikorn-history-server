@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
@@ -59,7 +59,7 @@ func (s *PostgresRepository) UpsertQueues(ctx context.Context, queues []*dao.Par
 		}
 		_, err = s.dbpool.Exec(ctx, upsertSQL,
 			pgx.NamedArgs{
-				"id":                       uuid.NewString(),
+				"id":                       ulid.Make().String(),
 				"parent_id":                parentId,
 				"queue_name":               q.QueueName,
 				"status":                   q.Status,

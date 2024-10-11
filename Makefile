@@ -530,4 +530,4 @@ $(K6): bin/tooling
 
 .PHONY: ng
 ng: ## install Angular CLI.
-	npm install -g @angular/cli@17
+	npm install -g @angular/cli@18

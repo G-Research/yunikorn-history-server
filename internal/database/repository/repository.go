@@ -18,8 +18,8 @@ type Repository interface {
 		apps []*dao.ApplicationHistoryDAOInfo,
 		containers []*dao.ContainerHistoryDAOInfo,
 	) error
-	GetApplicationsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error)
-	GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error)
+	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error)
+	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error)
 	UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error
 	InsertNodeUtilizations(ctx context.Context, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
 	GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error)

@@ -30,8 +30,9 @@
 							"src/assets"
 						],
 						"styles": [
-							"src/styles.scss"
-						],
+							"src/styles.scss",
+                            "node_modules/@fontsource/roboto/index.css"
+                        ],
 						"scripts": [],
 						"extraWebpackConfig": "webpack.config.js",
 						"commonChunk": false

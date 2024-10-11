@@ -1,5 +1,7 @@
 # Yunikorn History Server (YHS)
 
+**Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions.
+
 [![GoReport Widget]][GoReport Status]
 [![Latest Release](https://img.shields.io/github/v/release/G-Research/yunikorn-history-server?include_prereleases)](https://github.com/armadaproject/armada-operator/releases/latest)
 
@@ -130,6 +132,10 @@ Run tests using `minikube` for cluster manager:
 env CLUSTER_MGR=minikube make tests
 ```
 should all succeed without error.
+
+## Security
+
+Please see our [security policy](https://github.com/G-Research/yunikorn-history-server/blob/main/SECURITY.md) for details on reporting security vulnerabilities.
 
 ## License
 

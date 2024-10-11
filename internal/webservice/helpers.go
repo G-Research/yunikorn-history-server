@@ -17,6 +17,8 @@ const (
 	queryParamLimit               = "limit"
 	queryParamOffset              = "offset"
 	queryParamUser                = "user"
+	queryParamTimestampStart      = "timestampStart"
+	queryParamTimestampEnd        = "timestampEnd"
 )
 
 func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, error) {
@@ -60,13 +62,49 @@ func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, e
 	return &filters, nil
 }
 
+func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
+	var filters repository.HistoryFilters
+	timestampStart, err := getTimestampStartQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if timestampStart != nil {
+		filters.TimestampStart = timestampStart
+	}
+	timestampEnd, err := getTimestampEndQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if timestampEnd != nil {
+		filters.TimestampEnd = timestampEnd
+	}
+	offset, err := getOffsetQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if offset != nil {
+		filters.Offset = offset
+	}
+	limit, err := getLimitQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if limit != nil {
+		filters.Limit = limit
+	}
+	return &filters, nil
+}
+
 func getUserQueryParam(r *http.Request) string {
 	return r.URL.Query().Get(queryParamUser)
 }
 
 func getGroupsQueryParam(r *http.Request) []string {
+	var groupsSlice []string
 	groups := r.URL.Query().Get(queryParamGroups)
-	groupsSlice := strings.Split(groups, ",")
+	if groups != "" {
+		groupsSlice = strings.Split(groups, ",")
+	}
 	return groupsSlice
 }
 
@@ -115,10 +153,28 @@ func getSubmissionEndTimeQueryParam(r *http.Request) (*time.Time, error) {
 	return toTime(endStr)
 }
 
+func getTimestampStartQueryParam(r *http.Request) (*time.Time, error) {
+	startStr := r.URL.Query().Get(queryParamTimestampStart)
+	if startStr == "" {
+		return nil, nil
+	}
+
+	return toTime(startStr)
+}
+
+func getTimestampEndQueryParam(r *http.Request) (*time.Time, error) {
+	endStr := r.URL.Query().Get(queryParamTimestampEnd)
+	if endStr == "" {
+		return nil, nil
+	}
+
+	return toTime(endStr)
+}
+
 func toTime(millisString string) (*time.Time, error) {
 	startMillis, err := strconv.ParseInt(millisString, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid 'start' query parameter: %v", err)
+		return nil, fmt.Errorf("invalid 'timestamp' in query parameter: %v", err)
 	}
 
 	// Convert milliseconds since epoch to a time.Time object
