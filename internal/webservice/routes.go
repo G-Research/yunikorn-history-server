@@ -344,9 +344,22 @@ func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.R
 	jsonResponse(resp, nodes)
 }
 
+// getAppsHistory returns history of Applications.
+// Results are ordered by timestamp time in descending order.
+// Following query params are supported:
+// - timestampStart: filter from the timestamp
+// - timestampEnd: filter until the timestamp
+// - limit: limit the number of returned object
+// - offset: offset the returned object
 func (ws *WebService) getAppsHistory(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	appsHistory, err := ws.repository.GetApplicationsHistory(ctx)
+	filters, err := parseHistoryFilters(req.Request)
+	if err != nil {
+		badRequestResponse(req, resp, err)
+		return
+	}
+
+	appsHistory, err := ws.repository.GetApplicationsHistory(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
@@ -354,9 +367,21 @@ func (ws *WebService) getAppsHistory(req *restful.Request, resp *restful.Respons
 	jsonResponse(resp, appsHistory)
 }
 
+// getContainersHistory returns history of Containers.
+// Results are ordered by timestamp time in descending order.
+// Following query params are supported:
+// - timestampStart: filter from the timestamp
+// - timestampEnd: filter until the timestamp
+// - limit: limit the number of returned object
+// - offset: offset the returned object
 func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	containersHistory, err := ws.repository.GetContainersHistory(ctx)
+	filters, err := parseHistoryFilters(req.Request)
+	if err != nil {
+		badRequestResponse(req, resp, err)
+		return
+	}
+	containersHistory, err := ws.repository.GetContainersHistory(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return

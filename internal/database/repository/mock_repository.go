@@ -144,18 +144,18 @@ func (mr *MockRepositoryMockRecorder) GetAllQueues(arg0 any) *gomock.Call {
 }
 
 // GetApplicationsHistory mocks base method.
-func (m *MockRepository) GetApplicationsHistory(arg0 context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {
+func (m *MockRepository) GetApplicationsHistory(arg0 context.Context, arg1 HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetApplicationsHistory", arg0)
+	ret := m.ctrl.Call(m, "GetApplicationsHistory", arg0, arg1)
 	ret0, _ := ret[0].([]*dao.ApplicationHistoryDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetApplicationsHistory indicates an expected call of GetApplicationsHistory.
-func (mr *MockRepositoryMockRecorder) GetApplicationsHistory(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetApplicationsHistory(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationsHistory", reflect.TypeOf((*MockRepository)(nil).GetApplicationsHistory), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationsHistory", reflect.TypeOf((*MockRepository)(nil).GetApplicationsHistory), arg0, arg1)
 }
 
 // GetAppsPerPartitionPerQueue mocks base method.
@@ -174,18 +174,18 @@ func (mr *MockRepositoryMockRecorder) GetAppsPerPartitionPerQueue(arg0, arg1, ar
 }
 
 // GetContainersHistory mocks base method.
-func (m *MockRepository) GetContainersHistory(arg0 context.Context) ([]*dao.ContainerHistoryDAOInfo, error) {
+func (m *MockRepository) GetContainersHistory(arg0 context.Context, arg1 HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContainersHistory", arg0)
+	ret := m.ctrl.Call(m, "GetContainersHistory", arg0, arg1)
 	ret0, _ := ret[0].([]*dao.ContainerHistoryDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetContainersHistory indicates an expected call of GetContainersHistory.
-func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContainersHistory", reflect.TypeOf((*MockRepository)(nil).GetContainersHistory), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContainersHistory", reflect.TypeOf((*MockRepository)(nil).GetContainersHistory), arg0, arg1)
 }
 
 // GetNodeUtilizations mocks base method.

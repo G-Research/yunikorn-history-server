@@ -133,6 +133,10 @@ env CLUSTER_MGR=minikube make tests
 ```
 should all succeed without error.
 
+## Security
+
+Please see our [security policy](https://github.com/G-Research/yunikorn-history-server/blob/main/SECURITY.md) for details on reporting security vulnerabilities.
+
 ## License
 
 See the [LICENSE](LICENSE) file for licensing information.
