@@ -114,18 +114,18 @@ func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0, arg1 any) *gomock
 }
 
 // GetAllPartitions mocks base method.
-func (m *MockRepository) GetAllPartitions(arg0 context.Context) ([]*model.PartitionInfo, error) {
+func (m *MockRepository) GetAllPartitions(arg0 context.Context, arg1 PartitionFilters) ([]*model.PartitionInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllPartitions", arg0)
+	ret := m.ctrl.Call(m, "GetAllPartitions", arg0, arg1)
 	ret0, _ := ret[0].([]*model.PartitionInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllPartitions indicates an expected call of GetAllPartitions.
-func (mr *MockRepositoryMockRecorder) GetAllPartitions(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetAllPartitions(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPartitions", reflect.TypeOf((*MockRepository)(nil).GetAllPartitions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPartitions", reflect.TypeOf((*MockRepository)(nil).GetAllPartitions), arg0, arg1)
 }
 
 // GetAllQueues mocks base method.
