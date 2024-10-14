@@ -77,11 +77,6 @@ func (s *Service) Run(ctx context.Context) error {
 	}, func(err error) {},
 	)
 
-	g.Add(func() error {
-		return s.runDataSync(ctx)
-	}, func(err error) {},
-	)
-
 	return g.Run()
 }
 
@@ -104,40 +99,5 @@ func (s *Service) runEventCollector(ctx context.Context) error {
 		}
 		logger.Info("reconnecting yunikorn event stream client")
 		time.Sleep(2 * time.Second)
-	}
-}
-
-// RunDataSync starts the data sync process which periodically syncs the state of the applications with the Yunikorn API.
-func (s *Service) runDataSync(ctx context.Context) error {
-	logger := log.FromContext(ctx)
-	logger = logger.With("component", "yunikorn_data_sync")
-	ctx = log.ToContext(ctx, logger)
-
-	logger.Info("starting yunikorn data sync")
-
-	if err := s.sync(ctx); err != nil {
-		logger.Errorf("error syncing data with yunikorn api: %v", err)
-	}
-
-	// if sync interval is 0, sync data once and return
-	if s.syncInterval == 0 {
-		logger.Info("sync interval is not configured, shutting down data sync")
-		return nil
-	}
-
-	ticker := time.NewTicker(s.syncInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Warn("shutting down data sync")
-			return nil
-		case <-ticker.C:
-			logger.Info("syncing data with yunikorn api")
-			if err := s.sync(ctx); err != nil {
-				logger.Errorf("error syncing data with yunikorn api: %v", err)
-			}
-		}
 	}
 }
