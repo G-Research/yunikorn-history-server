@@ -3,7 +3,6 @@ package yunikorn
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
@@ -164,46 +163,56 @@ func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo
 	return queues
 }
 
-// upsertPartitionNodes fetches nodes for each partition and upserts them into the database
-func (s *Service) upsertPartitionNodes(ctx context.Context, partitions []*dao.PartitionInfo) error {
+func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) error {
 	logger := log.FromContext(ctx)
 
-	// Create a wait group as a separate goroutine will be spawned for each partition
-	wg := sync.WaitGroup{}
-	wg.Add(len(partitions))
-
-	// Protect the errors slice with a mutex so multiple goroutines can safely append queues
-	mutex := sync.Mutex{}
-
-	var errs []error
-
-	processPartition := func(p *dao.PartitionInfo) {
-		defer wg.Done()
+	for _, p := range partitions {
 		nodes, err := s.client.GetPartitionNodes(ctx, p.Name)
 		if err != nil {
-			mutex.Lock()
-			errs = append(errs, fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err))
-			mutex.Unlock()
-			return
+			return fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err)
 		}
-		err = s.workqueue.Add(func(ctx context.Context) error {
-			logger.Infow("upserting nodes for partition", "count", len(nodes), "partition", p.Name)
-			return s.repo.UpsertNodes(ctx, nodes, p.Name)
-		}, workqueue.WithJobName(fmt.Sprintf("upsert_nodes_for_partition_%s", p.Name)))
+
+		dbNodes, err := s.repo.GetLatestNodeByID(ctx, p.Name)
 		if err != nil {
-			logger.Errorf("could not add upsert nodes for partition %s job to workqueue: %v", p.Name, err)
+			return err
 		}
-	}
 
-	for _, p := range partitions {
-		go processPartition(p)
-	}
+		lookup := make(map[string]*model.Node, len(dbNodes))
+		for _, n := range dbNodes {
+			lookup[n.NodeID] = n
+		}
 
-	// wait for all partitions to be processed
-	wg.Wait()
+		now := time.Now().UnixNano()
+		for _, n := range nodes {
+			current, ok := lookup[n.NodeID]
+			delete(lookup, n.NodeID)
+			if !ok || current.DeletedAt != nil { // either not exists or deleted
+				node := &model.Node{
+					ModelMetadata: model.ModelMetadata{
+						ID:        ulid.Make().String(),
+						CreatedAt: now,
+					},
+					Partition:   &p.Name,
+					NodeDAOInfo: *n,
+				}
+				if err := s.repo.CreateNode(ctx, node); err != nil {
+					logger.Errorf("could not insert node %s: %v", n.NodeID, err)
+				}
+				continue
+			}
 
-	if len(errs) > 0 {
-		return fmt.Errorf("failed to get nodes for some partitions: %v", errs)
+			current.MergeFrom(n)
+			if err := s.repo.UpdateNode(ctx, current); err != nil {
+				logger.Errorf("could not update node %s: %v", n.NodeID, err)
+			}
+		}
+
+		for _, n := range lookup {
+			n.DeletedAt = &now
+			if err := s.repo.UpdateNode(ctx, n); err != nil {
+				logger.Errorf("failed to update deleted at for node %q: %v", n.NodeID, err)
+			}
+		}
 	}
 
 	return nil

@@ -66,6 +66,7 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 	s.syncQueues(ctx, partitions)
 	s.syncApplications(ctx)
+	s.syncNodes(ctx, partitions)
 
 	g.Add(func() error {
 		return s.runEventCollector(ctx)
