@@ -58,6 +58,7 @@ func TestClient_sync_Integration(t *testing.T) {
 		return len(partitions) > 0
 	}, 10*time.Second, 250*time.Millisecond)
 
+	// cleanup after test
 	t.Cleanup(func() {
 		s.workqueue.Shutdown()
 		cleanupDB()
