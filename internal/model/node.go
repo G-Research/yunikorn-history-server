@@ -31,7 +31,7 @@ func (n *Node) MergeFrom(nodeInfo *dao.NodeDAOInfo) {
 		}
 		for _, alloc := range nodeInfo.Allocations {
 			if _, ok := lookup[alloc.AllocationKey]; !ok {
-				n.Allocations = append(nodeInfo.Allocations, alloc)
+				n.Allocations = append(n.Allocations, alloc)
 			}
 		}
 		clear(lookup)
@@ -43,7 +43,7 @@ func (n *Node) MergeFrom(nodeInfo *dao.NodeDAOInfo) {
 		}
 		for _, res := range nodeInfo.Reservations {
 			if _, ok := lookup[res]; !ok {
-				n.Reservations = append(nodeInfo.Reservations, res)
+				n.Reservations = append(n.Reservations, res)
 			}
 		}
 		clear(lookup)

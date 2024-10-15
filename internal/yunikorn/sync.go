@@ -172,7 +172,7 @@ func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) 
 			return fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err)
 		}
 
-		dbNodes, err := s.repo.GetLatestNodeByID(ctx, p.Name)
+		dbNodes, err := s.repo.GetLatestNodesByID(ctx, p.Name)
 		if err != nil {
 			return err
 		}

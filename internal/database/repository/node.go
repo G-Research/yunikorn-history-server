@@ -176,7 +176,58 @@ WHERE id = @id`
 	return nil
 }
 
-func (s *PostgresRepository) GetLatestNodeByID(ctx context.Context, partition string) ([]*model.Node, error) {
+func (s *PostgresRepository) GetLatestNodeByID(ctx context.Context, nodeId, partition string) (*model.Node, error) {
+	const q = `
+SELECT
+	id,
+    created_at,
+	deleted_at,
+	node_id,
+	partition,
+	host_name,
+	rack_name,
+	attributes,
+	capacity,
+	allocated,
+	occupied,
+	available,
+	utilized,
+	allocations,
+	schedulable,
+	is_reserved,
+	reservations
+FROM nodes
+WHERE node_id = $1 AND partition = $2
+ORDER BY node_id, id DESC
+LIMIT 1`
+
+	var node model.Node
+	row := s.dbpool.QueryRow(ctx, q, nodeId, partition)
+	if err := row.Scan(
+		&node.ID,
+		&node.CreatedAt,
+		&node.DeletedAt,
+		&node.NodeID,
+		&node.Partition,
+		&node.HostName,
+		&node.RackName,
+		&node.Attributes,
+		&node.Capacity,
+		&node.Allocated,
+		&node.Occupied,
+		&node.Available,
+		&node.Utilized,
+		&node.Allocations,
+		&node.Schedulable,
+		&node.IsReserved,
+		&node.Reservations,
+	); err != nil {
+		return nil, fmt.Errorf("could not get node from DB: %v", err)
+	}
+	return &node, nil
+}
+
+func (s *PostgresRepository) GetLatestNodesByID(ctx context.Context, partition string) ([]*model.Node, error) {
 	const q = `
 SELECT DISTINCT ON (node_id)
 	id,
