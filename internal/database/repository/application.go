@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
-	"github.com/G-Research/yunikorn-history-server/internal/util"
+	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
-
-	"github.com/jackc/pgx/v5"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/G-Research/yunikorn-history-server/internal/util"
 )
 
 type ApplicationFilters struct {
@@ -138,7 +137,8 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 }
 
 func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) (
-	[]*model.ApplicationDAOInfo, error) {
+	[]*model.ApplicationDAOInfo, error,
+) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("applications", "").
 		Conditionp("queue_name", "=", queue).

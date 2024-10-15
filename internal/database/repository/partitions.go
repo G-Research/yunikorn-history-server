@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
+	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
 
+	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
-	"github.com/jackc/pgx/v5"
 )
 
 type PartitionFilters struct {
@@ -172,11 +172,11 @@ func (s *PostgresRepository) DeleteInactivePartitions(ctx context.Context, activ
 	}
 	deletedAt := time.Now().Unix()
 	query := `
-		UPDATE partitions 
-		SET deleted_at = $1 
+		UPDATE partitions
+		SET deleted_at = $1
 		WHERE id IN (
-			SELECT id 
-			FROM partitions 
+			SELECT id
+			FROM partitions
 			WHERE deleted_at IS NULL AND NOT(name = ANY($2))
 		)
 	`
