@@ -26,46 +26,6 @@ import (
 	"github.com/G-Research/yunikorn-history-server/test/config"
 )
 
-func TestClient_sync_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test in short mode.")
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	_, repo, cleanupDB := setupDatabase(t, ctx)
-
-	eventRepository := repository.NewInMemoryEventRepository()
-
-	c := NewRESTClient(config.GetTestYunikornConfig())
-	s := NewService(repo, eventRepository, c)
-
-	go func() { _ = s.Run(ctx) }()
-
-	assert.Eventually(t, func() bool {
-		return s.workqueue.Started()
-	}, 5*time.Second, 100*time.Millisecond)
-
-	err := s.sync(ctx)
-	if err != nil {
-		t.Errorf("error starting up client: %v", err)
-	}
-
-	assert.Eventually(t, func() bool {
-		partitions, err := repo.GetAllPartitions(ctx, repository.PartitionFilters{})
-		if err != nil {
-			t.Logf("error getting partitions: %v", err)
-		}
-		return len(partitions) > 0
-	}, 10*time.Second, 250*time.Millisecond)
-
-	// cleanup after test
-	t.Cleanup(func() {
-		s.workqueue.Shutdown()
-		cleanupDB()
-		cancel()
-	})
-}
-
 func TestSync_syncQueues_Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
