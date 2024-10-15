@@ -189,7 +189,7 @@ func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0, arg1 any) *gomo
 }
 
 // GetNodeUtilizations mocks base method.
-func (m *MockRepository) GetNodeUtilizations(arg0 context.Context, arg1 NodeUtilizationFilters) ([]*dao.PartitionNodesUtilDAOInfo, error) {
+func (m *MockRepository) GetNodeUtilizations(arg0 context.Context, arg1 NodeUtilFilters) ([]*dao.PartitionNodesUtilDAOInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNodeUtilizations", arg0, arg1)
 	ret0, _ := ret[0].([]*dao.PartitionNodesUtilDAOInfo)

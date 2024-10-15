@@ -112,8 +112,8 @@ func parseApplicationFilters(r *http.Request) (*repository.ApplicationFilters, e
 	return &filters, nil
 }
 
-func parseNodeUtilizationFilters(r *http.Request) (*repository.NodeUtilizationFilters, error) {
-	var filters repository.NodeUtilizationFilters
+func parseNodeUtilizationFilters(r *http.Request) (*repository.NodeUtilFilters, error) {
+	var filters repository.NodeUtilFilters
 
 	filters.ClusterID = getClusterIDQueryParam(r)
 	filters.Partition = getPartitionQueryParam(r)

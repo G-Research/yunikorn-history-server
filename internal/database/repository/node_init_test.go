@@ -38,33 +38,33 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		filters  NodeUtilizationFilters
+		filters  NodeUtilFilters
 		expected int
 	}{
 		{
 			name: "Filter by ClusterID",
-			filters: NodeUtilizationFilters{
+			filters: NodeUtilFilters{
 				ClusterID: util.ToPtr("cluster1"),
 			},
 			expected: 3,
 		},
 		{
 			name: "Filter by Partition",
-			filters: NodeUtilizationFilters{
+			filters: NodeUtilFilters{
 				Partition: util.ToPtr("default"),
 			},
 			expected: 6,
 		},
 		{
 			name: "Filter By Limit",
-			filters: NodeUtilizationFilters{
+			filters: NodeUtilFilters{
 				Limit: util.ToPtr(2),
 			},
 			expected: 2,
 		},
 		{
 			name: "Filter By Limit and Offset",
-			filters: NodeUtilizationFilters{
+			filters: NodeUtilFilters{
 				Limit:  util.ToPtr(10),
 				Offset: util.ToPtr(3),
 			},
@@ -72,7 +72,7 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 		},
 		{
 			name: "Multiple filters",
-			filters: NodeUtilizationFilters{
+			filters: NodeUtilFilters{
 				ClusterID: util.ToPtr("cluster2"),
 				Partition: util.ToPtr("default"),
 				Limit:     util.ToPtr(1),

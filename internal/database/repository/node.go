@@ -21,14 +21,14 @@ type NodeFilters struct {
 	Limit       *int
 }
 
-type NodeUtilizationFilters struct {
+type NodeUtilFilters struct {
 	ClusterID *string
 	Partition *string
 	Offset    *int
 	Limit     *int
 }
 
-func applyNodeUtilizationFilters(builder *sql.Builder, filters NodeUtilizationFilters) {
+func applyNodeUtilFilters(builder *sql.Builder, filters NodeUtilFilters) {
 	if filters.ClusterID != nil {
 		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
 	}
@@ -125,13 +125,13 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 
 func (s *PostgresRepository) GetNodeUtilizations(
 	ctx context.Context,
-	filters NodeUtilizationFilters,
+	filters NodeUtilFilters,
 ) ([]*dao.PartitionNodesUtilDAOInfo, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("partition_nodes_util", "").
 		OrderBy("id", sql.OrderByDescending)
 
-	applyNodeUtilizationFilters(queryBuilder, filters)
+	applyNodeUtilFilters(queryBuilder, filters)
 
 	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
 
