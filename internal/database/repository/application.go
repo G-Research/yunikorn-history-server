@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oklog/ulid/v2"
-
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
+	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
 )
 

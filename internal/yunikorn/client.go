@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 )
 
 // Client defines the interface for interacting with the Yunikorn REST API.

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/require"
 
 	"github.com/G-Research/yunikorn-history-server/internal/util"

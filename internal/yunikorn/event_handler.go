@@ -5,8 +5,8 @@ import (
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 )
 
 type EventHandler func(context.Context, *si.EventRecord) error
@@ -103,7 +103,7 @@ func (s *Service) handleAppAddEvent(ctx context.Context, ev *si.EventRecord) {
 			resources[res] = quantity.GetValue()
 		}
 		alloc := &dao.AllocationDAOInfo{
-			AllocationID:     ev.GetReferenceID(),
+			AllocationKey:    ev.GetReferenceID(),
 			ResourcePerAlloc: resources,
 			// AllocationTime might be different from the Event.TimestampNano
 			// For now, we will use the Event.TimestampNano as the AllocationTime but this is not factually correct
@@ -163,7 +163,7 @@ func (s *Service) handleAppSetEvent(ctx context.Context, ev *si.EventRecord) {
 		}
 		s.appMap[ev.GetObjectID()] = app
 	case si.EventRecord_APP_ACCEPTED,
-		si.EventRecord_APP_STARTING, si.EventRecord_APP_RUNNING,
+		si.EventRecord_APP_RUNNING,
 		si.EventRecord_APP_COMPLETING, si.EventRecord_APP_COMPLETED,
 		si.EventRecord_APP_FAILING, si.EventRecord_APP_FAILED,
 		si.EventRecord_APP_RESUMING, si.EventRecord_APP_EXPIRED:

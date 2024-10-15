@@ -7,7 +7,7 @@ import (
 
 	"sync/atomic"
 
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/require"
 )
 

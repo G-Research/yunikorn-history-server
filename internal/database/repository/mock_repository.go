@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
+	dao "github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	model "github.com/G-Research/yunikorn-history-server/internal/model"
-	dao "github.com/apache/yunikorn-core/pkg/webservice/dao"
 	gomock "go.uber.org/mock/gomock"
 )
 

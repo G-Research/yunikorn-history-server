@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
