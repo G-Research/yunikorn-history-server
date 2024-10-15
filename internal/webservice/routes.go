@@ -351,13 +351,13 @@ func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *re
 // getNodesPerPartition returns all nodes for a given partition and queue.
 // Results are ordered by creation time in descending order.
 // Following query params are supported:
-// - nodeId: filter by nodeId
-// - hostName: filter by hostName
-// - rackName: filter by rackName
+// - nodeId: string - filter by nodeId
+// - hostName: string - filter by hostName
+// - rackName: string - filter by rackName
 // - schedulable: boolean
 // - isReserved: boolean
-// - limit: limit the number of returned nodes
-// - offset: offset the returned nodes
+// - limit: int - limit the number of returned nodes
+// - offset: int - offset the returned nodes
 func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	partition := req.PathParameter(paramsPartitionName)
