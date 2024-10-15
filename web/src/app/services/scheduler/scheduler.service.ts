@@ -1,40 +1,43 @@
-import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
-import {AllocationInfo} from '@app/models/alloc-info.model';
-import {AppInfo} from '@app/models/app-info.model';
-import {ClusterInfo} from '@app/models/cluster-info.model';
-import {HistoryInfo} from '@app/models/history-info.model';
-import {NodeInfo} from '@app/models/node-info.model';
-import {NodeUtilizationsInfo} from '@app/models/node-utilization.model';
-import {Partition} from '@app/models/partition-info.model';
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { AllocationInfo } from '@app/models/alloc-info.model';
+import { AppInfo } from '@app/models/app-info.model';
+import { ClusterInfo } from '@app/models/cluster-info.model';
+import { HistoryInfo } from '@app/models/history-info.model';
+import { NodeInfo } from '@app/models/node-info.model';
+import { NodeUtilizationsInfo } from '@app/models/node-utilization.model';
+import { Partition } from '@app/models/partition-info.model';
 
-import {QueueInfo, QueuePropertyItem} from '@app/models/queue-info.model';
-import {SchedulerResourceInfo} from '@app/models/resource-info.model';
-import {SchedulerHealthInfo} from "@app/models/scheduler-health-info.model";
-import {CommonUtil} from '@app/utils/common.util';
-import {NOT_AVAILABLE} from '@app/utils/constants';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {EnvConfigService} from '../envconfig/envconfig.service';
+import { QueueInfo, QueuePropertyItem } from '@app/models/queue-info.model';
+import { SchedulerResourceInfo } from '@app/models/resource-info.model';
+import { SchedulerHealthInfo } from '@app/models/scheduler-health-info.model';
+import { CommonUtil } from '@app/utils/common.util';
+import { NOT_AVAILABLE } from '@app/utils/constants';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { EnvConfigService } from '../envconfig/envconfig.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SchedulerService {
-  constructor(private httpClient: HttpClient, private envConfig: EnvConfigService) {}
+  constructor(
+    private httpClient: HttpClient,
+    private envConfig: EnvConfigService
+  ) {}
 
   fetchClusterList(): Observable<ClusterInfo[]> {
-    const clusterUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/clusters`;
+    const clusterUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/clusters`;
     return this.httpClient.get(clusterUrl).pipe(map((data) => data as ClusterInfo[]));
   }
 
   fetchPartitionList(): Observable<Partition[]> {
-    const partitionUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/partitions`;
+    const partitionUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partitions`;
     return this.httpClient.get(partitionUrl).pipe(map((data) => data as Partition[]));
   }
 
   fetchSchedulerQueues(partitionName: string): Observable<any> {
-    const queuesUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/partition/${partitionName}/queues`;
+    const queuesUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partition/${partitionName}/queues`;
 
     return this.httpClient.get(queuesUrl).pipe(
       map((data: any) => {
@@ -63,7 +66,7 @@ export class SchedulerService {
   }
 
   fetchAppList(partitionName: string, queueName: string): Observable<AppInfo[]> {
-    const appsUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/partition/${partitionName}/queue/${queueName}/applications`;
+    const appsUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partition/${partitionName}/queue/${queueName}/applications`;
     return this.httpClient.get(appsUrl).pipe(
       map((data: any) => {
         const result: AppInfo[] = [];
@@ -82,8 +85,8 @@ export class SchedulerService {
               app['applicationState'],
               []
             );
-            appInfo.setLastStateChangeTime()
-            
+            appInfo.setLastStateChangeTime();
+
             const allocations = app['allocations'];
             if (allocations && allocations.length > 0) {
               const appAllocations: AllocationInfo[] = [];
@@ -94,9 +97,8 @@ export class SchedulerService {
                   alloc.allocationTags['kubernetes.io/meta/namespace'] &&
                   alloc.allocationTags['kubernetes.io/meta/podName']
                 ) {
-                  alloc[
-                    'displayName'
-                  ] = `${alloc.allocationTags['kubernetes.io/meta/namespace']}/${alloc.allocationTags['kubernetes.io/meta/podName']}`;
+                  alloc['displayName'] =
+                    `${alloc.allocationTags['kubernetes.io/meta/namespace']}/${alloc.allocationTags['kubernetes.io/meta/podName']}`;
                 } else {
                   alloc['displayName'] = `<nil>`;
                 }
@@ -129,7 +131,7 @@ export class SchedulerService {
   }
 
   fetchAppHistory(): Observable<HistoryInfo[]> {
-    const appHistoryUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/history/apps`;
+    const appHistoryUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/history/apps`;
     return this.httpClient.get(appHistoryUrl).pipe(
       map((data: any) => {
         const result: HistoryInfo[] = [];
@@ -148,7 +150,7 @@ export class SchedulerService {
   }
 
   fetchContainerHistory(): Observable<HistoryInfo[]> {
-    const containerHistoryUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/history/containers`;
+    const containerHistoryUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/history/containers`;
     return this.httpClient.get(containerHistoryUrl).pipe(
       map((data: any) => {
         const result: HistoryInfo[] = [];
@@ -167,7 +169,7 @@ export class SchedulerService {
   }
 
   fetchNodeList(partitionName: string): Observable<NodeInfo[]> {
-    const nodesUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/partition/${partitionName}/nodes`;
+    const nodesUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partition/${partitionName}/nodes`;
 
     return this.httpClient.get(nodesUrl).pipe(
       map((data: any) => {
@@ -186,7 +188,7 @@ export class SchedulerService {
               this.formatResource(node['available'] as SchedulerResourceInfo),
               this.formatPercent(node['utilized'] as SchedulerResourceInfo),
               [],
-              node['attributes'],
+              node['attributes']
             );
 
             const allocations = node['allocations'];
@@ -200,9 +202,8 @@ export class SchedulerService {
                   alloc.allocationTags['kubernetes.io/meta/namespace'] &&
                   alloc.allocationTags['kubernetes.io/meta/podName']
                 ) {
-                  alloc[
-                    'displayName'
-                  ] = `${alloc.allocationTags['kubernetes.io/meta/namespace']}/${alloc.allocationTags['kubernetes.io/meta/podName']}`;
+                  alloc['displayName'] =
+                    `${alloc.allocationTags['kubernetes.io/meta/namespace']}/${alloc.allocationTags['kubernetes.io/meta/podName']}`;
                 } else {
                   alloc['displayName'] = '<nil>';
                 }
@@ -234,14 +235,18 @@ export class SchedulerService {
     );
   }
 
-  fetchNodeUtilizationsInfo(): Observable<NodeUtilizationsInfo[]>{
-    const nodeUtilizationsUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/scheduler/node-utilizations`;
-    return this.httpClient.get(nodeUtilizationsUrl).pipe(map((data: any) => data as NodeUtilizationsInfo[]));
+  fetchNodeUtilizationsInfo(): Observable<NodeUtilizationsInfo[]> {
+    const nodeUtilizationsUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/scheduler/node-utilizations`;
+    return this.httpClient
+      .get(nodeUtilizationsUrl)
+      .pipe(map((data: any) => data as NodeUtilizationsInfo[]));
   }
 
   fecthHealthchecks(): Observable<SchedulerHealthInfo> {
-    const healthCheckUrl = `${this.envConfig.getSchedulerWebAddress()}/ws/v1/scheduler/healthcheck`;
-    return this.httpClient.get(healthCheckUrl).pipe(map((data: any) => data as SchedulerHealthInfo));
+    const healthCheckUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/scheduler/healthcheck`;
+    return this.httpClient
+      .get(healthCheckUrl)
+      .pipe(map((data: any) => data as SchedulerHealthInfo));
   }
 
   private generateQueuesTree(data: any, currentQueue: QueueInfo) {
@@ -308,49 +313,51 @@ export class SchedulerService {
     const formatted: string[] = [];
     if (resource) {
       // Object.keys() didn't guarantee the order of keys, sort it before iterate.
-      Object.keys(resource).sort(CommonUtil.resourcesCompareFn).forEach((key) => {
-        let value = resource[key];
-        let formattedKey = key;
-        let formattedValue : string;
+      Object.keys(resource)
+        .sort(CommonUtil.resourcesCompareFn)
+        .forEach((key) => {
+          let value = resource[key];
+          let formattedKey = key;
+          let formattedValue: string;
 
-        switch(key){
-          case "memory":
-            formattedKey = "Memory";
-            formattedValue = CommonUtil.formatMemoryBytes(value);
-            break;
-          case "vcore":
-            formattedKey = "CPU";
-            formattedValue = CommonUtil.formatCpuCore(value);
-            break;
-          case "ephemeral-storage":
-            formattedValue = CommonUtil.formatEphemeralStorageBytes(value);
-            break;
-          default:
-            if (key.startsWith('hugepages-')) {
+          switch (key) {
+            case 'memory':
+              formattedKey = 'Memory';
               formattedValue = CommonUtil.formatMemoryBytes(value);
-            } else{
-              formattedValue = CommonUtil.formatOtherResource(value);
-            }
-            break;
-         }
-        formatted.push(`${formattedKey}: ${formattedValue}`);
-      });
+              break;
+            case 'vcore':
+              formattedKey = 'CPU';
+              formattedValue = CommonUtil.formatCpuCore(value);
+              break;
+            case 'ephemeral-storage':
+              formattedValue = CommonUtil.formatEphemeralStorageBytes(value);
+              break;
+            default:
+              if (key.startsWith('hugepages-')) {
+                formattedValue = CommonUtil.formatMemoryBytes(value);
+              } else {
+                formattedValue = CommonUtil.formatOtherResource(value);
+              }
+              break;
+          }
+          formatted.push(`${formattedKey}: ${formattedValue}`);
+        });
     }
 
     if (formatted.length === 0) {
       return NOT_AVAILABLE;
     }
     return formatted.join(', ');
-  } 
+  }
 
   private formatPercent(resource: SchedulerResourceInfo): string {
     const formatted = [];
 
     if (resource) {
-      if (resource.memory !== undefined){
+      if (resource.memory !== undefined) {
         formatted.push(`Memory: ${CommonUtil.formatPercent(resource.memory)}`);
       }
-      if (resource.vcore !== undefined){
+      if (resource.vcore !== undefined) {
         formatted.push(`CPU: ${CommonUtil.formatPercent(resource.vcore)}`);
       }
     }

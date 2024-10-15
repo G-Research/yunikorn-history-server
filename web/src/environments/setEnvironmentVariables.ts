@@ -29,5 +29,6 @@ Object.keys(process.env).forEach((env_var) => {
   );
 });
 
-if (config) fs.writeFileSync(`./src/environments/environment.${config}.ts`, template_environment);
+if (config && config === 'prod')
+  fs.writeFileSync(`./src/environments/environment.${config}.ts`, template_environment);
 else fs.writeFileSync('./src/environments/environment.ts', template_environment);
