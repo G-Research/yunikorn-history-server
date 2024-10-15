@@ -204,18 +204,18 @@ func (mr *MockRepositoryMockRecorder) GetNodeUtilizations(arg0 any) *gomock.Call
 }
 
 // GetNodesPerPartition mocks base method.
-func (m *MockRepository) GetNodesPerPartition(arg0 context.Context, arg1 string) ([]*dao.NodeDAOInfo, error) {
+func (m *MockRepository) GetNodesPerPartition(arg0 context.Context, arg1 string, arg2 NodeFilters) ([]*dao.NodeDAOInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNodesPerPartition", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetNodesPerPartition", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*dao.NodeDAOInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNodesPerPartition indicates an expected call of GetNodesPerPartition.
-func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1, arg2)
 }
 
 // GetQueue mocks base method.

@@ -19,6 +19,11 @@ const (
 	queryParamUser                         = "user"
 	queryParamTimestampStart               = "timestampStart"
 	queryParamTimestampEnd                 = "timestampEnd"
+	queryParamNodeId                       = "nodeId"
+	queryParamHostName                     = "hostName"
+	queryParamRackName                     = "rackName"
+	queryParamSchedulable                  = "schedulable"
+	queryParamIsReserved                   = "isReserved"
 	queryParamClusterID                    = "clusterId"
 	queryParamState                        = "state"
 	queryParamName                         = "name"
@@ -136,6 +141,75 @@ func parseHistoryFilters(r *http.Request) (*repository.HistoryFilters, error) {
 		filters.Limit = limit
 	}
 	return &filters, nil
+}
+
+func parseNodeFilters(r *http.Request) (*repository.NodeFilters, error) {
+	var filters repository.NodeFilters
+	nodeId := getNodeIdQueryParam(r)
+	if nodeId != "" {
+		filters.NodeId = &nodeId
+	}
+	hostName := getHostNameQueryParam(r)
+	if hostName != "" {
+		filters.HostName = &hostName
+	}
+	rackName := getRackNameQueryParam(r)
+	if rackName != "" {
+		filters.RackName = &rackName
+	}
+	schedulable := getSchedulableQueryParam(r)
+	if schedulable != nil {
+		filters.Schedulable = schedulable
+	}
+	isReserved := getIsReservedQueryParam(r)
+	if isReserved != nil {
+		filters.IsReserved = isReserved
+	}
+	offset, err := getOffsetQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if offset != nil {
+		filters.Offset = offset
+	}
+	limit, err := getLimitQueryParam(r)
+	if err != nil {
+		return nil, err
+	}
+	if limit != nil {
+		filters.Limit = limit
+	}
+	return &filters, nil
+}
+
+func getNodeIdQueryParam(r *http.Request) string {
+	return r.URL.Query().Get(queryParamNodeId)
+}
+
+func getHostNameQueryParam(r *http.Request) string {
+	return r.URL.Query().Get(queryParamHostName)
+}
+
+func getRackNameQueryParam(r *http.Request) string {
+	return r.URL.Query().Get(queryParamRackName)
+}
+
+func getSchedulableQueryParam(r *http.Request) *bool {
+	schedulableStr := r.URL.Query().Get(queryParamSchedulable)
+	schedulable, err := strconv.ParseBool(schedulableStr)
+	if err != nil {
+		return nil
+	}
+	return &schedulable
+}
+
+func getIsReservedQueryParam(r *http.Request) *bool {
+	isReservedStr := r.URL.Query().Get(queryParamIsReserved)
+	isReserved, err := strconv.ParseBool(isReservedStr)
+	if err != nil {
+		return nil
+	}
+	return &isReserved
 }
 
 func getClusterIDQueryParam(r *http.Request) *string {
