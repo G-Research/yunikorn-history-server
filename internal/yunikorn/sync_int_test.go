@@ -32,10 +32,8 @@ func TestClient_sync_Integration(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-
 	_, repo, cleanupDB := setupDatabase(t, ctx)
-	t.Cleanup(cleanupDB)
+
 	eventRepository := repository.NewInMemoryEventRepository()
 
 	c := NewRESTClient(config.GetTestYunikornConfig())
@@ -45,9 +43,7 @@ func TestClient_sync_Integration(t *testing.T) {
 
 	assert.Eventually(t, func() bool {
 		return s.workqueue.Started()
-	}, 500*time.Millisecond, 50*time.Millisecond)
-
-	time.Sleep(100 * time.Millisecond)
+	}, 5*time.Second, 100*time.Millisecond)
 
 	err := s.sync(ctx)
 	if err != nil {
@@ -61,6 +57,12 @@ func TestClient_sync_Integration(t *testing.T) {
 		}
 		return len(partitions) > 0
 	}, 10*time.Second, 250*time.Millisecond)
+
+	t.Cleanup(func() {
+		s.workqueue.Shutdown()
+		cleanupDB()
+		cancel()
+	})
 }
 
 func TestSync_syncQueues_Integration(t *testing.T) {
