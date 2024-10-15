@@ -20,7 +20,6 @@ const (
 	queryParamTimestampStart               = "timestampStart"
 	queryParamTimestampEnd                 = "timestampEnd"
 	queryParamPartition                    = "partition"
-	queryParamPartition           		   = "partition"
 	queryParamNodeId                       = "nodeId"
 	queryParamHostName                     = "hostName"
 	queryParamRackName                     = "rackName"
