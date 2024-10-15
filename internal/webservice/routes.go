@@ -419,9 +419,20 @@ func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.R
 	jsonResponse(resp, containersHistory)
 }
 
+// getNodeUtilizations returns partition_node_utilization data.
+// Results are ordered by creation time in descending order.
+// Following query params are supported:
+// - clusterID: filter by clusterID
+// - limit: limit the number of returned nodes
+// - offset: offset the returned nodes
 func (ws *WebService) getNodeUtilizations(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	nodeUtilization, err := ws.repository.GetNodeUtilizations(ctx)
+	filters, err := parseNodeUtilizationFilters(req.Request)
+	if err != nil {
+		badRequestResponse(req, resp, err)
+		return
+	}
+	nodeUtilization, err := ws.repository.GetNodeUtilizations(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
