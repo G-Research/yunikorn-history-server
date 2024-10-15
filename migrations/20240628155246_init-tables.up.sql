@@ -13,7 +13,6 @@ CREATE TABLE partitions(
     last_state_transition_time BIGINT,
     deleted_at BIGINT,
     UNIQUE (id),
-    UNIQUE (name),
     PRIMARY KEY (id)
 );
 
@@ -40,12 +39,8 @@ CREATE TABLE applications(
     has_reserved BOOLEAN,
     reservations JSONB,
     max_request_priority INTEGER,
-    UNIQUE (id),
     PRIMARY KEY (id)
 );
-
--- Create unique index on applications
-CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue_name, app_id);
 
 -- Create queues table
 CREATE TABLE queues(
@@ -72,12 +67,8 @@ CREATE TABLE queues(
     running_apps INTEGER NOT NULL,
     current_priority INTEGER,
     allocating_accepted_apps TEXT[],
-    UNIQUE (id),
     PRIMARY KEY (id)
 );
-
--- Create unique index on queues
-CREATE UNIQUE INDEX idx_partition_queue_name ON queues (partition, queue_name);
 
 -- Create nodes table
 CREATE TABLE nodes(
@@ -96,8 +87,6 @@ CREATE TABLE nodes(
     schedulable BOOLEAN,
     is_reserved BOOLEAN,
     reservations TEXT[],
-    UNIQUE (id),
-    UNIQUE (node_id),
     PRIMARY KEY (id)
 );
 
@@ -107,7 +96,6 @@ CREATE TABLE partition_nodes_util(
     cluster_id TEXT NOT NULL,
     partition TEXT NOT NULL,
     nodes_util_list JSONB,
-    UNIQUE (id),
     PRIMARY KEY (id)
 );
 
@@ -123,6 +111,5 @@ CREATE TABLE history(
     history_type history_type NOT NULL,
     total_number BIGINT NOT NULL,
     timestamp BIGINT NOT NULL,
-    UNIQUE (id),
     PRIMARY KEY (id)
 );
