@@ -18,5 +18,7 @@
 
 export const environment = {
   production: true,
-  externalLogsURL: "",
+  externalLogsURL: '',
+  yunikornApiURL: '',
+  yhsApiURL: '',
 };

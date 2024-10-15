@@ -60,9 +60,6 @@ GIT_TAG ?= $(shell git describe --tags --dirty --always)
 # IMAGE_TAG defines the name and tag of the operator image.
 IMAGE_TAG ?= $(IMAGE_REPO):$(GIT_TAG)
 
-# WEB_ROOT defines path that will open web UI.
-WEB_ROOT ?= /web/
-
 # Go compiler selection
 GO := go
 GO_VERSION := $(shell $(GO) version | awk '{print substr($$3, 3, 4)}')
@@ -133,15 +130,33 @@ define url_escape
     $(shell printf "%s" $(1) | go run hack/url/main.go)
 endef
 
+define yq_get_jk
+    $(shell $(call yq_get, .yunikorn.$(1)))
+endef
+
+define yq_get_yhs
+	$(shell $(call yq_get, .yhs.$(1)))
+endef
 
 DB_USER ?= $(strip $(call url_escape,$(strip $(call yq_get_db,user))))
 DB_PASSWORD ?= $(strip $(call url_escape,$(strip $(call yq_get_db,password))))
 DB_HOST ?= $(strip $(call url_escape,$(strip $(call yq_get_db,host))))
 DB_PORT ?= $(strip $(call yq_get_db,port))
 DB_NAME ?= $(strip $(call url_escape,$(strip $(call yq_get_db,dbname))))
+YUNIKORN_HOST ?= $(strip $(call yq_get_jk,host))
+YUNIKORN_PORT ?= $(strip $(call yq_get_jk,port))
+YHS_PORT ?= $(strip $(call yq_get_yhs,port))
 
 define database_url
 	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
+endef
+
+define yunikorn_api_url
+	http://$(YUNIKORN_HOST):$(YUNIKORN_PORT)
+endef
+
+define yhs_api_url
+	http://$(YUNIKORN_HOST):$(YHS_PORT)
 endef
 
 .PHONY: migrate
@@ -289,7 +304,9 @@ test-k6-performance: ## run k6 performance tests.
 
 .PHONY: web-build
 web-build: ng ## build the web components.
-	npm install --prefix web && npm run build --prefix web -- --base-href $(WEB_ROOT)
+	npm install --prefix web
+	yhsApiURL=$(strip $(call yhs_api_url)) yunikornApiURL=$(strip $(call yunikorn_api_url)) npm run setenv --prefix web
+	npm run build --prefix web
 
 .PHONY: build
 build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
