@@ -23,6 +23,7 @@ func (s *Service) handleEvent(ctx context.Context, ev *si.EventRecord) error {
 	case si.EventRecord_APP:
 		s.handleAppEvent(ctx, ev)
 	case si.EventRecord_NODE:
+		s.handleNodeEvent(ctx, ev)
 	case si.EventRecord_QUEUE:
 		s.handleQueueEvent(ctx, ev)
 	case si.EventRecord_USERGROUP:
@@ -125,6 +126,36 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 
 	if err := s.repo.UpdateQueue(ctx, queue); err != nil {
 		logger.Errorf("could not update queue: %v", err)
+		return
+	}
+}
+
+func (s *Service) handleNodeEvent(ctx context.Context, ev *si.EventRecord) {
+	logger := log.FromContext(ctx)
+	logger.Debugf("adding node event to accumulator: %v", ev)
+
+	var daoNode dao.NodeDAOInfo
+	if err := json.Unmarshal([]byte(ev.GetState()), &daoNode); err != nil {
+		logger.Errorw("Failed to unmarshal node state from event", "error", err)
+		return
+	}
+
+	//TODO: Confirm - Is there a node add event?
+
+	//TODO: how do we get partition information  for nodes in the event stream?
+	node, err := s.repo.GetLatestNodeByID(ctx, daoNode.NodeID, "default")
+	if err != nil {
+		logger.Errorf("could not get node by node id: %v", err)
+		return
+	}
+
+	node.MergeFrom(&daoNode)
+	if ev.GetEventChangeType() == si.EventRecord_REMOVE {
+		node.DeletedAt = &ev.TimestampNano
+	}
+
+	if err := s.repo.UpdateNode(ctx, node); err != nil {
+		logger.Errorf("could not update node: %v", err)
 		return
 	}
 }
