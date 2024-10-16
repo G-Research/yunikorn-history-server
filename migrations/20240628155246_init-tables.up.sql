@@ -1,6 +1,8 @@
 -- Create partitions table
 CREATE TABLE partitions(
     id TEXT,
+    created_at BIGINT NOT NULL,
+    deleted_at BIGINT,
     cluster_id TEXT NOT NULL,
     name TEXT NOT NULL,
     capacity JSONB,
@@ -11,22 +13,20 @@ CREATE TABLE partitions(
     total_containers INTEGER,
     state TEXT,
     last_state_transition_time BIGINT,
-    deleted_at BIGINT,
-    UNIQUE (id),
-    UNIQUE (name),
     PRIMARY KEY (id)
 );
 
 -- Create applications table
 CREATE TABLE applications(
-    id TEXT,
+    id TEXT, -- internal id
+    created_at BIGINT NOT NULL,
+    deleted_at BIGINT,
     app_id TEXT NOT NULL,
     used_resource JSONB,
     max_used_resource JSONB,
     pending_resource JSONB,
     partition TEXT NOT NULL,
     queue_name TEXT NOT NULL,
-    queue_id UUID NOT NULL,
     submission_time BIGINT,
     finished_time BIGINT,
     requests JSONB,
@@ -49,11 +49,11 @@ CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue
 
 -- Create queues table
 CREATE TABLE queues(
-    id UUID NOT NULL DEFAULT gen_random_uuid(),
-    parent_id UUID,
+    id TEXT NOT NULL,
     created_at BIGINT NOT NULL,
     deleted_at BIGINT,
     queue_name TEXT NOT NULL,
+    parent_id TEXT REFERENCES queues(id),
     status TEXT,
     partition TEXT NOT NULL CHECK (partition <> ''),
     pending_resource JSONB,
@@ -75,9 +75,6 @@ CREATE TABLE queues(
     UNIQUE (id),
     PRIMARY KEY (id)
 );
-
--- Create unique index on queues
-CREATE UNIQUE INDEX idx_partition_queue_name ON queues (partition, queue_name);
 
 -- Create nodes table
 CREATE TABLE nodes(
