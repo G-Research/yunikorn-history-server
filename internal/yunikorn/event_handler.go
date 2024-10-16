@@ -48,7 +48,7 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 	var app *model.Application
 	if isNew {
 		app = &model.Application{
-			ModelMetadata: model.ModelMetadata{
+			Metadata: model.Metadata{
 				ID:        ulid.Make().String(),
 				CreatedAt: ev.TimestampNano,
 			},

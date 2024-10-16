@@ -207,12 +207,11 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 
 	apps := []*model.Application{
 		{
-			ModelMetadata: model.ModelMetadata{
+			Metadata: model.Metadata{
 				ID:        "1",
 				CreatedAt: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
-
 				ApplicationID:   "app1",
 				UsedResource:    map[string]int64{"cpu": 1},
 				MaxUsedResource: map[string]int64{"cpu": 2},
@@ -226,7 +225,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			ModelMetadata: model.ModelMetadata{
-				ID:        "2",
+			Metadata2",Metadata
 				CreatedAt: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
@@ -244,7 +243,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			ModelMetadata: model.ModelMetadata{
-				ID:        "3",
+			Metadata3",Metadata
 				CreatedAt: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
@@ -263,7 +262,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			ModelMetadata: model.ModelMetadata{
-				ID:        "4",
+			Metadata4",Metadata
 				CreatedAt: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
@@ -281,7 +280,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			ModelMetadata: model.ModelMetadata{
-				ID:        "5",
+			Metadata5",Metadata
 				CreatedAt: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
@@ -299,7 +298,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			ModelMetadata: model.ModelMetadata{
-				ID:        "6",
+			Metadata6",Metadata
 				CreatedAt: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{

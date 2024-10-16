@@ -5,7 +5,7 @@ import (
 )
 
 type Application struct {
-	ModelMetadata          `json:",inline"`
+	Metadata               `json:",inline"`
 	dao.ApplicationDAOInfo `json:",inline"`
 }
 

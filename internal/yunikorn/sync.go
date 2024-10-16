@@ -276,7 +276,7 @@ func (s *Service) syncApplications(ctx context.Context) error {
 		delete(lookup, a.ApplicationID)
 		if !ok || current.DeletedAt != nil { // either not exists or deleted
 			application := &model.Application{
-				ModelMetadata: model.ModelMetadata{
+				Metadata: model.Metadata{
 					ID:        ulid.Make().String(),
 					CreatedAt: now,
 				},
