@@ -7,7 +7,55 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
+
+	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 )
+
+type NodeFilters struct {
+	NodeId      *string
+	HostName    *string
+	RackName    *string
+	Schedulable *bool
+	IsReserved  *bool
+	Offset      *int
+	Limit       *int
+}
+
+type NodeUtilFilters struct {
+	ClusterID *string
+	Partition *string
+	Offset    *int
+	Limit     *int
+}
+
+func applyNodeUtilFilters(builder *sql.Builder, filters NodeUtilFilters) {
+	if filters.ClusterID != nil {
+		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
+	}
+	if filters.Partition != nil {
+		builder.Conditionp("partition", "=", *filters.Partition)
+	}
+	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
+}
+
+func applyNodeFilters(builder *sql.Builder, filters NodeFilters) {
+	if filters.NodeId != nil {
+		builder.Conditionp("node_id", "=", *filters.NodeId)
+	}
+	if filters.HostName != nil {
+		builder.Conditionp("host_name", "=", *filters.HostName)
+	}
+	if filters.RackName != nil {
+		builder.Conditionp("rack_name", "=", *filters.RackName)
+	}
+	if filters.Schedulable != nil {
+		builder.Conditionp("schedulable", "=", *filters.Schedulable)
+	}
+	if filters.IsReserved != nil {
+		builder.Conditionp("is_reserved", "=", *filters.IsReserved)
+	}
+	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
+}
 
 func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error {
 	upsertSQL := `INSERT INTO nodes (id, node_id, partition, host_name, rack_name, attributes, capacity, allocated,
@@ -75,40 +123,57 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 	return nil
 }
 
-func (s *PostgresRepository) GetNodeUtilizations(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	selectSQL := `SELECT * FROM partition_nodes_util`
+func (s *PostgresRepository) GetNodeUtilizations(
+	ctx context.Context,
+	filters NodeUtilFilters,
+) ([]*dao.PartitionNodesUtilDAOInfo, error) {
+	queryBuilder := sql.NewBuilder().
+		SelectAll("partition_nodes_util", "").
+		OrderBy("id", sql.OrderByDescending)
 
-	rows, err := s.dbpool.Query(ctx, selectSQL)
+	applyNodeUtilFilters(queryBuilder, filters)
+
+	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
+
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
 	}
 	defer rows.Close()
 
-	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
 	for rows.Next() {
-		nu := &dao.PartitionNodesUtilDAOInfo{}
+		var nu dao.PartitionNodesUtilDAOInfo
 		var id string
 		err := rows.Scan(&id, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan node utilizations from DB: %v", err)
 		}
-		nodesUtil = append(nodesUtil, nu)
+		nodesUtil = append(nodesUtil, &nu)
 	}
 	return nodesUtil, nil
 }
 
-func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string) ([]*dao.NodeDAOInfo, error) {
-	selectSQL := "SELECT * FROM nodes WHERE partition = $1"
+func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error) {
+	queryBuilder := sql.NewBuilder().
+		SelectAll("nodes", "").
+		Conditionp("partition", "=", partition).
+		OrderBy("node_id", sql.OrderByDescending)
+	applyNodeFilters(queryBuilder, filters)
 
-	nodes := []*dao.NodeDAOInfo{}
+	var nodes []*dao.NodeDAOInfo
 
-	rows, err := s.dbpool.Query(ctx, selectSQL, partition)
+	query := queryBuilder.Query()
+	args := queryBuilder.Args()
+	rows, err := s.dbpool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get nodes from DB: %v", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		n := dao.NodeDAOInfo{}
+		var n dao.NodeDAOInfo
 		var id string
 		err := rows.Scan(&id, &n.NodeID, nil, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity,
 			&n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable,

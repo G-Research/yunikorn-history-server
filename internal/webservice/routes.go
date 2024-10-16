@@ -348,10 +348,25 @@ func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *re
 	jsonResponse(resp, daoApps)
 }
 
+// getNodesPerPartition returns all nodes for a given partition and queue.
+// Results are ordered by creation time in descending order.
+// Following query params are supported:
+// - nodeId: string - filter by nodeId
+// - hostName: string - filter by hostName
+// - rackName: string - filter by rackName
+// - schedulable: boolean
+// - isReserved: boolean
+// - limit: int - limit the number of returned nodes
+// - offset: int - offset the returned nodes
 func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	partition := req.PathParameter(paramsPartitionName)
-	nodes, err := ws.repository.GetNodesPerPartition(ctx, partition)
+	filters, err := parseNodeFilters(req.Request)
+	if err != nil {
+		badRequestResponse(req, resp, err)
+		return
+	}
+	nodes, err := ws.repository.GetNodesPerPartition(ctx, partition, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
@@ -404,9 +419,20 @@ func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.R
 	jsonResponse(resp, containersHistory)
 }
 
+// getNodeUtilizations returns partition_node_utilization data.
+// Results are ordered by creation time in descending order.
+// Following query params are supported:
+// - clusterID: filter by clusterID
+// - limit: limit the number of returned nodes
+// - offset: offset the returned nodes
 func (ws *WebService) getNodeUtilizations(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	nodeUtilization, err := ws.repository.GetNodeUtilizations(ctx)
+	filters, err := parseNodeUtilizationFilters(req.Request)
+	if err != nil {
+		badRequestResponse(req, resp, err)
+		return
+	}
+	nodeUtilization, err := ws.repository.GetNodeUtilizations(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
