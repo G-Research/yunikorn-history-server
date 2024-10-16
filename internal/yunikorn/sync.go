@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -33,13 +35,7 @@ func (s *Service) sync(ctx context.Context) error {
 
 	go func() {
 		defer wg.Done()
-		queues, err := s.syncQueues(ctx, partitions)
-		if err != nil {
-			addErr(fmt.Errorf("error getting and upserting queues: %v", err))
-			return
-		}
-
-		if err = s.upsertApplications(ctx, queues); err != nil {
+		if err = s.syncApplications(ctx); err != nil {
 			addErr(fmt.Errorf("error getting and upserting applications: %v", err))
 		}
 	}()
@@ -100,7 +96,7 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*dao.PartitionInfo, err
 }
 
 // syncQueues fetches queues for each partition and upserts them into the database
-func (s *Service) syncQueues(ctx context.Context, partitions []*dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
+func (s *Service) syncQueues(ctx context.Context, partitions []*dao.PartitionInfo) error {
 	logger := log.FromContext(ctx)
 
 	errs := make(chan error, len(partitions))
@@ -130,15 +126,10 @@ func (s *Service) syncQueues(ctx context.Context, partitions []*dao.PartitionInf
 	}
 
 	if len(syncErrors) > 0 {
-		return nil, fmt.Errorf("some errors encountered while syncing queues: %v", syncErrors)
+		return fmt.Errorf("some errors encountered while syncing queues: %v", syncErrors)
 	}
 
-	// retrieve all queues from the channel
-	var queues []*dao.PartitionQueueDAOInfo
-	for qs := range partitionQueues {
-		queues = append(queues, qs...)
-	}
-	return queues, nil
+	return nil
 }
 
 func (s *Service) syncPartitionQueues(ctx context.Context, partition *dao.PartitionInfo) ([]*dao.PartitionQueueDAOInfo, error) {
@@ -260,55 +251,54 @@ func (s *Service) upsertPartitionNodes(ctx context.Context, partitions []*dao.Pa
 	return nil
 }
 
-// upsertApplications fetches applications for each queue and upserts them into the database
-func (s *Service) upsertApplications(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error {
+// syncApplications fetches applications for each queue and upserts them into the database
+func (s *Service) syncApplications(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 
-	// Create a wait group as a separate goroutine will be spawned for each partition
-	wg := sync.WaitGroup{}
-	wg.Add(len(queues))
+	applications, err := s.client.GetApplications(ctx, "", "")
+	if err != nil {
+		return fmt.Errorf("could not get applications: %v", err)
+	}
 
-	// Protect the applications and errors slices with a mutex so multiple goroutines can safely append queues
-	mutex := sync.Mutex{}
+	dbApplications, err := s.repo.GetLatestApplicationsByApplicationID(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get latest applications: %v", err)
+	}
 
-	var errs []error
-	var apps []*dao.ApplicationDAOInfo
+	lookup := make(map[string]*model.Application, len(dbApplications))
+	for _, a := range dbApplications {
+		lookup[a.ApplicationID] = a
+	}
 
-	processQueue := func(q *dao.PartitionQueueDAOInfo) {
-		defer wg.Done()
-		queueApps, err := s.client.GetApplications(ctx, q.Partition, q.QueueName)
-		if err != nil {
-			mutex.Lock()
-			errs = append(
-				errs,
-				fmt.Errorf("could not get applications for partition %s, queue %s: %v", q.Partition, q.QueueName, err),
-			)
-			mutex.Unlock()
-		} else {
-			mutex.Lock()
-			apps = append(apps, queueApps...)
-			mutex.Unlock()
+	now := time.Now().UnixNano()
+	for _, a := range applications {
+		current, ok := lookup[a.ApplicationID]
+		delete(lookup, a.ApplicationID)
+		if !ok || current.DeletedAt != nil { // either not exists or deleted
+			application := &model.Application{
+				ModelMetadata: model.ModelMetadata{
+					ID:        ulid.Make().String(),
+					CreatedAt: now,
+				},
+				ApplicationDAOInfo: *a,
+			}
+			if err := s.repo.InsertApplication(ctx, application); err != nil {
+				logger.Errorf("could not insert application %s: %v", a.ApplicationID, err)
+			}
+			continue
+		}
+
+		current.MergeFrom(a)
+		if err := s.repo.UpdateApplication(ctx, current); err != nil {
+			logger.Errorf("could not update application %s: %v", a.ApplicationID, err)
 		}
 	}
 
-	// Get applications from Yunikorn API and upsert into DB
-	for _, q := range queues {
-		go processQueue(q)
-	}
-
-	// wait for all queues to be processed
-	wg.Wait()
-
-	if len(errs) > 0 {
-		return fmt.Errorf("failed to get applications for some queues: %v", errs)
-	}
-
-	err := s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("upserting applications", "count", len(apps))
-		return s.repo.UpsertApplications(ctx, apps)
-	}, workqueue.WithJobName("upsert_applications"))
-	if err != nil {
-		logger.Errorf("could not add upsert applications job to workqueue: %v", err)
+	for _, a := range lookup {
+		a.DeletedAt = &now
+		if err := s.repo.UpdateApplication(ctx, a); err != nil {
+			logger.Errorf("failed to update deleted at for application %q: %v", a.ApplicationID, err)
+		}
 	}
 
 	return nil

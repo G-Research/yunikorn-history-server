@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/test/database"
 )
@@ -204,82 +205,121 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 	err := repo.AddQueues(ctx, nil, queues)
 	require.NoError(t, err, "could not seed queues")
 
-	apps := []*dao.ApplicationDAOInfo{
+	apps := []*model.Application{
 		{
-			ApplicationID:   "app1",
-			UsedResource:    map[string]int64{"cpu": 1},
-			MaxUsedResource: map[string]int64{"cpu": 2},
-			PendingResource: map[string]int64{"cpu": 1},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-6 * time.Hour).UnixMilli(),
-			User:            "user1",
-			State:           si.EventRecord_APP_RUNNING.String(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        "1",
+				CreatedAt: now.UnixNano(),
+			},
+			ApplicationDAOInfo: dao.ApplicationDAOInfo{
+
+				ApplicationID:   "app1",
+				UsedResource:    map[string]int64{"cpu": 1},
+				MaxUsedResource: map[string]int64{"cpu": 2},
+				PendingResource: map[string]int64{"cpu": 1},
+				Partition:       "default",
+				QueueName:       "root.default",
+				SubmissionTime:  now.Add(-6 * time.Hour).UnixMilli(),
+				User:            "user1",
+				State:           si.EventRecord_APP_RUNNING.String(),
+			},
 		},
 		{
-			ApplicationID:   "app2",
-			UsedResource:    map[string]int64{"memory": 1},
-			MaxUsedResource: map[string]int64{"memory": 2},
-			PendingResource: map[string]int64{"memory": 1},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-5 * time.Hour).UnixMilli(),
-			FinishedTime:    util.ToPtr(now.Add(-4 * time.Hour).Add(-20 * time.Minute).UnixMilli()),
-			User:            "user2",
-			State:           si.EventRecord_APP_COMPLETED.String(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        "2",
+				CreatedAt: now.UnixNano(),
+			},
+			ApplicationDAOInfo: dao.ApplicationDAOInfo{
+				ApplicationID:   "app2",
+				UsedResource:    map[string]int64{"memory": 1},
+				MaxUsedResource: map[string]int64{"memory": 2},
+				PendingResource: map[string]int64{"memory": 1},
+				Partition:       "default",
+				QueueName:       "root.default",
+				SubmissionTime:  now.Add(-5 * time.Hour).UnixMilli(),
+				FinishedTime:    util.ToPtr(now.Add(-4 * time.Hour).Add(-20 * time.Minute).UnixMilli()),
+				User:            "user2",
+				State:           si.EventRecord_APP_COMPLETED.String(),
+			},
 		},
 		{
-			ApplicationID:   "app3",
-			UsedResource:    map[string]int64{"cpu": 3},
-			MaxUsedResource: map[string]int64{"cpu": 6},
-			PendingResource: map[string]int64{"cpu": 3},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-3 * time.Hour).UnixMilli(),
-			FinishedTime:    util.ToPtr(now.Add(-1 * time.Hour).Add(-33 * time.Minute).UnixMilli()),
-			User:            "user2",
-			State:           si.EventRecord_APP_FAILED.String(),
-			Groups:          []string{"group2"},
+			ModelMetadata: model.ModelMetadata{
+				ID:        "3",
+				CreatedAt: now.UnixNano(),
+			},
+			ApplicationDAOInfo: dao.ApplicationDAOInfo{
+				ApplicationID:   "app3",
+				UsedResource:    map[string]int64{"cpu": 3},
+				MaxUsedResource: map[string]int64{"cpu": 6},
+				PendingResource: map[string]int64{"cpu": 3},
+				Partition:       "default",
+				QueueName:       "root.default",
+				SubmissionTime:  now.Add(-3 * time.Hour).UnixMilli(),
+				FinishedTime:    util.ToPtr(now.Add(-1 * time.Hour).Add(-33 * time.Minute).UnixMilli()),
+				User:            "user2",
+				State:           si.EventRecord_APP_FAILED.String(),
+				Groups:          []string{"group2"},
+			},
 		},
 		{
-			ApplicationID:   "app4",
-			UsedResource:    map[string]int64{"memory": 4},
-			MaxUsedResource: map[string]int64{"memory": 8},
-			PendingResource: map[string]int64{"memory": 4},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-2 * time.Hour).UnixMilli(),
-			User:            "user3",
-			State:           si.EventRecord_APP_RUNNING.String(),
-			Groups:          []string{"group1"},
+			ModelMetadata: model.ModelMetadata{
+				ID:        "4",
+				CreatedAt: now.UnixNano(),
+			},
+			ApplicationDAOInfo: dao.ApplicationDAOInfo{
+				ApplicationID:   "app4",
+				UsedResource:    map[string]int64{"memory": 4},
+				MaxUsedResource: map[string]int64{"memory": 8},
+				PendingResource: map[string]int64{"memory": 4},
+				Partition:       "default",
+				QueueName:       "root.default",
+				SubmissionTime:  now.Add(-2 * time.Hour).UnixMilli(),
+				User:            "user3",
+				State:           si.EventRecord_APP_RUNNING.String(),
+				Groups:          []string{"group1"},
+			},
 		},
 		{
-			ApplicationID:   "app5",
-			UsedResource:    map[string]int64{"cpu": 5},
-			MaxUsedResource: map[string]int64{"cpu": 10},
-			PendingResource: map[string]int64{"cpu": 5},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-1 * time.Hour).UnixMilli(),
-			User:            "user1",
-			State:           si.EventRecord_APP_COMPLETING.String(),
-			Groups:          []string{"group1", "group2"},
+			ModelMetadata: model.ModelMetadata{
+				ID:        "5",
+				CreatedAt: now.UnixNano(),
+			},
+			ApplicationDAOInfo: dao.ApplicationDAOInfo{
+				ApplicationID:   "app5",
+				UsedResource:    map[string]int64{"cpu": 5},
+				MaxUsedResource: map[string]int64{"cpu": 10},
+				PendingResource: map[string]int64{"cpu": 5},
+				Partition:       "default",
+				QueueName:       "root.default",
+				SubmissionTime:  now.Add(-1 * time.Hour).UnixMilli(),
+				User:            "user1",
+				State:           si.EventRecord_APP_COMPLETING.String(),
+				Groups:          []string{"group1", "group2"},
+			},
 		},
 		{
-			ApplicationID:   "app6",
-			UsedResource:    map[string]int64{"memory": 6},
-			MaxUsedResource: map[string]int64{"memory": 12},
-			PendingResource: map[string]int64{"memory": 6},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-43 * time.Minute).UnixMilli(),
-			FinishedTime:    util.ToPtr(now.Add(-5 * time.Minute).UnixMilli()),
-			User:            "user1",
-			State:           si.EventRecord_APP_COMPLETED.String(),
-			Groups:          []string{"group1", "group3"},
+			ModelMetadata: model.ModelMetadata{
+				ID:        "6",
+				CreatedAt: now.UnixNano(),
+			},
+			ApplicationDAOInfo: dao.ApplicationDAOInfo{
+				ApplicationID:   "app6",
+				UsedResource:    map[string]int64{"memory": 6},
+				MaxUsedResource: map[string]int64{"memory": 12},
+				PendingResource: map[string]int64{"memory": 6},
+				Partition:       "default",
+				QueueName:       "root.default",
+				SubmissionTime:  now.Add(-43 * time.Minute).UnixMilli(),
+				FinishedTime:    util.ToPtr(now.Add(-5 * time.Minute).UnixMilli()),
+				User:            "user1",
+				State:           si.EventRecord_APP_COMPLETED.String(),
+				Groups:          []string{"group1", "group3"},
+			},
 		},
 	}
 
-	err = repo.UpsertApplications(ctx, apps)
-	require.NoError(t, err, "could not seed applications")
+	for _, app := range apps {
+		err := repo.InsertApplication(ctx, app)
+		require.NoError(t, err, "could not seed applications")
+	}
 }

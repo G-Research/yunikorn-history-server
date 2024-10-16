@@ -442,7 +442,7 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				s.workqueue.Shutdown()
 			})
 
-			_, err := s.syncQueues(context.Background(), tt.partitions)
+			err := s.syncQueues(context.Background(), tt.partitions)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
