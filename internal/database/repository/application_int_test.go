@@ -285,18 +285,6 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 			},
 		},
 		{
-<<<<<<< HEAD
-			ApplicationID:   "app5",
-			UsedResource:    map[string]int64{"cpu": 5},
-			MaxUsedResource: map[string]int64{"cpu": 10},
-			PendingResource: map[string]int64{"cpu": 5},
-			Partition:       "default",
-			QueueName:       "root.default",
-			SubmissionTime:  now.Add(-1 * time.Hour).UnixMilli(),
-			User:            "user1",
-			State:           si.EventRecord_APP_COMPLETING.String(),
-			Groups:          []string{"group1", "group2"},
-=======
 			ModelMetadata: model.ModelMetadata{
 				ID: "5",
 			},
@@ -312,7 +300,6 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				State:           si.EventRecord_APP_COMPLETING.String(),
 				Groups:          []string{"group1", "group2"},
 			},
->>>>>>> 124e85c (New app history with event dao snapshots)
 		},
 		{
 			ModelMetadata: model.ModelMetadata{
