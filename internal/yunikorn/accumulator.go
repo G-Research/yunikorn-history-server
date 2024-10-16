@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 )
 
 // accumulator is a struct that accumulates events and processes them
