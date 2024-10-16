@@ -24,16 +24,16 @@ type Repository interface {
 	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error)
 	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error)
 	UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error
+	InsertNodeUtilizations(ctx context.Context, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
+	GetNodeUtilizations(ctx context.Context, filters NodeUtilFilters) ([]*dao.PartitionNodesUtilDAOInfo, error)
 	GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error)
-	UpsertPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error
-	GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.PartitionInfo, error)
-	GetActivePartitions(ctx context.Context) ([]*model.PartitionInfo, error)
-	DeleteInactivePartitions(ctx context.Context, activePartitions []*dao.PartitionInfo) error
-	AddQueues(ctx context.Context, parentId *string, queues []*dao.PartitionQueueDAOInfo) error
-	UpdateQueue(ctx context.Context, queue *dao.PartitionQueueDAOInfo) error
-	UpsertQueues(ctx context.Context, queues []*dao.PartitionQueueDAOInfo) error
-	GetAllQueues(ctx context.Context) ([]*model.PartitionQueueDAOInfo, error)
-	GetQueuesPerPartition(ctx context.Context, partition string) ([]*model.PartitionQueueDAOInfo, error)
-	GetQueue(ctx context.Context, partition, queueName string) (*model.PartitionQueueDAOInfo, error)
-	DeleteQueues(ctx context.Context, queues []*model.PartitionQueueDAOInfo) error
+	CreatePartition(ctx context.Context, partition *model.Partition) error
+	UpdatePartition(ctx context.Context, partition *model.Partition) error
+	GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.Partition, error)
+	GetLatestPartitionsGroupedByName(ctx context.Context) ([]*model.Partition, error)
+	InsertQueue(ctx context.Context, q *model.Queue) error
+	GetQueueInPartition(ctx context.Context, partition, queueName string) (*model.Queue, error)
+	UpdateQueue(ctx context.Context, queue *model.Queue) error
+	GetAllQueues(ctx context.Context) ([]*model.Queue, error)
+	GetQueuesInPartition(ctx context.Context, partition string) ([]*model.Queue, error)
 }
