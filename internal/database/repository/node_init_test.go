@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/G-Research/yunikorn-history-server/internal/util"
@@ -25,16 +26,18 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 		t.Fatalf("could not create repository: %v", err)
 	}
 
-	nu := []*dao.PartitionNodesUtilDAOInfo{
-		{ClusterID: "cluster1", Partition: "default"},
-		{ClusterID: "cluster1", Partition: "default"},
-		{ClusterID: "cluster1", Partition: "default"},
-		{ClusterID: "cluster2", Partition: "default"},
-		{ClusterID: "cluster2", Partition: "default"},
-		{ClusterID: "cluster2", Partition: "default"},
+	nus := []*model.NodesUtil{
+		{ModelMetadata: model.ModelMetadata{ID: "1"}, PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"}},
+		{ModelMetadata: model.ModelMetadata{ID: "1"}, PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"}},
+		{ModelMetadata: model.ModelMetadata{ID: "1"}, PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"}},
+		{ModelMetadata: model.ModelMetadata{ID: "1"}, PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"}},
+		{ModelMetadata: model.ModelMetadata{ID: "1"}, PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"}},
+		{ModelMetadata: model.ModelMetadata{ID: "1"}, PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"}},
 	}
-	err = repo.InsertNodeUtilizations(ctx, nu)
-	require.NoError(t, err)
+	for _, nu := range nus {
+		err = repo.InsertNodesUtil(ctx, nu)
+		require.NoError(t, err)
+	}
 
 	tests := []struct {
 		name     string
@@ -83,7 +86,7 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nodes, err := repo.GetNodesUtil(ctx, tt.filters)
+			nodes, err := repo.GetNodesUtils(ctx, tt.filters)
 			require.NoError(t, err)
 			require.Len(t, nodes, tt.expected)
 		})
