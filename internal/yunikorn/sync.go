@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -173,8 +173,8 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *dao.Partit
 func (s *Service) findQueueDeleteCandidates(
 	ctx context.Context,
 	partition *dao.PartitionInfo,
-	apiQueues []*dao.PartitionQueueDAOInfo) ([]*model.PartitionQueueDAOInfo, error) {
-
+	apiQueues []*dao.PartitionQueueDAOInfo,
+) ([]*model.PartitionQueueDAOInfo, error) {
 	// Fetch queues from the database for the given partition
 	queuesInDB, err := s.repo.GetQueuesPerPartition(ctx, partition.Name)
 	if err != nil {

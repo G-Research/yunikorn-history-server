@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
-	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -262,7 +262,7 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 			QueueName:       "root.default",
 			SubmissionTime:  now.Add(-1 * time.Hour).UnixMilli(),
 			User:            "user1",
-			State:           si.EventRecord_APP_STARTING.String(),
+			State:           si.EventRecord_APP_COMPLETING.String(),
 			Groups:          []string{"group1", "group2"},
 		},
 		{

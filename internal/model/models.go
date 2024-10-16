@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/apache/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 )
 
 type ApplicationDAOInfo struct {
