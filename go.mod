@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	github.com/G-Research/yunikorn-core v0.0.0-20241010094036-f478acaa0177
 	github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08
-	github.com/emicklei/go-restful-openapi/v2 v2.10.2
+	github.com/emicklei/go-restful-openapi/v2 v2.11.0
 	github.com/emicklei/go-restful/v3 v3.12.1
 	github.com/go-openapi/spec v0.21.0
 	github.com/golang-migrate/migrate/v4 v4.18.1
