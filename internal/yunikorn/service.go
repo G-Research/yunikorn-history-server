@@ -3,9 +3,11 @@ package yunikorn
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/oklog/run"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
@@ -19,24 +21,15 @@ type Service struct {
 	client          Client
 	// eventHandler is a function that handles events from the Yunikorn event stream.
 	eventHandler EventHandler
-	// queueEventAccumulator is responsible for accumulating all queue events.
-	// After event stream is idle, it triggers the sync which should handle all event types.
-	queueEventAccumulator *accumulator
+	// partitionAccumulator accumulates new queue events and synchronizes partitions after a certain interval.
+	partitionAccumulator *accumulator
 	// appMap is a map of application IDs to their respective DAOs.
 	appMap map[string]*dao.ApplicationDAOInfo
-	// syncInterval is the interval at which the service will sync the state of the applications with the Yunikorn API.
-	syncInterval time.Duration
 	// workqueue processes jobs which store data in database during data sync and retries them with exponential backoff.
 	workqueue *workqueue.WorkQueue
 }
 
 type Option func(*Service)
-
-func WithSyncInterval(interval time.Duration) Option {
-	return func(s *Service) {
-		s.syncInterval = interval
-	}
-}
 
 func NewService(repository repository.Repository, eventRepository repository.EventRepository, client Client, opts ...Option) *Service {
 	s := &Service{
@@ -44,13 +37,19 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 		eventRepository: eventRepository,
 		client:          client,
 		appMap:          make(map[string]*dao.ApplicationDAOInfo),
-		syncInterval:    5 * time.Minute,
 		workqueue:       workqueue.NewWorkQueue(workqueue.WithName("yunikorn_data_sync")),
 	}
 	s.eventHandler = s.handleEvent
-	s.queueEventAccumulator = newAccumulator(
-		s.handleQueueEvents,
-		1*time.Second,
+	s.partitionAccumulator = newAccumulator(
+		func(ctx context.Context, event []*si.EventRecord) {
+			logger := log.FromContext(ctx)
+			_, err := s.syncPartitions(ctx)
+			if err != nil {
+				logger.Errorf("error syncing partitions: %v", err)
+				return
+			}
+		},
+		2*time.Second,
 	)
 	for _, opt := range opts {
 		opt(s)
@@ -67,18 +66,22 @@ func (s *Service) Run(ctx context.Context) error {
 	}, func(err error) {},
 	)
 
-	g.Add(func() error {
-		return s.queueEventAccumulator.run(ctx)
-	}, func(err error) {},
-	)
+	partitions, err := s.syncPartitions(ctx)
+	if err != nil {
+		return err
+	}
+	if err := s.syncQueues(ctx, partitions); err != nil {
+		return fmt.Errorf("error syncing queues: %v", err)
+	}
+	if err := s.syncApplications(ctx); err != nil {
+		return fmt.Errorf("error syncing applications: %v", err)
+	}
+	if err := s.upsertPartitionNodes(ctx, partitions); err != nil {
+		return fmt.Errorf("error upserting partition nodes: %v", err)
+	}
 
 	g.Add(func() error {
 		return s.runEventCollector(ctx)
-	}, func(err error) {},
-	)
-
-	g.Add(func() error {
-		return s.runDataSync(ctx)
 	}, func(err error) {},
 	)
 
@@ -104,40 +107,5 @@ func (s *Service) runEventCollector(ctx context.Context) error {
 		}
 		logger.Info("reconnecting yunikorn event stream client")
 		time.Sleep(2 * time.Second)
-	}
-}
-
-// RunDataSync starts the data sync process which periodically syncs the state of the applications with the Yunikorn API.
-func (s *Service) runDataSync(ctx context.Context) error {
-	logger := log.FromContext(ctx)
-	logger = logger.With("component", "yunikorn_data_sync")
-	ctx = log.ToContext(ctx, logger)
-
-	logger.Info("starting yunikorn data sync")
-
-	if err := s.sync(ctx); err != nil {
-		logger.Errorf("error syncing data with yunikorn api: %v", err)
-	}
-
-	// if sync interval is 0, sync data once and return
-	if s.syncInterval == 0 {
-		logger.Info("sync interval is not configured, shutting down data sync")
-		return nil
-	}
-
-	ticker := time.NewTicker(s.syncInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Warn("shutting down data sync")
-			return nil
-		case <-ticker.C:
-			logger.Info("syncing data with yunikorn api")
-			if err := s.sync(ctx); err != nil {
-				logger.Errorf("error syncing data with yunikorn api: %v", err)
-			}
-		}
 	}
 }

@@ -67,26 +67,31 @@ func TestWebServiceServeSPA(t *testing.T) {
 
 func TestBuildPartitionQueueTree(t *testing.T) {
 	tt := map[string]struct {
-		queues  []*model.PartitionQueueDAOInfo
-		want    []*model.PartitionQueueDAOInfo
+		queues  []*model.Queue
+		want    []*model.Queue
 		wantErr bool
 	}{
 		"no queues": {
-			queues: []*model.PartitionQueueDAOInfo{},
+			queues: []*model.Queue{},
 			want:   nil,
 		},
 		"root queue": {
-			queues: []*model.PartitionQueueDAOInfo{
+			queues: []*model.Queue{
+
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						ID: "1",
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root",
 					},
 				},
 			},
-			want: []*model.PartitionQueueDAOInfo{
+			want: []*model.Queue{
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						ID: "1",
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root",
 					},
@@ -94,10 +99,12 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			},
 		},
 		"no root queue": {
-			queues: []*model.PartitionQueueDAOInfo{
+			queues: []*model.Queue{
 				{
-					Id:       "2",
-					ParentId: util.ToPtr("1"),
+					Metadata: model.Metadata{
+						ID: "2",
+					},
+					ParentID: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child",
 					},
@@ -107,44 +114,56 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			want:    nil,
 		},
 		"multiple root queues": {
-			queues: []*model.PartitionQueueDAOInfo{
+			queues: []*model.Queue{
 				{
-					Id:       "2",
-					ParentId: util.ToPtr("1"),
+					Metadata: model.Metadata{
+						ID: "2",
+					},
+					ParentID: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child-1",
 					},
 				},
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						ID: "1",
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-1",
 					},
 				},
 				{
-					Id:       "22",
-					ParentId: util.ToPtr("11"),
+					Metadata: model.Metadata{
+						ID: "22",
+					},
+					ParentID: util.ToPtr("11"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "child-2",
 					},
 				},
 				{
-					Id: "11",
+					Metadata: model.Metadata{
+						ID: "11",
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-2",
 					},
 				},
 			},
-			want: []*model.PartitionQueueDAOInfo{
+			want: []*model.Queue{
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						ID: "1",
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-1",
 					},
-					Children: []*model.PartitionQueueDAOInfo{
+					Children: []*model.Queue{
 						{
-							Id:       "2",
-							ParentId: util.ToPtr("1"),
+							Metadata: model.Metadata{
+								ID: "2",
+							},
+							ParentID: util.ToPtr("1"),
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 								QueueName: "child-1",
 							},
@@ -152,14 +171,18 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 					},
 				},
 				{
-					Id: "11",
+					Metadata: model.Metadata{
+						ID: "11",
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-2",
 					},
-					Children: []*model.PartitionQueueDAOInfo{
+					Children: []*model.Queue{
 						{
-							Id:       "22",
-							ParentId: util.ToPtr("11"),
+							Metadata: model.Metadata{
+								ID: "22",
+							},
+							ParentID: util.ToPtr("11"),
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 								QueueName: "child-2",
 							},

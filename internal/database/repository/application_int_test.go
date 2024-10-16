@@ -188,22 +188,32 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 
 	now := time.Now()
 
-	queues := []*dao.PartitionQueueDAOInfo{
+	queues := []*model.Queue{
 		{
-			Partition: "default",
-			QueueName: "root",
-			Children: []dao.PartitionQueueDAOInfo{
-				{
-					Partition: "default",
-					QueueName: "root.default",
-					Parent:    "root",
-				},
+			Metadata: model.Metadata{
+				ID: "1",
+			},
+			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				Partition: "default",
+				QueueName: "root",
+			},
+		},
+		{
+			Metadata: model.Metadata{
+				ID: "2",
+			},
+			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				Partition: "default",
+				Parent:    "root",
+				QueueName: "root.default",
 			},
 		},
 	}
 
-	err := repo.AddQueues(ctx, nil, queues)
-	require.NoError(t, err, "could not seed queues")
+	for _, q := range queues {
+		err := repo.InsertQueue(ctx, q)
+		require.NoError(t, err)
+	}
 
 	apps := []*model.Application{
 		{
