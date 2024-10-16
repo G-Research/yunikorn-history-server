@@ -38,33 +38,33 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		filters  NodeUtilFilters
+		filters  NodesUtilFilters
 		expected int
 	}{
 		{
 			name: "Filter by ClusterID",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				ClusterID: util.ToPtr("cluster1"),
 			},
 			expected: 3,
 		},
 		{
 			name: "Filter by Partition",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				Partition: util.ToPtr("default"),
 			},
 			expected: 6,
 		},
 		{
 			name: "Filter By Limit",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				Limit: util.ToPtr(2),
 			},
 			expected: 2,
 		},
 		{
 			name: "Filter By Limit and Offset",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				Limit:  util.ToPtr(10),
 				Offset: util.ToPtr(3),
 			},
@@ -72,7 +72,7 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 		},
 		{
 			name: "Multiple filters",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				ClusterID: util.ToPtr("cluster2"),
 				Partition: util.ToPtr("default"),
 				Limit:     util.ToPtr(1),
@@ -83,7 +83,7 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nodes, err := repo.GetNodeUtilizations(ctx, tt.filters)
+			nodes, err := repo.GetNodesUtil(ctx, tt.filters)
 			require.NoError(t, err)
 			require.Len(t, nodes, tt.expected)
 		})
