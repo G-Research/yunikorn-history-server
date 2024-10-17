@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 
 	"github.com/G-Research/yunikorn-history-server/internal/util"
@@ -76,44 +78,98 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 
 	now := time.Now()
 
-	apps := []*dao.ApplicationHistoryDAOInfo{
+	apps := []*model.AppHistory{
 		{
-			TotalApplications: "0",
-			Timestamp:         now.Add(-6 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-6 * time.Hour).UnixNano(),
+			},
+			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
+				TotalApplications: "0",
+				Timestamp:         now.Add(-6 * time.Hour).UnixNano(),
+			},
 		},
 		{
-			TotalApplications: "2",
-			Timestamp:         now.Add(-5 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-5 * time.Hour).UnixNano(),
+			},
+			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
+				TotalApplications: "2",
+				Timestamp:         now.Add(-5 * time.Hour).UnixNano(),
+			},
 		},
 		{
-			TotalApplications: "4",
-			Timestamp:         now.Add(-3 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-3 * time.Hour).UnixNano(),
+			},
+			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
+				TotalApplications: "5",
+				Timestamp:         now.Add(-3 * time.Hour).UnixNano(),
+			},
 		},
 		{
-			TotalApplications: "7",
-			Timestamp:         now.Add(-1 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-1 * time.Hour).UnixNano(),
+			},
+			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
+				TotalApplications: "7",
+				Timestamp:         now.Add(-1 * time.Hour).UnixNano(),
+			},
 		},
 	}
 
-	containers := []*dao.ContainerHistoryDAOInfo{
+	containers := []*model.ContainerHistory{
 		{
-			TotalContainers: "0",
-			Timestamp:       now.Add(-6 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-6 * time.Hour).UnixNano(),
+			},
+			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
+				TotalContainers: "0",
+				Timestamp:       now.Add(-6 * time.Hour).UnixNano(),
+			},
 		},
 		{
-			TotalContainers: "2",
-			Timestamp:       now.Add(-5 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-5 * time.Hour).UnixNano(),
+			},
+			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
+				TotalContainers: "2",
+				Timestamp:       now.Add(-5 * time.Hour).UnixNano(),
+			},
 		},
 		{
-			TotalContainers: "4",
-			Timestamp:       now.Add(-3 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-3 * time.Hour).UnixNano(),
+			},
+			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
+				TotalContainers: "5",
+				Timestamp:       now.Add(-3 * time.Hour).UnixNano(),
+			},
 		},
 		{
-			TotalContainers: "7",
-			Timestamp:       now.Add(-1 * time.Hour).UnixMilli(),
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now.Add(-1 * time.Hour).UnixNano(),
+			},
+			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
+				TotalContainers: "7",
+				Timestamp:       now.Add(-1 * time.Hour).UnixNano(),
+			},
 		},
 	}
 
-	err := repo.UpdateHistory(ctx, apps, containers)
-	require.NoError(t, err)
+	for _, app := range apps {
+		err := repo.InsertAppHistory(ctx, app)
+		require.NoError(t, err)
+	}
+	for _, container := range containers {
+		err := repo.InsertContainerHistory(ctx, container)
+		require.NoError(t, err)
+	}
 }
