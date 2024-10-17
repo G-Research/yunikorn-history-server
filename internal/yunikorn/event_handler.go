@@ -38,7 +38,7 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 
 	var daoApp dao.ApplicationDAOInfo
 	if err := json.Unmarshal([]byte(ev.GetState()), &daoApp); err != nil {
-		logger.Errorw("Failed to unmarshal application state from event", "error", err)
+		logger.Errorw("failed to unmarshal application state from event", "error", err)
 		return
 	}
 
