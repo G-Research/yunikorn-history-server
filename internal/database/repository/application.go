@@ -317,7 +317,8 @@ WHERE id = @id
 			"has_reserved":         app.HasReserved,
 			"reservations":         app.Reservations,
 			"max_request_priority": app.MaxRequestPriority,
-		})
+		},
+	)
 	if err != nil {
 		return err
 	}
