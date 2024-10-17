@@ -41,7 +41,7 @@ func (app *Application) MergeFrom(appInfo *dao.ApplicationDAOInfo) {
 		for _, ask := range app.Requests {
 			lookup[ask.AllocationKey] = struct{}{}
 		}
-		for _, ask := range app.Requests {
+		for _, ask := range appInfo.Requests {
 			if _, ok := lookup[ask.AllocationKey]; !ok {
 				app.Requests = append(app.Requests, ask)
 			}
