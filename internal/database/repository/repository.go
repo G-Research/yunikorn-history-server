@@ -16,13 +16,10 @@ type Repository interface {
 	DeleteApplicationsNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error
 	GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.Application, error)
 	GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.Application, error)
-	UpdateHistory(
-		ctx context.Context,
-		apps []*dao.ApplicationHistoryDAOInfo,
-		containers []*dao.ContainerHistoryDAOInfo,
-	) error
-	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error)
-	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error)
+	InsertAppHistory(ctx context.Context, appHistory *model.AppHistory) error
+	InsertContainerHistory(ctx context.Context, containerHistory *model.ContainerHistory) error
+	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*model.AppHistory, error)
+	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*model.ContainerHistory, error)
 	UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error
 	InsertNodeUtilizations(ctx context.Context, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
 	GetNodeUtilizations(ctx context.Context, filters NodeUtilFilters) ([]*dao.PartitionNodesUtilDAOInfo, error)

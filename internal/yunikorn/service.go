@@ -87,6 +87,7 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.upsertNodeUtilizations(ctx); err != nil {
 		return fmt.Errorf("error upserting node utilizations: %v", err)
 	}
+	s.syncHistory(ctx)
 
 	g.Add(func() error {
 		return s.runEventCollector(ctx)

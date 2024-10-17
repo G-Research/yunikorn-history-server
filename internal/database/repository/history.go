@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/jackc/pgx/v5"
-	"github.com/oklog/ulid/v2"
-
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/jackc/pgx/v5"
 )
 
 type HistoryFilters struct {
@@ -29,54 +27,87 @@ func applyHistoryFilters(builder *sql.Builder, filters HistoryFilters) {
 	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
 }
 
-func (s *PostgresRepository) UpdateHistory(
-	ctx context.Context,
-	apps []*dao.ApplicationHistoryDAOInfo,
-	containers []*dao.ContainerHistoryDAOInfo,
-) error {
+func (r *PostgresRepository) InsertAppHistory(ctx context.Context, appHistory *model.AppHistory) error {
+	const appHistoryType = "application"
+	const q = `
+INSERT INTO history (
+	 id, 
+	 created_at,
+	 deleted_at,
+	 history_type, 
+	 total_number, 
+	 timestamp
+) VALUES (
+	@id,
+	@created_at,
+	@deleted_at,
+	@history_type,
+	@total_number,
+	@timestamp
+)`
 
-	appSQL := `INSERT INTO history (id, history_type, total_number, timestamp)
-		VALUES (@id, 'application', @total_number, @timestamp)`
-	containerSQL := `INSERT INTO history (id, history_type, total_number, timestamp)
-		VALUES (@id, 'container', @total_number, @timestamp)`
-
-	for _, app := range apps {
-		_, err := s.dbpool.Exec(ctx, appSQL,
-			pgx.NamedArgs{
-				"id":           ulid.Make().String(),
-				"total_number": app.TotalApplications,
-				"timestamp":    app.Timestamp,
-			})
-		if err != nil {
-			return fmt.Errorf("could not update applications history into DB: %v", err)
-		}
-	}
-	for _, container := range containers {
-		_, err := s.dbpool.Exec(ctx, containerSQL,
-			pgx.NamedArgs{
-				"id":           ulid.Make().String(),
-				"total_number": container.TotalContainers,
-				"timestamp":    container.Timestamp,
-			})
-		if err != nil {
-			return fmt.Errorf("could not update containers history into DB: %v", err)
-		}
+	_, err := r.dbpool.Exec(ctx, q,
+		pgx.NamedArgs{
+			"id":           appHistory.ID,
+			"created_at":   appHistory.CreatedAt,
+			"deleted_at":   appHistory.DeletedAt,
+			"history_type": appHistoryType,
+			"total_number": appHistory.TotalApplications,
+			"timestamp":    appHistory.Timestamp,
+		})
+	if err != nil {
+		return fmt.Errorf("could not create application history into DB: %v", err)
 	}
 	return nil
 }
 
-func (s *PostgresRepository) GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error) {
+func (r *PostgresRepository) InsertContainerHistory(ctx context.Context, containerHistory *model.ContainerHistory) error {
+	const containerHistoryType = "container"
+	const q = `
+INSERT INTO history (
+	id,
+	created_at,
+	deleted_at,
+	history_type,
+	total_number,
+	timestamp
+) VALUES (
+	 @id,
+	 @created_at,
+	 @deleted_at,
+	 @history_type,
+	 @total_number,
+	 @timestamp
+)`
+
+	_, err := r.dbpool.Exec(ctx, q,
+		pgx.NamedArgs{
+			"id":           containerHistory.ID,
+			"created_at":   containerHistory.CreatedAt,
+			"deleted_at":   containerHistory.DeletedAt,
+			"history_type": containerHistoryType,
+			"total_number": containerHistory.TotalContainers,
+			"timestamp":    containerHistory.Timestamp,
+		})
+	if err != nil {
+		return fmt.Errorf("could not create container history into DB: %v", err)
+	}
+	return nil
+
+}
+
+func (r *PostgresRepository) GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*model.AppHistory, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("history", "").
 		Conditionp("history_type", "=", "application").
 		OrderBy("timestamp", sql.OrderByDescending)
 	applyHistoryFilters(queryBuilder, filters)
 
-	var apps []*dao.ApplicationHistoryDAOInfo
+	var apps []*model.AppHistory
 
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
-	rows, err := s.dbpool.Query(ctx, query, args...)
+	rows, err := r.dbpool.Query(ctx, query, args...)
 
 	if err != nil {
 		return nil, fmt.Errorf("could not get applications history from DB: %v", err)
@@ -84,9 +115,8 @@ func (s *PostgresRepository) GetApplicationsHistory(ctx context.Context, filters
 	defer rows.Close()
 
 	for rows.Next() {
-		var app dao.ApplicationHistoryDAOInfo
-		var id string
-		err := rows.Scan(&id, nil, &app.TotalApplications, &app.Timestamp)
+		var app model.AppHistory
+		err := rows.Scan(&app.ID, &app.CreatedAt, &app.DeletedAt, nil, &app.TotalApplications, &app.Timestamp)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan applications history from DB: %v", err)
 		}
@@ -95,18 +125,18 @@ func (s *PostgresRepository) GetApplicationsHistory(ctx context.Context, filters
 	return apps, nil
 }
 
-func (s *PostgresRepository) GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error) {
+func (r *PostgresRepository) GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*model.ContainerHistory, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("history", "").
 		Conditionp("history_type", "=", "container").
 		OrderBy("timestamp", sql.OrderByDescending)
 	applyHistoryFilters(queryBuilder, filters)
 
-	var containers []*dao.ContainerHistoryDAOInfo
+	var containers []*model.ContainerHistory
 
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
-	rows, err := s.dbpool.Query(ctx, query, args...)
+	rows, err := r.dbpool.Query(ctx, query, args...)
 
 	if err != nil {
 		return nil, fmt.Errorf("could not get container history from DB: %v", err)
@@ -114,9 +144,8 @@ func (s *PostgresRepository) GetContainersHistory(ctx context.Context, filters H
 	defer rows.Close()
 
 	for rows.Next() {
-		var container dao.ContainerHistoryDAOInfo
-		var id string
-		err := rows.Scan(&id, nil, &container.TotalContainers, &container.Timestamp)
+		var container model.ContainerHistory
+		err := rows.Scan(&container.ID, &container.CreatedAt, &container.DeletedAt, nil, &container.TotalContainers, &container.Timestamp)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan contaienrs history from DB: %v", err)
 		}

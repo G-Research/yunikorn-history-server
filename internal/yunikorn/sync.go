@@ -245,3 +245,47 @@ func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
 
 	return nil
 }
+
+func (s *Service) syncHistory(ctx context.Context) error {
+
+	logger := log.FromContext(ctx)
+
+	appsHistory, err := s.client.GetAppsHistory(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get apps history: %w", err)
+	}
+	containersHistory, err := s.client.GetContainersHistory(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get containers history: %w", err)
+	}
+
+	now := time.Now().UnixNano()
+
+	for _, ah := range appsHistory {
+		history := &model.AppHistory{
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now,
+			},
+			ApplicationHistoryDAOInfo: *ah,
+		}
+		if err := s.repo.InsertAppHistory(ctx, history); err != nil {
+			logger.Errorf("could not insert app history: %v", err)
+		}
+	}
+
+	for _, ch := range containersHistory {
+		history := &model.ContainerHistory{
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now,
+			},
+			ContainerHistoryDAOInfo: *ch,
+		}
+		if err := s.repo.InsertContainerHistory(ctx, history); err != nil {
+			logger.Errorf("could not insert container history: %v", err)
+		}
+	}
+
+	return nil
+}
