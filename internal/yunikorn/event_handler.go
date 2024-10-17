@@ -49,8 +49,8 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 	if isNew {
 		app = &model.Application{
 			Metadata: model.Metadata{
-				ID:        ulid.Make().String(),
-				CreatedAt: ev.TimestampNano,
+				ID:            ulid.Make().String(),
+				CreatedAtNano: ev.TimestampNano,
 			},
 			ApplicationDAOInfo: daoApp,
 		}
@@ -71,7 +71,7 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 
 	app.MergeFrom(&daoApp)
 	if ev.GetEventChangeType() == si.EventRecord_REMOVE {
-		app.DeletedAt = &ev.TimestampNano
+		app.DeletedAtNano = &ev.TimestampNano
 	}
 
 	if err := s.repo.UpdateApplication(ctx, app); err != nil {

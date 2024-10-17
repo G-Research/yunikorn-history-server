@@ -5,9 +5,9 @@ import (
 )
 
 type Metadata struct {
-	ID        string `json:"id"`
-	CreatedAt int64  `json:"createdAt"`
-	DeletedAt *int64 `json:"deletedAt,omitempty"`
+	ID            string `json:"id"`
+	CreatedAtNano int64  `json:"createdAtNano"`
+	DeletedAtNano *int64 `json:"deletedAtNano,omitempty"`
 }
 
 type PartitionQueueDAOInfo struct {

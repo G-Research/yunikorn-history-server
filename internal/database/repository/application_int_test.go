@@ -208,8 +208,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 	apps := []*model.Application{
 		{
 			Metadata: model.Metadata{
-				ID:        "1",
-				CreatedAt: now.UnixNano(),
+				ID:            "1",
+				CreatedAtNano: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
 				ApplicationID:   "app1",
@@ -225,8 +225,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			Metadata: model.Metadata{
-				ID:        "Metadata2",
-				CreatedAt: now.UnixNano(),
+				ID:            "Metadata2",
+				CreatedAtNano: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
 				ApplicationID:   "app2",
@@ -243,8 +243,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			Metadata: model.Metadata{
-				ID:        "Metadata3",
-				CreatedAt: now.UnixNano(),
+				ID:            "Metadata3",
+				CreatedAtNano: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
 				ApplicationID:   "app3",
@@ -262,8 +262,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			Metadata: model.Metadata{
-				ID:        "Metadata4",
-				CreatedAt: now.UnixNano(),
+				ID:            "Metadata4",
+				CreatedAtNano: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
 				ApplicationID:   "app4",
@@ -280,8 +280,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			Metadata: model.Metadata{
-				ID:        "Metadata5",
-				CreatedAt: now.UnixNano(),
+				ID:            "Metadata5",
+				CreatedAtNano: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
 				ApplicationID:   "app5",
@@ -298,8 +298,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 		},
 		{
 			Metadata: model.Metadata{
-				ID:        "Metadata6",
-				CreatedAt: now.UnixNano(),
+				ID:            "Metadata6",
+				CreatedAtNano: now.UnixNano(),
 			},
 			ApplicationDAOInfo: dao.ApplicationDAOInfo{
 				ApplicationID:   "app6",

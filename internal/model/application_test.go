@@ -10,8 +10,8 @@ import (
 
 func TestApplicationMergeFrom(t *testing.T) {
 	meta := Metadata{
-		ID:        "1",
-		CreatedAt: time.Now().UnixNano(),
+		ID:            "1",
+		CreatedAtNano: time.Now().UnixNano(),
 	}
 
 	tt := map[string]struct {

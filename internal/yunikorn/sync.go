@@ -274,11 +274,11 @@ func (s *Service) syncApplications(ctx context.Context) error {
 	for _, a := range applications {
 		current, ok := lookup[a.ApplicationID]
 		delete(lookup, a.ApplicationID)
-		if !ok || current.DeletedAt != nil { // either not exists or deleted
+		if !ok || current.DeletedAtNano != nil { // either not exists or deleted
 			application := &model.Application{
 				Metadata: model.Metadata{
-					ID:        ulid.Make().String(),
-					CreatedAt: now,
+					ID:            ulid.Make().String(),
+					CreatedAtNano: now,
 				},
 				ApplicationDAOInfo: *a,
 			}
@@ -295,7 +295,7 @@ func (s *Service) syncApplications(ctx context.Context) error {
 	}
 
 	for _, a := range lookup {
-		a.DeletedAt = &now
+		a.DeletedAtNano = &now
 		if err := s.repo.UpdateApplication(ctx, a); err != nil {
 			logger.Errorf("failed to update deleted at for application %q: %v", a.ApplicationID, err)
 		}

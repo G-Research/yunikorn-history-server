@@ -20,8 +20,8 @@ CREATE TABLE partitions(
 -- Create applications table
 CREATE TABLE applications(
     id TEXT, -- internal id
-    created_at BIGINT NOT NULL,
-    deleted_at BIGINT,
+    created_at_nano BIGINT NOT NULL,
+    deleted_at_nano BIGINT,
     app_id TEXT NOT NULL,
     used_resource JSONB,
     max_used_resource JSONB,

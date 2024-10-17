@@ -615,8 +615,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			expectedLive: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:        "1",
-						CreatedAt: now,
+						ID:            "1",
+						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
 						ApplicationID: "app-1",
@@ -624,8 +624,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 				},
 				{
 					Metadata: model.Metadata{
-						ID:        "2",
-						CreatedAt: now,
+						ID:            "2",
+						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
 						ApplicationID: "app-2",
@@ -647,8 +647,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			existingApplications: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:        "1",
-						CreatedAt: now,
+						ID:            "1",
+						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
 						ApplicationID: "app-1",
@@ -656,8 +656,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 				},
 				{
 					Metadata: model.Metadata{
-						ID:        "2",
-						CreatedAt: now,
+						ID:            "2",
+						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
 						ApplicationID: "app-2",
@@ -667,8 +667,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			expectedLive: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:        "1",
-						CreatedAt: now,
+						ID:            "1",
+						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
 						ApplicationID: "app-1",
@@ -678,8 +678,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			expectedDeleted: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:        "2",
-						CreatedAt: now,
+						ID:            "2",
+						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
 						ApplicationID: "app-2",
@@ -756,16 +756,16 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 				state, ok := lookup[target.ApplicationID]
 				require.True(t, ok)
 				assert.NotEmpty(t, state.Metadata.ID)
-				assert.Greater(t, state.Metadata.CreatedAt, int64(0))
-				assert.Nil(t, state.Metadata.DeletedAt)
+				assert.Greater(t, state.Metadata.CreatedAtNano, int64(0))
+				assert.Nil(t, state.Metadata.DeletedAtNano)
 			}
 
 			for _, target := range tt.expectedDeleted {
 				state, ok := lookup[target.ApplicationID]
 				require.True(t, ok)
 				assert.NotEmpty(t, state.Metadata.ID)
-				assert.Greater(t, state.Metadata.CreatedAt, int64(0))
-				assert.NotNil(t, state.Metadata.DeletedAt)
+				assert.Greater(t, state.Metadata.CreatedAtNano, int64(0))
+				assert.NotNil(t, state.Metadata.DeletedAtNano)
 			}
 		})
 	}

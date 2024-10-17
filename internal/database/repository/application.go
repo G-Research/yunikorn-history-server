@@ -52,8 +52,8 @@ func (s *PostgresRepository) InsertApplication(ctx context.Context, app *model.A
 INSERT INTO applications
 (
 	id,
-	created_at,
-	deleted_at,
+	created_at_nano,
+	deleted_at_nano,
 	app_id,
 	used_resource,
 	max_used_resource,
@@ -77,8 +77,8 @@ INSERT INTO applications
 VALUES
 (
 	@id,
-	@created_at,
-	@deleted_at,
+	@created_at_nano,
+	@deleted_at_nano,
 	@app_id,
 	@used_resource,
 	@max_used_resource,
@@ -106,8 +106,8 @@ VALUES
 		q,
 		pgx.NamedArgs{
 			"id":                   app.ID,
-			"created_at":           app.CreatedAt,
-			"deleted_at":           app.DeletedAt,
+			"created_at_nano":      app.CreatedAtNano,
+			"deleted_at_nano":      app.DeletedAtNano,
 			"app_id":               app.ApplicationID,
 			"used_resource":        app.UsedResource,
 			"max_used_resource":    app.MaxUsedResource,
@@ -135,8 +135,8 @@ func (s *PostgresRepository) GetLatestApplicationByApplicationID(ctx context.Con
 	const q = `
 SELECT
 	id,
-	created_at,
-	deleted_at,
+	created_at_nano,
+	deleted_at_nano,
 	app_id,
 	used_resource,
 	max_used_resource,
@@ -175,8 +175,8 @@ LIMIT 1
 
 	if err := row.Scan(
 		&app.ID,
-		&app.CreatedAt,
-		&app.DeletedAt,
+		&app.CreatedAtNano,
+		&app.DeletedAtNano,
 		&app.ApplicationID,
 		&app.UsedResource,
 		&app.MaxUsedResource,
@@ -207,8 +207,8 @@ func (s *PostgresRepository) GetLatestApplicationsByApplicationID(ctx context.Co
 	const q = `
 SELECT DISTINCT ON (app_id)
 	id,
-	created_at,
-	deleted_at,
+	created_at_nano,
+	deleted_at_nano,
 	app_id,
 	used_resource,
 	max_used_resource,
@@ -243,8 +243,8 @@ ORDER BY app_id, id DESC`
 		var app model.Application
 		if err := rows.Scan(
 			&app.ID,
-			&app.CreatedAt,
-			&app.DeletedAt,
+			&app.CreatedAtNano,
+			&app.DeletedAtNano,
 			&app.ApplicationID,
 			&app.UsedResource,
 			&app.MaxUsedResource,
@@ -281,7 +281,7 @@ func (s *PostgresRepository) UpdateApplication(ctx context.Context, app *model.A
 	const q = `
 UPDATE applications
 SET
-	deleted_at = @deleted_at,
+	deleted_at_nano = @deleted_at_nano,
 	used_resource = @used_resource,
 	max_used_resource = @max_used_resource,
 	pending_resource = @pending_resource,
@@ -303,7 +303,7 @@ WHERE id = @id
 		q,
 		pgx.NamedArgs{
 			"id":                   app.ID,
-			"deleted_at":           app.DeletedAt,
+			"deleted_at_nano":      app.DeletedAtNano,
 			"used_resource":        app.UsedResource,
 			"max_used_resource":    app.MaxUsedResource,
 			"pending_resource":     app.PendingResource,
@@ -347,8 +347,8 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 		var app model.Application
 		err := rows.Scan(
 			&app.ID,
-			&app.CreatedAt,
-			&app.DeletedAt,
+			&app.CreatedAtNano,
+			&app.DeletedAtNano,
 			&app.ApplicationID,
 			&app.UsedResource,
 			&app.MaxUsedResource,
@@ -400,8 +400,8 @@ func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, pa
 
 		err := rows.Scan(
 			&app.ID,
-			&app.CreatedAt,
-			&app.DeletedAt,
+			&app.CreatedAtNano,
+			&app.DeletedAtNano,
 			&app.ApplicationID,
 			&app.UsedResource,
 			&app.MaxUsedResource,
