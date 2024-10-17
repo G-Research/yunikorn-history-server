@@ -285,25 +285,45 @@ func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
 	return nil
 }
 
-// updateAppsHistory fetches the history of applications and containers and updates the history in the database
-func (s *Service) updateAppsHistory(ctx context.Context) error {
+func (s *Service) syncHistory(ctx context.Context) error {
+
 	logger := log.FromContext(ctx)
 
 	appsHistory, err := s.client.GetAppsHistory(ctx)
 	if err != nil {
-		return fmt.Errorf("could not get apps history: %v", err)
+		return fmt.Errorf("could not get apps history: %w", err)
 	}
 	containersHistory, err := s.client.GetContainersHistory(ctx)
 	if err != nil {
-		return fmt.Errorf("could not get containers history: %v", err)
+		return fmt.Errorf("could not get containers history: %w", err)
 	}
 
-	err = s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("updating apps history", "count", len(appsHistory))
-		return s.repo.UpdateHistory(ctx, appsHistory, containersHistory)
-	}, workqueue.WithJobName("update_apps_history"))
-	if err != nil {
-		logger.Errorf("could not add update apps history job to workqueue: %v", err)
+	now := time.Now().UnixNano()
+
+	for _, ah := range appsHistory {
+		history := &model.AppHistory{
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now,
+			},
+			ApplicationHistoryDAOInfo: *ah,
+		}
+		if err := s.repo.InsertAppHistory(ctx, history); err != nil {
+			logger.Errorf("could not insert app history: %v", err)
+		}
+	}
+
+	for _, ch := range containersHistory {
+		history := &model.ContainerHistory{
+			ModelMetadata: model.ModelMetadata{
+				ID:        ulid.Make().String(),
+				CreatedAt: now,
+			},
+			ContainerHistoryDAOInfo: *ch,
+		}
+		if err := s.repo.InsertContainerHistory(ctx, history); err != nil {
+			logger.Errorf("could not insert container history: %v", err)
+		}
 	}
 
 	return nil

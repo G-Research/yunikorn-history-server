@@ -117,6 +117,8 @@ CREATE TYPE history_type AS ENUM ('container', 'application');
 -- Create history table
 CREATE TABLE history(
     id TEXT,
+    created_at BIGINT NOT NULL,
+    deleted_at BIGINT,
     history_type history_type NOT NULL,
     total_number BIGINT NOT NULL,
     timestamp BIGINT NOT NULL,
