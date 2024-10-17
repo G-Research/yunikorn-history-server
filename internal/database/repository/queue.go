@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
+
+	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"

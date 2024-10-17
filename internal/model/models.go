@@ -1,15 +1,13 @@
 package model
 
 import (
-	"time"
-
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 )
 
-type ApplicationDAOInfo struct {
-	CreatedAt              time.Time `json:"createdAt"`
-	QueueID                string    `json:"queueId"`
-	dao.ApplicationDAOInfo `json:",inline"`
+type Metadata struct {
+	ID            string `json:"id"`
+	CreatedAtNano int64  `json:"createdAtNano"`
+	DeletedAtNano *int64 `json:"deletedAtNano,omitempty"`
 }
 
 type PartitionQueueDAOInfo struct {

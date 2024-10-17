@@ -10,9 +10,12 @@ import (
 
 //go:generate mockgen -destination=mock_repository.go -package=repository github.com/G-Research/yunikorn-history-server/internal/database/repository Repository
 type Repository interface {
-	UpsertApplications(ctx context.Context, apps []*dao.ApplicationDAOInfo) error
-	GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.ApplicationDAOInfo, error)
-	GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.ApplicationDAOInfo, error)
+	InsertApplication(ctx context.Context, app *model.Application) error
+	UpdateApplication(ctx context.Context, app *model.Application) error
+	GetLatestApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error)
+	GetLatestApplicationsByApplicationID(ctx context.Context) ([]*model.Application, error)
+	GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.Application, error)
+	GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.Application, error)
 	UpdateHistory(
 		ctx context.Context,
 		apps []*dao.ApplicationHistoryDAOInfo,
