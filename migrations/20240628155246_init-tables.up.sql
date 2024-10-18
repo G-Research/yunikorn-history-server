@@ -19,14 +19,15 @@ CREATE TABLE partitions(
 
 -- Create applications table
 CREATE TABLE applications(
-    id TEXT,
+    id TEXT, -- internal id
+    created_at_nano BIGINT NOT NULL,
+    deleted_at_nano BIGINT,
     app_id TEXT NOT NULL,
     used_resource JSONB,
     max_used_resource JSONB,
     pending_resource JSONB,
     partition TEXT NOT NULL,
     queue_name TEXT NOT NULL,
-    queue_id UUID NOT NULL,
     submission_time BIGINT,
     finished_time BIGINT,
     requests JSONB,
