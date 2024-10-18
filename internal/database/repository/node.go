@@ -9,6 +9,7 @@ import (
 	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
 
 type NodeFilters struct {
@@ -21,14 +22,14 @@ type NodeFilters struct {
 	Limit       *int
 }
 
-type NodeUtilFilters struct {
+type NodesUtilFilters struct {
 	ClusterID *string
 	Partition *string
 	Offset    *int
 	Limit     *int
 }
 
-func applyNodeUtilFilters(builder *sql.Builder, filters NodeUtilFilters) {
+func applyNodeUtilFilters(builder *sql.Builder, filters NodesUtilFilters) {
 	if filters.ClusterID != nil {
 		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
 	}
@@ -99,40 +100,46 @@ func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeD
 	return nil
 }
 
-func (s *PostgresRepository) InsertNodeUtilizations(
+func (s *PostgresRepository) InsertNodesUtil(
 	ctx context.Context,
-	nus []*dao.PartitionNodesUtilDAOInfo,
+	nu *model.NodesUtil,
 ) error {
-	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
-		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
+	const q = `
+INSERT INTO partition_nodes_util 
+(id,  created_at_nano, deleted_at_nano, cluster_id, partition, nodes_util_list)
+VALUES
+(@id, @created_at_nano, @deleted_at_nano, @cluster_id, @partition, @nodes_util_list)
+`
 
-	for _, nu := range nus {
-		_, err := s.dbpool.Exec(ctx, insertSQL,
-			pgx.NamedArgs{
-				"id":              ulid.Make().String(),
-				"cluster_id":      nu.ClusterID,
-				"partition":       nu.Partition,
-				"nodes_util_list": nu.NodesUtilList,
-			})
-		if err != nil {
-			return fmt.Errorf("could not insert node utilizations into DB: %v", err)
-		}
-
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"id":              nu.ID,
+			"created_at_nano": nu.CreatedAtNano,
+			"deleted_at_nano": nu.DeletedAtNano,
+			"cluster_id":      nu.ClusterID,
+			"partition":       nu.Partition,
+			"nodes_util_list": nu.NodesUtilList,
+		})
+	if err != nil {
+		return fmt.Errorf("could not insert node utilizations into DB: %w", err)
 	}
+
 	return nil
 }
 
-func (s *PostgresRepository) GetNodeUtilizations(
+func (s *PostgresRepository) GetNodesUtils(
 	ctx context.Context,
-	filters NodeUtilFilters,
-) ([]*dao.PartitionNodesUtilDAOInfo, error) {
+	filters NodesUtilFilters,
+) ([]*model.NodesUtil, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("partition_nodes_util", "").
 		OrderBy("id", sql.OrderByDescending)
 
 	applyNodeUtilFilters(queryBuilder, filters)
 
-	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
+	var nodesUtils []*model.NodesUtil
 
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
@@ -143,15 +150,14 @@ func (s *PostgresRepository) GetNodeUtilizations(
 	defer rows.Close()
 
 	for rows.Next() {
-		var nu dao.PartitionNodesUtilDAOInfo
-		var id string
-		err := rows.Scan(&id, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
+		var nu model.NodesUtil
+		err := rows.Scan(&nu.ID, &nu.CreatedAtNano, &nu.DeletedAtNano, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan node utilizations from DB: %v", err)
 		}
-		nodesUtil = append(nodesUtil, &nu)
+		nodesUtils = append(nodesUtils, &nu)
 	}
-	return nodesUtil, nil
+	return nodesUtils, nil
 }
 
 func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error) {
