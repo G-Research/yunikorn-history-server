@@ -442,7 +442,7 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				s.workqueue.Shutdown()
 			})
 
-			_, err := s.syncQueues(context.Background(), tt.partitions)
+			err := s.syncQueues(context.Background(), tt.partitions)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -574,6 +574,198 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 				if !isPartitionPresent(partitionsInDB, target) {
 					t.Errorf("Partition %s is not found in the DB", target.Name)
 				}
+			}
+		})
+	}
+}
+
+func TestSync_syncApplications_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	pool, repo, cleanupDB := setupDatabase(t, ctx)
+	t.Cleanup(cleanupDB)
+	eventRepository := repository.NewInMemoryEventRepository()
+
+	now := time.Now().UnixNano()
+	tests := []struct {
+		name                 string
+		setup                func() *httptest.Server
+		existingApplications []*model.Application
+		expectedLive         []*model.Application
+		expectedDeleted      []*model.Application
+		wantErr              bool
+	}{
+		{
+			name: "Sync applications with no existing applications in DB",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					response := []*dao.ApplicationDAOInfo{
+						{ApplicationID: "app-1"},
+						{ApplicationID: "app-2"},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			existingApplications: nil,
+			expectedLive: []*model.Application{
+				{
+					Metadata: model.Metadata{
+						ID:            "1",
+						CreatedAtNano: now,
+					},
+					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ApplicationID: "app-1",
+					},
+				},
+				{
+					Metadata: model.Metadata{
+						ID:            "2",
+						CreatedAtNano: now,
+					},
+					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ApplicationID: "app-2",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Should mark application as deleted in DB",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					response := []*dao.ApplicationDAOInfo{
+						{ApplicationID: "app-1"},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			existingApplications: []*model.Application{
+				{
+					Metadata: model.Metadata{
+						ID:            "1",
+						CreatedAtNano: now,
+					},
+					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ApplicationID: "app-1",
+					},
+				},
+				{
+					Metadata: model.Metadata{
+						ID:            "2",
+						CreatedAtNano: now,
+					},
+					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ApplicationID: "app-2",
+					},
+				},
+			},
+			expectedLive: []*model.Application{
+				{
+					Metadata: model.Metadata{
+						ID:            "1",
+						CreatedAtNano: now,
+					},
+					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ApplicationID: "app-1",
+					},
+				},
+			},
+			expectedDeleted: []*model.Application{
+				{
+					Metadata: model.Metadata{
+						ID:            "2",
+						CreatedAtNano: now,
+					},
+					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ApplicationID: "app-2",
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			t.Cleanup(func() {
+				_, err := pool.Exec(ctx, "DELETE FROM applications")
+				require.NoError(t, err)
+			})
+
+			for _, app := range tt.existingApplications {
+				err := repo.InsertApplication(ctx, app)
+				require.NoError(t, err)
+			}
+
+			ts := tt.setup()
+			defer ts.Close()
+
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
+			s := NewService(repo, eventRepository, client)
+
+			// Start the service
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				_ = s.Run(ctx)
+			}()
+
+			// Ensure workqueue is started
+			assert.Eventually(t, func() bool {
+				return s.workqueue.Started()
+			}, 500*time.Millisecond, 50*time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
+
+			// Cleanup after each test case
+			t.Cleanup(func() {
+				cancel()
+				s.workqueue.Shutdown()
+			})
+
+			err := s.syncApplications(ctx)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			var applicationsInDB []*model.Application
+			assert.Eventually(t, func() bool {
+				applicationsInDB, err = s.repo.GetLatestApplicationsByApplicationID(ctx)
+				if err != nil {
+					t.Logf("error getting partitions: %v", err)
+				}
+				return len(applicationsInDB) == 2
+			}, 5*time.Second, 50*time.Millisecond)
+
+			require.Equal(t, len(tt.expectedLive)+len(tt.expectedDeleted), len(applicationsInDB))
+
+			lookup := make(map[string]model.Application)
+			for _, app := range applicationsInDB {
+				lookup[app.ApplicationID] = *app
+			}
+
+			t.Logf("Lookup: %v", lookup)
+
+			for _, target := range tt.expectedLive {
+				state, ok := lookup[target.ApplicationID]
+				require.True(t, ok)
+				assert.NotEmpty(t, state.Metadata.ID)
+				assert.Greater(t, state.Metadata.CreatedAtNano, int64(0))
+				assert.Nil(t, state.Metadata.DeletedAtNano)
+			}
+
+			for _, target := range tt.expectedDeleted {
+				state, ok := lookup[target.ApplicationID]
+				require.True(t, ok)
+				assert.NotEmpty(t, state.Metadata.ID)
+				assert.Greater(t, state.Metadata.CreatedAtNano, int64(0))
+				assert.NotNil(t, state.Metadata.DeletedAtNano)
 			}
 		})
 	}

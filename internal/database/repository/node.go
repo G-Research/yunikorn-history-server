@@ -103,7 +103,6 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 	ctx context.Context,
 	nus []*dao.PartitionNodesUtilDAOInfo,
 ) error {
-
 	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
 		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
 
@@ -138,7 +137,6 @@ func (s *PostgresRepository) GetNodeUtilizations(
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
 	rows, err := s.dbpool.Query(ctx, query, args...)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
 	}
