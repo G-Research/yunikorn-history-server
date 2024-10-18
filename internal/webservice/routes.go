@@ -126,7 +126,7 @@ func (ws *WebService) init(ctx context.Context) {
 	)
 	service.Route(
 		service.GET(routeNodeUtilization).
-			To(ws.getNodeUtilizations).
+			To(ws.getNodesUtils).
 			Produces(restful.MIME_JSON).
 			Writes([]dao.PartitionNodesUtilDAOInfo{}).
 			Returns(200, "OK", []dao.PartitionNodesUtilDAOInfo{}).
@@ -419,20 +419,20 @@ func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.R
 	jsonResponse(resp, containersHistory)
 }
 
-// getNodeUtilizations returns partition_node_utilization data.
+// getNodesUtils returns partition_node_utilization data.
 // Results are ordered by creation time in descending order.
 // Following query params are supported:
 // - clusterID: filter by clusterID
 // - limit: limit the number of returned nodes
 // - offset: offset the returned nodes
-func (ws *WebService) getNodeUtilizations(req *restful.Request, resp *restful.Response) {
+func (ws *WebService) getNodesUtils(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	filters, err := parseNodeUtilizationFilters(req.Request)
 	if err != nil {
 		badRequestResponse(req, resp, err)
 		return
 	}
-	nodeUtilization, err := ws.repository.GetNodeUtilizations(ctx, *filters)
+	nodeUtilization, err := ws.repository.GetNodesUtils(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
