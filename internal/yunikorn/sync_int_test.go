@@ -538,7 +538,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			})
 
 			for _, partition := range tt.existingPartitions {
-				err := repo.CreatePartition(ctx, partition)
+				err := repo.InsertPartition(ctx, partition)
 				require.NoError(t, err)
 			}
 

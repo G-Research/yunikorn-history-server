@@ -41,20 +41,6 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// CreatePartition mocks base method.
-func (m *MockRepository) CreatePartition(arg0 context.Context, arg1 *model.Partition) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePartition", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreatePartition indicates an expected call of CreatePartition.
-func (mr *MockRepositoryMockRecorder) CreatePartition(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePartition", reflect.TypeOf((*MockRepository)(nil).CreatePartition), arg0, arg1)
-}
-
 // GetAllApplications mocks base method.
 func (m *MockRepository) GetAllApplications(arg0 context.Context, arg1 ApplicationFilters) ([]*model.Application, error) {
 	m.ctrl.T.Helper()
@@ -276,6 +262,20 @@ func (m *MockRepository) InsertNodeUtilizations(arg0 context.Context, arg1 []*da
 func (mr *MockRepositoryMockRecorder) InsertNodeUtilizations(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).InsertNodeUtilizations), arg0, arg1)
+}
+
+// InsertPartition mocks base method.
+func (m *MockRepository) InsertPartition(arg0 context.Context, arg1 *model.Partition) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertPartition", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertPartition indicates an expected call of InsertPartition.
+func (mr *MockRepositoryMockRecorder) InsertPartition(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPartition", reflect.TypeOf((*MockRepository)(nil).InsertPartition), arg0, arg1)
 }
 
 // InsertQueue mocks base method.

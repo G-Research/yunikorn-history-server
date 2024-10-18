@@ -27,7 +27,7 @@ type Repository interface {
 	InsertNodeUtilizations(ctx context.Context, partitionNodesUtil []*dao.PartitionNodesUtilDAOInfo) error
 	GetNodeUtilizations(ctx context.Context, filters NodeUtilFilters) ([]*dao.PartitionNodesUtilDAOInfo, error)
 	GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error)
-	CreatePartition(ctx context.Context, partition *model.Partition) error
+	InsertPartition(ctx context.Context, partition *model.Partition) error
 	UpdatePartition(ctx context.Context, partition *model.Partition) error
 	GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.Partition, error)
 	GetLatestPartitionsGroupedByName(ctx context.Context) ([]*model.Partition, error)
