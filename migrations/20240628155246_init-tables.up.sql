@@ -79,6 +79,8 @@ CREATE TABLE queues(
 -- Create nodes table
 CREATE TABLE nodes(
     id TEXT,
+    created_at_nano BIGINT NOT NULL,
+    deleted_at_nano BIGINT,
     node_id TEXT NOT NULL,
     partition TEXT NOT NULL,
     host_name TEXT NOT NULL,
