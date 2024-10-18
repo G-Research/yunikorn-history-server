@@ -80,7 +80,7 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 		},
 	}
 	for _, p := range partitions {
-		err = repo.CreatePartition(ctx, p)
+		err = repo.InsertPartition(ctx, p)
 		require.NoError(t, err)
 	}
 

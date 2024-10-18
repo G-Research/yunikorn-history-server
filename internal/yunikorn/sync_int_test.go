@@ -538,7 +538,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			})
 
 			for _, partition := range tt.existingPartitions {
-				err := repo.CreatePartition(ctx, partition)
+				err := repo.InsertPartition(ctx, partition)
 				require.NoError(t, err)
 			}
 
@@ -779,7 +779,8 @@ func isQueuePresent(queuesInDB []*model.Queue, targetQueue *model.Queue) bool {
 	for _, dbQueue := range queuesInDB {
 		if dbQueue.QueueName == targetQueue.QueueName && dbQueue.Partition == targetQueue.Partition {
 			// Check if DeletedAtNano fields are either both nil or both non-nil
-			if (dbQueue.DeletedAtNano == nil && targetQueue.DeletedAtNano != nil) || (dbQueue.DeletedAtNano != nil && targetQueue.DeletedAtNano == nil) {
+			if (dbQueue.DeletedAtNano == nil && targetQueue.DeletedAtNano != nil) ||
+				(dbQueue.DeletedAtNano != nil && targetQueue.DeletedAtNano == nil) {
 				return false // If one is nil and the other is not, return false
 			}
 			return true
