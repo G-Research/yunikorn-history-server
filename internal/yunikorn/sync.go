@@ -97,7 +97,7 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error
 				PartitionInfo: *p,
 			}
 			allPartitions = append(allPartitions, partition)
-			if err := s.repo.CreatePartition(ctx, partition); err != nil {
+			if err := s.repo.InsertPartition(ctx, partition); err != nil {
 				logger.Errorf("could not create partition %s: %v", p.Name, err)
 			}
 			continue

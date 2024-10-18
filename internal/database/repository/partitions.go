@@ -40,7 +40,7 @@ func applyPartitionFilters(builder *sql.Builder, filters PartitionFilters) {
 	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
 }
 
-func (r *PostgresRepository) CreatePartition(ctx context.Context, partition *model.Partition) error {
+func (r *PostgresRepository) InsertPartition(ctx context.Context, partition *model.Partition) error {
 	const q = `
 INSERT INTO partitions (
 	id,
