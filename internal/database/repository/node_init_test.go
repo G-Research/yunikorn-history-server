@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 
 	"github.com/G-Research/yunikorn-history-server/internal/util"
@@ -25,46 +27,66 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 		t.Fatalf("could not create repository: %v", err)
 	}
 
-	nu := []*dao.PartitionNodesUtilDAOInfo{
-		{ClusterID: "cluster1", Partition: "default"},
-		{ClusterID: "cluster1", Partition: "default"},
-		{ClusterID: "cluster1", Partition: "default"},
-		{ClusterID: "cluster2", Partition: "default"},
-		{ClusterID: "cluster2", Partition: "default"},
-		{ClusterID: "cluster2", Partition: "default"},
+	nus := []*model.NodesUtil{
+		{
+			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"},
+		},
+		{
+			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"},
+		},
+		{
+			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"},
+		},
+		{
+			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"},
+		},
+		{
+			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"},
+		},
+		{
+			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"},
+		},
 	}
-	err = repo.InsertNodeUtilizations(ctx, nu)
-	require.NoError(t, err)
+	for _, nu := range nus {
+		err = repo.InsertNodesUtil(ctx, nu)
+		require.NoError(t, err)
+	}
 
 	tests := []struct {
 		name     string
-		filters  NodeUtilFilters
+		filters  NodesUtilFilters
 		expected int
 	}{
 		{
 			name: "Filter by ClusterID",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				ClusterID: util.ToPtr("cluster1"),
 			},
 			expected: 3,
 		},
 		{
 			name: "Filter by Partition",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				Partition: util.ToPtr("default"),
 			},
 			expected: 6,
 		},
 		{
 			name: "Filter By Limit",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				Limit: util.ToPtr(2),
 			},
 			expected: 2,
 		},
 		{
 			name: "Filter By Limit and Offset",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				Limit:  util.ToPtr(10),
 				Offset: util.ToPtr(3),
 			},
@@ -72,7 +94,7 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 		},
 		{
 			name: "Multiple filters",
-			filters: NodeUtilFilters{
+			filters: NodesUtilFilters{
 				ClusterID: util.ToPtr("cluster2"),
 				Partition: util.ToPtr("default"),
 				Limit:     util.ToPtr(1),
@@ -83,7 +105,7 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nodes, err := repo.GetNodeUtilizations(ctx, tt.filters)
+			nodes, err := repo.GetNodesUtils(ctx, tt.filters)
 			require.NoError(t, err)
 			require.Len(t, nodes, tt.expected)
 		})

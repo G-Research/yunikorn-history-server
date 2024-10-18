@@ -226,22 +226,27 @@ func (s *Service) syncApplications(ctx context.Context) error {
 	return nil
 }
 
-// upsertNodeUtilizations fetches node utilizations from the Yunikorn API and inserts them into the database
-func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
-	logger := log.FromContext(ctx)
-
-	nus, err := s.client.GetNodeUtil(ctx)
+// syncNodesUtils fetches nodes utilization from the Yunikorn API and inserts them into the database
+func (s *Service) syncNodesUtils(ctx context.Context) error {
+	nodesUtils, err := s.client.GetNodeUtil(ctx)
 	if err != nil {
-		return fmt.Errorf("could not get node utilizations: %v", err)
+		return fmt.Errorf("could not get nodes utilization: %w", err)
 	}
 
-	err = s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("upserting node utilizations", "count", len(nus))
-		return s.repo.InsertNodeUtilizations(ctx, nus)
-	}, workqueue.WithJobName("upsert_node_utilizations"))
-	if err != nil {
-		logger.Errorf("could not add insert node utilizations job to workqueue: %v", err)
+	var errs []error
+	now := time.Now().UnixNano()
+	for _, nu := range nodesUtils {
+		nodesUtil := &model.NodesUtil{
+			Metadata: model.Metadata{
+				ID:            ulid.Make().String(),
+				CreatedAtNano: now,
+			},
+			PartitionNodesUtilDAOInfo: *nu,
+		}
+		if err := s.repo.InsertNodesUtil(ctx, nodesUtil); err != nil {
+			errs = append(errs, fmt.Errorf("could not insert nodes utilization: %w", err))
+		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
