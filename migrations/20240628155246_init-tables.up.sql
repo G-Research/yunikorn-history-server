@@ -101,6 +101,8 @@ CREATE TABLE nodes(
 -- Create partition_nodes_util table
 CREATE TABLE partition_nodes_util(
     id TEXT,
+    created_at_nano BIGINT NOT NULL,
+    deleted_at_nano BIGINT,
     cluster_id TEXT NOT NULL,
     partition TEXT NOT NULL,
     nodes_util_list JSONB,
