@@ -110,8 +110,8 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeAppsHistory).
 			To(ws.getAppsHistory).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.ApplicationHistoryDAOInfo{}).
-			Returns(200, "OK", []dao.ApplicationHistoryDAOInfo{}).
+			Writes([]model.AppHistory{}).
+			Returns(200, "OK", []model.AppHistory{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get applications history"),
 	)
@@ -119,8 +119,8 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeContainersHistory).
 			To(ws.getContainersHistory).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.ContainerHistoryDAOInfo{}).
-			Returns(200, "OK", []dao.ContainerHistoryDAOInfo{}).
+			Writes([]model.ContainerHistory{}).
+			Returns(200, "OK", []model.ContainerHistory{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get containers history"),
 	)
