@@ -172,11 +172,11 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeNodeUtilization).
 			To(ws.getNodesUtils).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.PartitionNodesUtilDAOInfo{}).
+			Writes([]model.NodesUtil{}).
 			Param(service.QueryParameter("clusterID", "Filter by clusterID").DataType("string")).
 			Param(service.QueryParameter("limit", "Limit the number of returned nodes").DataType("int")).
 			Param(service.QueryParameter("offset", "Offset the returned nodes").DataType("int")).
-			Returns(200, "OK", []dao.PartitionNodesUtilDAOInfo{}).
+			Returns(200, "OK", []model.NodesUtil{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get node utilization"),
 	)
