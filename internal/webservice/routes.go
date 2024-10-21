@@ -130,7 +130,7 @@ func (ws *WebService) init(ctx context.Context) {
 					DataType("string"),
 			).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.NodeDAOInfo{}).
+			Writes([]model.Node{}).
 			Param(service.QueryParameter("nodeId", "Filter by nodeId").DataType("string")).
 			Param(service.QueryParameter("hostName", "Filter by hostName").DataType("string")).
 			Param(service.QueryParameter("rackName", "Filter by rackName").DataType("string")).
@@ -138,7 +138,7 @@ func (ws *WebService) init(ctx context.Context) {
 			Param(service.QueryParameter("isReserved", "Filter by reservation status").DataType("boolean")).
 			Param(service.QueryParameter("limit", "Limit the number of returned nodes").DataType("int")).
 			Param(service.QueryParameter("offset", "Offset the returned nodes").DataType("int")).
-			Returns(200, "OK", []dao.NodeDAOInfo{}).
+			Returns(200, "OK", []model.Node{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get all nodes for a partition"),
 	)
