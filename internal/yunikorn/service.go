@@ -87,7 +87,9 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.upsertNodeUtilizations(ctx); err != nil {
 		return fmt.Errorf("error upserting node utilizations: %v", err)
 	}
-	s.syncHistory(ctx)
+	if err := s.syncHistory(ctx); err != nil {
+		return fmt.Errorf("error syncing app and container history: %v", err)
+	}
 
 	g.Add(func() error {
 		return s.runEventCollector(ctx)

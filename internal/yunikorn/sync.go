@@ -248,8 +248,6 @@ func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
 
 func (s *Service) syncHistory(ctx context.Context) error {
 
-	logger := log.FromContext(ctx)
-
 	appsHistory, err := s.client.GetAppsHistory(ctx)
 	if err != nil {
 		return fmt.Errorf("could not get apps history: %w", err)
@@ -260,32 +258,32 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	}
 
 	now := time.Now().UnixNano()
-
+	var errs []error
 	for _, ah := range appsHistory {
 		history := &model.AppHistory{
-			ModelMetadata: model.ModelMetadata{
-				ID:        ulid.Make().String(),
-				CreatedAt: now,
+			Metadata: model.Metadata{
+				ID:            ulid.Make().String(),
+				CreatedAtNano: now,
 			},
 			ApplicationHistoryDAOInfo: *ah,
 		}
 		if err := s.repo.InsertAppHistory(ctx, history); err != nil {
-			logger.Errorf("could not insert app history: %v", err)
+			errs = append(errs, fmt.Errorf("could not insert app history: %v", err))
 		}
 	}
 
 	for _, ch := range containersHistory {
 		history := &model.ContainerHistory{
-			ModelMetadata: model.ModelMetadata{
-				ID:        ulid.Make().String(),
-				CreatedAt: now,
+			Metadata: model.Metadata{
+				ID:            ulid.Make().String(),
+				CreatedAtNano: now,
 			},
 			ContainerHistoryDAOInfo: *ch,
 		}
 		if err := s.repo.InsertContainerHistory(ctx, history); err != nil {
-			logger.Errorf("could not insert container history: %v", err)
+			errs = append(errs, fmt.Errorf("could not insert container history: %v", err))
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }

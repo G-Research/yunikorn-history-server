@@ -19,10 +19,10 @@ type HistoryFilters struct {
 
 func applyHistoryFilters(builder *sql.Builder, filters HistoryFilters) {
 	if filters.TimestampStart != nil {
-		builder.Conditionp("timestamp", ">=", filters.TimestampStart.UnixMilli())
+		builder.Conditionp("timestamp", ">=", filters.TimestampStart.UnixNano())
 	}
 	if filters.TimestampEnd != nil {
-		builder.Conditionp("timestamp", "<=", filters.TimestampEnd.UnixMilli())
+		builder.Conditionp("timestamp", "<=", filters.TimestampEnd.UnixNano())
 	}
 	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
 }
@@ -32,15 +32,15 @@ func (r *PostgresRepository) InsertAppHistory(ctx context.Context, appHistory *m
 	const q = `
 INSERT INTO history (
 	 id, 
-	 created_at,
-	 deleted_at,
+	 created_at_nano,
+	 deleted_at_nano,
 	 history_type, 
 	 total_number, 
 	 timestamp
 ) VALUES (
 	@id,
-	@created_at,
-	@deleted_at,
+	@created_at_nano,
+	@deleted_at_nano,
 	@history_type,
 	@total_number,
 	@timestamp
@@ -48,12 +48,12 @@ INSERT INTO history (
 
 	_, err := r.dbpool.Exec(ctx, q,
 		pgx.NamedArgs{
-			"id":           appHistory.ID,
-			"created_at":   appHistory.CreatedAt,
-			"deleted_at":   appHistory.DeletedAt,
-			"history_type": appHistoryType,
-			"total_number": appHistory.TotalApplications,
-			"timestamp":    appHistory.Timestamp,
+			"id":              appHistory.ID,
+			"created_at_nano": appHistory.CreatedAtNano,
+			"deleted_at_nano": appHistory.DeletedAtNano,
+			"history_type":    appHistoryType,
+			"total_number":    appHistory.TotalApplications,
+			"timestamp":       appHistory.Timestamp,
 		})
 	if err != nil {
 		return fmt.Errorf("could not create application history into DB: %v", err)
@@ -66,15 +66,15 @@ func (r *PostgresRepository) InsertContainerHistory(ctx context.Context, contain
 	const q = `
 INSERT INTO history (
 	id,
-	created_at,
-	deleted_at,
+	 created_at_nano,
+	 deleted_at_nano,
 	history_type,
 	total_number,
 	timestamp
 ) VALUES (
 	 @id,
-	 @created_at,
-	 @deleted_at,
+	 @created_at_nano,
+	 @deleted_at_nano,
 	 @history_type,
 	 @total_number,
 	 @timestamp
@@ -82,12 +82,12 @@ INSERT INTO history (
 
 	_, err := r.dbpool.Exec(ctx, q,
 		pgx.NamedArgs{
-			"id":           containerHistory.ID,
-			"created_at":   containerHistory.CreatedAt,
-			"deleted_at":   containerHistory.DeletedAt,
-			"history_type": containerHistoryType,
-			"total_number": containerHistory.TotalContainers,
-			"timestamp":    containerHistory.Timestamp,
+			"id":              containerHistory.ID,
+			"created_at_nano": containerHistory.CreatedAtNano,
+			"deleted_at_nano": containerHistory.DeletedAtNano,
+			"history_type":    containerHistoryType,
+			"total_number":    containerHistory.TotalContainers,
+			"timestamp":       containerHistory.Timestamp,
 		})
 	if err != nil {
 		return fmt.Errorf("could not create container history into DB: %v", err)
@@ -116,7 +116,7 @@ func (r *PostgresRepository) GetApplicationsHistory(ctx context.Context, filters
 
 	for rows.Next() {
 		var app model.AppHistory
-		err := rows.Scan(&app.ID, &app.CreatedAt, &app.DeletedAt, nil, &app.TotalApplications, &app.Timestamp)
+		err := rows.Scan(&app.ID, &app.CreatedAtNano, &app.DeletedAtNano, nil, &app.TotalApplications, &app.Timestamp)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan applications history from DB: %v", err)
 		}
@@ -145,7 +145,7 @@ func (r *PostgresRepository) GetContainersHistory(ctx context.Context, filters H
 
 	for rows.Next() {
 		var container model.ContainerHistory
-		err := rows.Scan(&container.ID, &container.CreatedAt, &container.DeletedAt, nil, &container.TotalContainers, &container.Timestamp)
+		err := rows.Scan(&container.ID, &container.CreatedAtNano, &container.DeletedAtNano, nil, &container.TotalContainers, &container.Timestamp)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan contaienrs history from DB: %v", err)
 		}

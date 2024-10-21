@@ -146,12 +146,12 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeAppsHistory).
 			To(ws.getAppsHistory).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.ApplicationHistoryDAOInfo{}).
+			Writes([]model.AppHistory{}).
 			Param(service.QueryParameter("timestampStart", "Filter from the timestamp").DataType("string")).
 			Param(service.QueryParameter("timestampEnd", "Filter until the timestamp").DataType("string")).
 			Param(service.QueryParameter("limit", "Limit the number of returned objects").DataType("int")).
 			Param(service.QueryParameter("offset", "Offset the returned objects").DataType("int")).
-			Returns(200, "OK", []dao.ApplicationHistoryDAOInfo{}).
+			Returns(200, "OK", []model.AppHistory{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get applications history"),
 	)
@@ -159,12 +159,12 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeContainersHistory).
 			To(ws.getContainersHistory).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.ContainerHistoryDAOInfo{}).
+			Writes([]model.ContainerHistory{}).
 			Param(service.QueryParameter("timestampStart", "Filter from the timestamp").DataType("string")).
 			Param(service.QueryParameter("timestampEnd", "Filter until the timestamp").DataType("string")).
 			Param(service.QueryParameter("limit", "Limit the number of returned objects").DataType("int")).
 			Param(service.QueryParameter("offset", "Offset the returned objects").DataType("int")).
-			Returns(200, "OK", []dao.ContainerHistoryDAOInfo{}).
+			Returns(200, "OK", []model.ContainerHistory{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get containers history"),
 	)
