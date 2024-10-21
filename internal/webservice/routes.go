@@ -101,8 +101,8 @@ func (ws *WebService) init(ctx context.Context) {
 		service.GET(routeNodesPerPartition).
 			To(ws.getNodesPerPartition).
 			Produces(restful.MIME_JSON).
-			Writes([]dao.NodeDAOInfo{}).
-			Returns(200, "OK", []dao.NodeDAOInfo{}).
+			Writes([]model.Node{}).
+			Returns(200, "OK", []model.Node{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get all nodes for a partition"),
 	)
