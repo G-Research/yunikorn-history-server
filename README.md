@@ -16,6 +16,13 @@ resource usage, etc.).
 
 ## Installation
 
+**Note:** This project is built on **G-Research's** forks of the [Apache YuniKorn](https://yunikorn.apache.org/) project. 
+Please refer to the following G-Research repositories for the relevant forks: 
+[yunikorn-core](https://github.com/G-Research/yunikorn-core), 
+[yunikorn-k8shim](https://github.com/G-Research/yunikorn-k8shim), and 
+[yunikorn-scheduler-interface](https://github.com/G-Research/yunikorn-scheduler-interface).
+
+
 ### Quickstart
 
 Use the following `make` commands to run **YHS** for a quick test.
