@@ -62,7 +62,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 	g := run.Group{}
 
 	client := yunikorn.NewRESTClient(&cfg.YunikornConfig)
-	service := yunikorn.NewService(mainRepository, eventRepository, client, yunikorn.WithSyncInterval(cfg.YHSConfig.DataSyncInterval))
+	service := yunikorn.NewService(mainRepository, eventRepository, client)
 	g.Add(
 		func() error {
 			return service.Run(ctx)
