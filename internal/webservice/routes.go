@@ -54,6 +54,19 @@ func (ws *WebService) init(ctx context.Context) {
 			Produces(restful.MIME_JSON).
 			Doc("Get all partitions").
 			Writes([]dao.PartitionInfo{}).
+			Param(service.QueryParameter("name", "Filter by partition name").DataType("string")).
+			Param(service.QueryParameter("clusterId", "Filter by clusterId").DataType("string")).
+			Param(service.QueryParameter("state", "Filter by state").DataType("string")).
+			Param(service.QueryParameter(
+				"lastStateTransitionTimeStart",
+				"Filter from the lastStateTransitionTime (unix nanoseconds)",
+			).DataType("string")).
+			Param(service.QueryParameter(
+				"lastStateTransitionTimeEnd",
+				"Filter until the lastStateTransitionTime (unix nanoseconds)",
+			).DataType("string")).
+			Param(service.QueryParameter("limit", "Limit the number of returned partitions").DataType("int")).
+			Param(service.QueryParameter("offset", "Offset the returned partitions").DataType("int")).
 			Returns(200, "OK", []dao.PartitionInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}),
 	)
@@ -92,6 +105,15 @@ func (ws *WebService) init(ctx context.Context) {
 			).
 			Produces(restful.MIME_JSON).
 			Writes([]dao.ApplicationDAOInfo{}).
+			Param(service.QueryParameter("user", "Filter by user").DataType("string")).
+			Param(service.QueryParameter("groups", "Filter by groups (comma-separated list)").
+				DataType("string")).
+			Param(service.QueryParameter("submissionStartTime", "Filter from the submission time (unix nanoseconds)").
+				DataType("string")).
+			Param(service.QueryParameter("submissionEndTime", "Filter until the submission time (unix nanoseconds)").
+				DataType("string")).
+			Param(service.QueryParameter("limit", "Limit the number of returned applications").DataType("int")).
+			Param(service.QueryParameter("offset", "Offset the returned applications").DataType("int")).
 			Returns(200, "OK", []dao.ApplicationDAOInfo{}).
 			Returns(400, "Bad Request", ProblemDetails{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
@@ -100,8 +122,22 @@ func (ws *WebService) init(ctx context.Context) {
 	service.Route(
 		service.GET(routeNodesPerPartition).
 			To(ws.getNodesPerPartition).
+			Param(
+				service.PathParameter(
+					"partition_name",
+					"partition name",
+				).
+					DataType("string"),
+			).
 			Produces(restful.MIME_JSON).
 			Writes([]dao.NodeDAOInfo{}).
+			Param(service.QueryParameter("nodeId", "Filter by nodeId").DataType("string")).
+			Param(service.QueryParameter("hostName", "Filter by hostName").DataType("string")).
+			Param(service.QueryParameter("rackName", "Filter by rackName").DataType("string")).
+			Param(service.QueryParameter("schedulable", "Filter by schedulable status").DataType("boolean")).
+			Param(service.QueryParameter("isReserved", "Filter by reservation status").DataType("boolean")).
+			Param(service.QueryParameter("limit", "Limit the number of returned nodes").DataType("int")).
+			Param(service.QueryParameter("offset", "Offset the returned nodes").DataType("int")).
 			Returns(200, "OK", []dao.NodeDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get all nodes for a partition"),
@@ -111,6 +147,10 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getAppsHistory).
 			Produces(restful.MIME_JSON).
 			Writes([]dao.ApplicationHistoryDAOInfo{}).
+			Param(service.QueryParameter("timestampStart", "Filter from the timestamp").DataType("string")).
+			Param(service.QueryParameter("timestampEnd", "Filter until the timestamp").DataType("string")).
+			Param(service.QueryParameter("limit", "Limit the number of returned objects").DataType("int")).
+			Param(service.QueryParameter("offset", "Offset the returned objects").DataType("int")).
 			Returns(200, "OK", []dao.ApplicationHistoryDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get applications history"),
@@ -120,6 +160,10 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getContainersHistory).
 			Produces(restful.MIME_JSON).
 			Writes([]dao.ContainerHistoryDAOInfo{}).
+			Param(service.QueryParameter("timestampStart", "Filter from the timestamp").DataType("string")).
+			Param(service.QueryParameter("timestampEnd", "Filter until the timestamp").DataType("string")).
+			Param(service.QueryParameter("limit", "Limit the number of returned objects").DataType("int")).
+			Param(service.QueryParameter("offset", "Offset the returned objects").DataType("int")).
 			Returns(200, "OK", []dao.ContainerHistoryDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get containers history"),
@@ -129,6 +173,9 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getNodeUtilizations).
 			Produces(restful.MIME_JSON).
 			Writes([]dao.PartitionNodesUtilDAOInfo{}).
+			Param(service.QueryParameter("clusterID", "Filter by clusterID").DataType("string")).
+			Param(service.QueryParameter("limit", "Limit the number of returned nodes").DataType("int")).
+			Param(service.QueryParameter("offset", "Offset the returned nodes").DataType("int")).
 			Returns(200, "OK", []dao.PartitionNodesUtilDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get node utilization"),
@@ -229,16 +276,6 @@ func (s *WebService) applyCORS(next http.Handler) http.Handler {
 	})
 }
 
-// getPartitions returns all partitions in the scheduler.
-// Results are ordered by creation time in descending order.
-// Following query params are supported:
-// - name: filter by partition name
-// - clusterId: filter by clusterId
-// - state: filter by state
-// - lastStateTransitionTimeStart: filter from the lastStateTransitionTime
-// - lastStateTransitionTimeEnd: filter until the lastStateTransitionTime
-// - limit: limit the number of returned partitions
-// - offset: offset the returned partitions
 func (ws *WebService) getPartitions(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	filters, err := parsePartitionFilters(req.Request)
@@ -315,15 +352,6 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueu
 	return roots, nil
 }
 
-// getAppsPerPartitionPerQueue returns all applications for a given partition and queue.
-// Results are ordered by submission time in descending order.
-// Following query params are supported:
-// - user: filter by user
-// - groups: filter by groups (comma-separated list)
-// - submissionStartTime: filter from the submission time
-// - submissionEndTime: filter until the submission time
-// - limit: limit the number of returned applications
-// - offset: offset the returned applications
 func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	partition := req.PathParameter(paramsPartitionName)
@@ -348,16 +376,6 @@ func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *re
 	jsonResponse(resp, daoApps)
 }
 
-// getNodesPerPartition returns all nodes for a given partition and queue.
-// Results are ordered by creation time in descending order.
-// Following query params are supported:
-// - nodeId: string - filter by nodeId
-// - hostName: string - filter by hostName
-// - rackName: string - filter by rackName
-// - schedulable: boolean
-// - isReserved: boolean
-// - limit: int - limit the number of returned nodes
-// - offset: int - offset the returned nodes
 func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	partition := req.PathParameter(paramsPartitionName)
@@ -374,13 +392,6 @@ func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.R
 	jsonResponse(resp, nodes)
 }
 
-// getAppsHistory returns history of Applications.
-// Results are ordered by timestamp time in descending order.
-// Following query params are supported:
-// - timestampStart: filter from the timestamp
-// - timestampEnd: filter until the timestamp
-// - limit: limit the number of returned object
-// - offset: offset the returned object
 func (ws *WebService) getAppsHistory(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	filters, err := parseHistoryFilters(req.Request)
@@ -397,13 +408,6 @@ func (ws *WebService) getAppsHistory(req *restful.Request, resp *restful.Respons
 	jsonResponse(resp, appsHistory)
 }
 
-// getContainersHistory returns history of Containers.
-// Results are ordered by timestamp time in descending order.
-// Following query params are supported:
-// - timestampStart: filter from the timestamp
-// - timestampEnd: filter until the timestamp
-// - limit: limit the number of returned object
-// - offset: offset the returned object
 func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	filters, err := parseHistoryFilters(req.Request)
@@ -419,12 +423,6 @@ func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.R
 	jsonResponse(resp, containersHistory)
 }
 
-// getNodeUtilizations returns partition_node_utilization data.
-// Results are ordered by creation time in descending order.
-// Following query params are supported:
-// - clusterID: filter by clusterID
-// - limit: limit the number of returned nodes
-// - offset: offset the returned nodes
 func (ws *WebService) getNodeUtilizations(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	filters, err := parseNodeUtilizationFilters(req.Request)
