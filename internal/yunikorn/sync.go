@@ -268,8 +268,6 @@ func (s *Service) syncApplications(ctx context.Context) error {
 	if err := s.repo.DeleteApplicationsNotInIDs(ctx, ids, nowNano); err != nil {
 		return err
 	}
-	// drop ids to free up the memory when gc runs
-	ids = nil
 
 	for _, app := range applications {
 		current, err := s.repo.GetApplicationByID(ctx, app.ID)
