@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -260,44 +259,37 @@ func (s *Service) syncApplications(ctx context.Context) error {
 		return fmt.Errorf("could not get applications: %v", err)
 	}
 
-	dbApplications, err := s.repo.GetLatestApplicationsByApplicationID(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get latest applications: %v", err)
-	}
-
-	lookup := make(map[string]*model.Application, len(dbApplications))
-	for _, a := range dbApplications {
-		lookup[a.ApplicationID] = a
-	}
-
-	now := time.Now().UnixNano()
+	ids := make([]string, 0, len(applications))
 	for _, a := range applications {
-		current, ok := lookup[a.ApplicationID]
-		delete(lookup, a.ApplicationID)
-		if !ok || current.DeletedAtNano != nil { // either not exists or deleted
+		ids = append(ids, a.ID)
+	}
+
+	nowNano := time.Now().UnixNano()
+	if err := s.repo.DeleteApplicationsNotInIDs(ctx, ids, nowNano); err != nil {
+		return err
+	}
+	// drop ids to free up the memory when gc runs
+	ids = nil
+
+	for _, app := range applications {
+		current, err := s.repo.GetApplicationByID(ctx, app.ID)
+		if err != nil { // todo: Further check if error is not found
 			application := &model.Application{
 				Metadata: model.Metadata{
-					ID:            ulid.Make().String(),
-					CreatedAtNano: now,
+					CreatedAtNano: nowNano,
 				},
-				ApplicationDAOInfo: *a,
+				ApplicationDAOInfo: *app,
 			}
 			if err := s.repo.InsertApplication(ctx, application); err != nil {
-				logger.Errorf("could not insert application %s: %v", a.ApplicationID, err)
+				logger.Errorf("could not insert application %s: %v", app.ID, err)
 			}
 			continue
+
 		}
 
-		current.MergeFrom(a)
+		current.MergeFrom(app)
 		if err := s.repo.UpdateApplication(ctx, current); err != nil {
-			logger.Errorf("could not update application %s: %v", a.ApplicationID, err)
-		}
-	}
-
-	for _, a := range lookup {
-		a.DeletedAtNano = &now
-		if err := s.repo.UpdateApplication(ctx, a); err != nil {
-			logger.Errorf("failed to update deleted at for application %q: %v", a.ApplicationID, err)
+			logger.Errorf("could not update application %s: %v", app.ID, err)
 		}
 	}
 
