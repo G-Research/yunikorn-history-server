@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/assert"
@@ -66,6 +67,7 @@ func TestWebServiceServeSPA(t *testing.T) {
 }
 
 func TestBuildPartitionQueueTree(t *testing.T) {
+	now := time.Now().UnixNano()
 	tt := map[string]struct {
 		queues  []*model.Queue
 		want    []*model.Queue
@@ -77,12 +79,12 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 		},
 		"root queue": {
 			queues: []*model.Queue{
-
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root",
 					},
 				},
@@ -90,9 +92,10 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			want: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root",
 					},
 				},
@@ -102,11 +105,12 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			queues: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "2",
+						CreatedAtNano: now,
 					},
-					ParentID: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "2",
 						QueueName: "child",
+						ParentID:  util.ToPtr("1"),
 					},
 				},
 			},
@@ -117,35 +121,39 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			queues: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "2",
+						CreatedAtNano: now,
 					},
-					ParentID: util.ToPtr("1"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "2",
 						QueueName: "child-1",
+						ParentID:  util.ToPtr("1"),
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-1",
+						ID:        "1",
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID: "22",
+						CreatedAtNano: now,
 					},
-					ParentID: util.ToPtr("11"),
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "22",
 						QueueName: "child-2",
+						ParentID:  util.ToPtr("11"),
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID: "11",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "11",
 						QueueName: "root-2",
 					},
 				},
@@ -153,38 +161,42 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			want: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root-1",
 					},
 					Children: []*model.Queue{
 						{
 							Metadata: model.Metadata{
-								ID: "2",
+								CreatedAtNano: now,
 							},
-							ParentID: util.ToPtr("1"),
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+								ID:        "2",
 								QueueName: "child-1",
+								ParentID:  util.ToPtr("1"),
 							},
 						},
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID: "11",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "11",
 						QueueName: "root-2",
 					},
 					Children: []*model.Queue{
 						{
 							Metadata: model.Metadata{
-								ID: "22",
+								CreatedAtNano: now,
 							},
-							ParentID: util.ToPtr("11"),
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+								ID:        "22",
 								QueueName: "child-2",
+								ParentID:  util.ToPtr("11"),
 							},
 						},
 					},

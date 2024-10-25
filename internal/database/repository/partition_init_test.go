@@ -32,10 +32,10 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 	partitions := []*model.Partition{
 		{
 			Metadata: model.Metadata{
-				ID:            "1",
 				CreatedAtNano: nowNano,
 			},
 			PartitionInfo: dao.PartitionInfo{
+				ID:                      "1",
 				Name:                    "default",
 				ClusterID:               "cluster1",
 				State:                   "Active",
@@ -44,10 +44,10 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "2",
 				CreatedAtNano: nowNano,
 			},
 			PartitionInfo: dao.PartitionInfo{
+				ID:                      "2",
 				Name:                    "second",
 				ClusterID:               "cluster1",
 				State:                   "Active",
@@ -56,10 +56,10 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "3",
 				CreatedAtNano: nowNano,
 			},
 			PartitionInfo: dao.PartitionInfo{
+				ID:                      "3",
 				Name:                    "third",
 				ClusterID:               "cluster1",
 				State:                   "Active",
@@ -68,10 +68,10 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "4",
 				CreatedAtNano: nowNano,
 			},
 			PartitionInfo: dao.PartitionInfo{
+				ID:                      "4",
 				Name:                    "fourth",
 				ClusterID:               "cluster1",
 				State:                   "FakeState",

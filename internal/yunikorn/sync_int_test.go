@@ -34,6 +34,8 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 	t.Cleanup(cleanupDB)
 	eventRepository := repository.NewInMemoryEventRepository()
 
+	now := time.Now().UnixNano()
+
 	tests := []struct {
 		name           string
 		setup          func() *httptest.Server
@@ -130,9 +132,10 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			existingQueues: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root",
 						Partition: "default",
 					},
@@ -187,18 +190,20 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			existingQueues: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root",
 						Partition: "default",
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID: "2",
+						CreatedAtNano: now,
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "2",
 						QueueName: "root.child-1",
 						Partition: "default",
 					},
@@ -454,6 +459,8 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 	t.Cleanup(cleanupDB)
 	eventRepository := repository.NewInMemoryEventRepository()
 
+	now := time.Now().UnixNano()
+
 	tests := []struct {
 		name               string
 		setup              func() *httptest.Server
@@ -500,17 +507,19 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			existingPartitions: []*model.Partition{
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now,
 					},
 					PartitionInfo: dao.PartitionInfo{
+						ID:   "1",
 						Name: "default",
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID: "2",
+						CreatedAtNano: now,
 					},
 					PartitionInfo: dao.PartitionInfo{
+						ID:   "2",
 						Name: "secondary",
 					},
 				},
@@ -518,9 +527,10 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			expected: []*model.Partition{
 				{
 					Metadata: model.Metadata{
-						ID: "3",
+						CreatedAtNano: now,
 					},
 					PartitionInfo: dao.PartitionInfo{
+						ID:   "3",
 						Name: "default",
 					},
 				},

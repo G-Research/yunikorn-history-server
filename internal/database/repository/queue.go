@@ -335,3 +335,23 @@ ORDER BY queue_name, id DESC
 
 	return queues, nil
 }
+
+func (s *PostgresRepository) DeleteQueuesNotInIDs(ctx context.Context, partition string, ids []string, deletedAtNano int64) error {
+	const q = `
+UPDATE queues
+SET deleted_at_nano = @deleted_at_nano
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids)) AND partition = @partition
+		`
+
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"ids":             ids,
+			"deleted_at_nano": deletedAtNano,
+			"partition":       partition,
+		},
+	)
+
+	return err
+}
