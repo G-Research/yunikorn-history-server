@@ -214,8 +214,8 @@ WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
 		ctx,
 		q,
 		pgx.NamedArgs{
-			"ids":             ids,
 			"deleted_at_nano": deletedAtNano,
+			"ids":             ids,
 		},
 	)
 	return err
