@@ -10,7 +10,6 @@ import (
 
 func TestApplicationMergeFrom(t *testing.T) {
 	meta := Metadata{
-		ID:            "1",
 		CreatedAtNano: time.Now().UnixNano(),
 	}
 
@@ -24,6 +23,7 @@ func TestApplicationMergeFrom(t *testing.T) {
 				Metadata: meta,
 			},
 			dao: &dao.ApplicationDAOInfo{
+				ID: "1",
 				Allocations: []*dao.AllocationDAOInfo{
 					{
 						AllocationKey: "alloc-1",
@@ -33,6 +33,7 @@ func TestApplicationMergeFrom(t *testing.T) {
 			want: Application{
 				Metadata: meta,
 				ApplicationDAOInfo: dao.ApplicationDAOInfo{
+					ID: "1",
 					Allocations: []*dao.AllocationDAOInfo{
 						{
 							AllocationKey: "alloc-1",
