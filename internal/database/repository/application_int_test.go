@@ -191,18 +191,20 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 	queues := []*model.Queue{
 		{
 			Metadata: model.Metadata{
-				ID: "1",
+				CreatedAtNano: now.UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "1",
 				Partition: "default",
 				QueueName: "root",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID: "2",
+				CreatedAtNano: now.UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "2",
 				Partition: "default",
 				Parent:    "root",
 				QueueName: "root.default",

@@ -232,6 +232,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 	repo, err := NewPostgresRepository(connPool)
 	require.NoError(t, err)
 
+	now := time.Now()
 	tests := []struct {
 		name           string
 		existingQueues []*model.Queue
@@ -243,9 +244,10 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			existingQueues: []*model.Queue{
 				{
 					Metadata: model.Metadata{
-						ID: "1",
+						CreatedAtNano: now.UnixNano(),
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:              "1",
 						Partition:       "default",
 						QueueName:       "root",
 						CurrentPriority: 0,
@@ -254,9 +256,10 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			},
 			queueToUpdate: &model.Queue{
 				Metadata: model.Metadata{
-					ID: "1",
+					CreatedAtNano: now.UnixNano(),
 				},
 				PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+					ID:              "1",
 					Partition:       "default",
 					QueueName:       "root",
 					CurrentPriority: 1,
@@ -269,9 +272,10 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			existingQueues: nil,
 			queueToUpdate: &model.Queue{
 				Metadata: model.Metadata{
-					ID: "2",
+					CreatedAtNano: now.UnixNano(),
 				},
 				PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+					ID:              "2",
 					Partition:       "default",
 					QueueName:       "root",
 					CurrentPriority: 1,
@@ -321,120 +325,120 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 	queues := []*model.Queue{
 		{
 			Metadata: model.Metadata{
-				ID:            "1",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "1",
 				Partition: "default",
 				QueueName: "root",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "2",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "2",
 				Partition: "default",
 				QueueName: "root.org",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "3",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "3",
 				Partition: "default",
 				QueueName: "root.org.eng",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "4",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "4",
 				Partition: "default",
 				QueueName: "root.org.eng.test",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "5",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "5",
 				Partition: "default",
 				QueueName: "root.org.eng.prod",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "6",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "6",
 				Partition: "default",
 				QueueName: "root.org.sales",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "7",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "7",
 				Partition: "default",
 				QueueName: "root.org.sales.test",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "8",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "8",
 				Partition: "default",
 				QueueName: "root.org.sales.prod",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "9",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "9",
 				Partition: "default",
 				QueueName: "root.system",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "10",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "10",
 				Partition: "second",
 				QueueName: "root",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "11",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "11",
 				Partition: "second",
 				QueueName: "root.child",
 			},
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            "12",
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:        "12",
 				Partition: "second",
 				QueueName: "root.child2",
 			},

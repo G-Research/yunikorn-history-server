@@ -96,7 +96,6 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 		s.partitionAccumulator.add(ev)
 		queue = &model.Queue{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: ev.TimestampNano,
 			},
 			PartitionQueueDAOInfo: daoQueue,

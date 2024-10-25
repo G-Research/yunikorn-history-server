@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -43,7 +42,6 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error
 		if !ok || current.DeletedAtNano != nil { // either not exists or deleted
 			partition := &model.Partition{
 				Metadata: model.Metadata{
-					ID:            ulid.Make().String(),
 					CreatedAtNano: now,
 				},
 				PartitionInfo: *p,
@@ -103,7 +101,7 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 
 	lookup := make(map[string]*model.Queue, len(dbQueues))
 	for _, q := range dbQueues {
-		lookup[q.QueueName] = q
+		lookup[q.ID] = q
 	}
 
 	now := time.Now().UnixNano()
@@ -114,7 +112,6 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 		if !ok || current.DeletedAtNano != nil { // either not exists or deleted
 			queue := &model.Queue{
 				Metadata: model.Metadata{
-					ID:            ulid.Make().String(),
 					CreatedAtNano: now,
 				},
 				PartitionQueueDAOInfo: *q,
