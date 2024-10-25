@@ -147,27 +147,22 @@ func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) 
 			return fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err)
 		}
 
-		dbNodes, err := s.repo.GetLatestNodesByID(ctx, p.Name)
-		if err != nil {
-			return err
-		}
-
-		lookup := make(map[string]*model.Node, len(dbNodes))
-		for _, n := range dbNodes {
-			lookup[n.NodeID] = n
-		}
-
-		now := time.Now().UnixNano()
+		ids := make([]string, 0, len(nodes))
 		for _, n := range nodes {
-			current, ok := lookup[n.NodeID]
-			delete(lookup, n.NodeID)
-			if !ok || current.DeletedAtNano != nil { // either not exists or deleted
+			ids = append(ids, n.ID)
+		}
+		nowNano := time.Now().UnixNano()
+		if err := s.repo.DeleteNodesNotInIDs(ctx, ids, nowNano); err != nil {
+			errs = append(errs, err)
+		}
+
+		for _, n := range nodes {
+			current, err := s.repo.GetNodeByID(ctx, n.ID)
+			if err != nil { // node not found
 				node := &model.Node{
 					Metadata: model.Metadata{
-						ID:            ulid.Make().String(),
-						CreatedAtNano: now,
+						CreatedAtNano: nowNano,
 					},
-					Partition:   &p.Name,
 					NodeDAOInfo: *n,
 				}
 				if err := s.repo.InsertNode(ctx, node); err != nil {
@@ -179,13 +174,6 @@ func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) 
 			current.MergeFrom(n)
 			if err := s.repo.UpdateNode(ctx, current); err != nil {
 				errs = append(errs, fmt.Errorf("could not update node %s: %v", n.NodeID, err))
-			}
-		}
-
-		for _, n := range lookup {
-			n.DeletedAtNano = &now
-			if err := s.repo.UpdateNode(ctx, n); err != nil {
-				errs = append(errs, fmt.Errorf("failed to update deleted at for node %q: %v", n.NodeID, err))
 			}
 		}
 	}

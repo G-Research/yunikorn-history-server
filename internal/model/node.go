@@ -6,12 +6,12 @@ import (
 
 type Node struct {
 	Metadata        `json:",inline"`
-	Partition       *string `json:"partition"`
 	dao.NodeDAOInfo `json:",inline"`
 }
 
 func (n *Node) MergeFrom(nodeInfo *dao.NodeDAOInfo) {
 	n.NodeID = nodeInfo.NodeID
+	n.Partition = nodeInfo.Partition
 	n.HostName = nodeInfo.HostName
 	n.RackName = nodeInfo.RackName
 	n.Attributes = nodeInfo.Attributes

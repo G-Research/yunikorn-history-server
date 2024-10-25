@@ -7,8 +7,6 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
-
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 )
@@ -130,9 +128,6 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 }
 
 func (s *Service) handleNodeEvent(ctx context.Context, ev *si.EventRecord) {
-	// Assume partition is default for now
-	// TODO: We need partition information in the event stream
-	const partition = "default"
 	logger := log.FromContext(ctx)
 
 	var daoNode dao.NodeDAOInfo
@@ -146,10 +141,8 @@ func (s *Service) handleNodeEvent(ctx context.Context, ev *si.EventRecord) {
 	if isNew {
 		node = &model.Node{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: ev.TimestampNano,
 			},
-			Partition:   util.ToPtr(partition),
 			NodeDAOInfo: daoNode,
 		}
 		if err := s.repo.InsertNode(ctx, node); err != nil {
@@ -159,13 +152,13 @@ func (s *Service) handleNodeEvent(ctx context.Context, ev *si.EventRecord) {
 		return
 	}
 
-	node, err := s.repo.GetLatestNodeByID(ctx, daoNode.NodeID, partition)
+	node, err := s.repo.GetNodeByID(ctx, daoNode.ID)
 	if err != nil {
 		logger.Errorf("could not get node by node id: %v", err)
 		return
 	}
-
 	node.MergeFrom(&daoNode)
+
 	if ev.GetEventChangeType() == si.EventRecord_REMOVE {
 		node.DeletedAtNano = &ev.TimestampNano
 	}

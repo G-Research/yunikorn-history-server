@@ -177,33 +177,10 @@ WHERE id = @id`
 	return nil
 }
 
-func (s *PostgresRepository) GetLatestNodeByID(ctx context.Context, nodeId, partition string) (*model.Node, error) {
-	const q = `
-SELECT
-	id,
-    created_at_nano,
-	deleted_at_nano,
-	node_id,
-	partition,
-	host_name,
-	rack_name,
-	attributes,
-	capacity,
-	allocated,
-	occupied,
-	available,
-	utilized,
-	allocations,
-	schedulable,
-	is_reserved,
-	reservations
-FROM nodes
-WHERE node_id = $1 AND partition = $2
-ORDER BY node_id, id DESC
-LIMIT 1`
-
+func (s *PostgresRepository) GetNodeByID(ctx context.Context, id string) (*model.Node, error) {
+	const q = ` SELECT * FROM nodes WHERE id = $1 ORDER BY id DESC LIMIT 1`
 	var node model.Node
-	row := s.dbpool.QueryRow(ctx, q, nodeId, partition)
+	row := s.dbpool.QueryRow(ctx, q, id)
 	if err := row.Scan(
 		&node.ID,
 		&node.CreatedAtNano,
@@ -228,67 +205,20 @@ LIMIT 1`
 	return &node, nil
 }
 
-func (s *PostgresRepository) GetLatestNodesByID(ctx context.Context, partition string) ([]*model.Node, error) {
+func (s *PostgresRepository) DeleteNodesNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error {
 	const q = `
-SELECT DISTINCT ON (node_id)
-	id,
-    created_at_nano,
-	deleted_at_nano,
-	node_id,
-	partition,
-	host_name,
-	rack_name,
-	attributes,
-	capacity,
-	allocated,
-	occupied,
-	available,
-	utilized,
-	allocations,
-	schedulable,
-	is_reserved,
-	reservations
-FROM nodes
-WHERE partition = $1
-ORDER BY node_id, id DESC`
-
-	rows, err := s.dbpool.Query(ctx, q, partition)
-	if err != nil {
-		return nil, fmt.Errorf("could not get nodes from DB: %v", err)
-	}
-	defer rows.Close()
-
-	var nodes []*model.Node
-	for rows.Next() {
-		var node model.Node
-		if err := rows.Scan(
-			&node.ID,
-			&node.CreatedAtNano,
-			&node.DeletedAtNano,
-			&node.NodeID,
-			&node.Partition,
-			&node.HostName,
-			&node.RackName,
-			&node.Attributes,
-			&node.Capacity,
-			&node.Allocated,
-			&node.Occupied,
-			&node.Available,
-			&node.Utilized,
-			&node.Allocations,
-			&node.Schedulable,
-			&node.IsReserved,
-			&node.Reservations,
-		); err != nil {
-			return nil, fmt.Errorf("could not scan node from DB: %v", err)
-		}
-		nodes = append(nodes, &node)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read rows: %v", err)
-	}
-	return nodes, nil
+UPDATE nodes 
+SET deleted_at_nano = @deleted_at_nano
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"ids":             ids,
+			"deleted_at_nano": deletedAtNano,
+		},
+	)
+	return err
 }
 
 func (s *PostgresRepository) InsertNodeUtilizations(

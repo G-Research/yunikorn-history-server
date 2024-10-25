@@ -22,6 +22,127 @@ import (
 	"github.com/G-Research/yunikorn-history-server/test/database"
 )
 
+func TestSync_syncNodes_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	pool, repo, cleanupDB := setupDatabase(t, ctx)
+	t.Cleanup(cleanupDB)
+	eventRepository := repository.NewInMemoryEventRepository()
+
+	nowNano := time.Now().UnixNano()
+
+	tests := []struct {
+		name          string
+		setup         func() *httptest.Server
+		partitions    []*model.Partition
+		existingNodes []*model.Node
+		expectedNodes []*model.Node
+		wantErr       bool
+	}{
+		{
+			name: "Sync nodes with no existing nodes",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+					response := []dao.NodeDAOInfo{
+						{ID: "1", NodeID: "node-1", Partition: partitionName, HostName: "host-1"},
+						{ID: "2", NodeID: "node-2", Partition: partitionName, HostName: "host-2"},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*model.Partition{
+				{
+					PartitionInfo: dao.PartitionInfo{
+						Name: "default",
+					},
+				},
+			},
+			existingNodes: nil,
+			expectedNodes: []*model.Node{
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2"}},
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1"}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sync nodes with existing nodes in DB",
+			setup: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					partitionName := extractPartitionNameFromURL(r.URL.Path)
+					response := []dao.NodeDAOInfo{
+						{ID: "2", NodeID: "node-2", Partition: partitionName, HostName: "host-2-updated"},
+					}
+					writeResponse(t, w, response)
+				}))
+			},
+			partitions: []*model.Partition{
+				{
+					PartitionInfo: dao.PartitionInfo{
+						Name: "default",
+					},
+				},
+			},
+			existingNodes: []*model.Node{
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", Partition: "default"}},
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2", Partition: "default"}},
+			},
+			expectedNodes: []*model.Node{
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2-updated", Partition: "default"}}, // updated
+				{
+					Metadata:    model.Metadata{DeletedAtNano: &nowNano}, // deleted
+					NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", Partition: "default"},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// clean up the table after the test
+			t.Cleanup(func() {
+				_, err := pool.Exec(ctx, "DELETE FROM nodes")
+				require.NoError(t, err)
+			})
+
+			for _, node := range tt.existingNodes {
+				err := repo.InsertNode(ctx, node)
+				require.NoError(t, err)
+			}
+
+			ts := tt.setup()
+			defer ts.Close()
+
+			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
+			s := NewService(repo, eventRepository, client)
+
+			err := s.syncNodes(ctx, tt.partitions)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			nodesInDB, err := s.repo.GetNodesPerPartition(ctx, "default", repository.NodeFilters{})
+			require.NoError(t, err)
+			for i, target := range tt.expectedNodes {
+				require.Equal(t, target.ID, nodesInDB[i].ID)
+				require.Equal(t, target.NodeID, nodesInDB[i].NodeID)
+				require.Equal(t, target.HostName, nodesInDB[i].HostName)
+				if target.DeletedAtNano != nil {
+					require.NotNil(t, nodesInDB[i].DeletedAtNano)
+				}
+			}
+		})
+	}
+}
+
 func TestSync_syncQueues_Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")

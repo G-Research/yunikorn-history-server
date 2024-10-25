@@ -130,12 +130,12 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 	nodes := []*model.Node{
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
-			Partition: &partition,
 			NodeDAOInfo: dao.NodeDAOInfo{
+				ID:          ulid.Make().String(),
 				NodeID:      "node1",
+				Partition:   partition,
 				HostName:    "host1",
 				RackName:    "rack1",
 				Schedulable: true,
@@ -144,12 +144,12 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
-			Partition: &partition,
 			NodeDAOInfo: dao.NodeDAOInfo{
+				ID:          ulid.Make().String(),
 				NodeID:      "node2",
+				Partition:   partition,
 				HostName:    "host2",
 				RackName:    "rack2",
 				Schedulable: false,
@@ -158,12 +158,12 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
-			Partition: &partition,
 			NodeDAOInfo: dao.NodeDAOInfo{
+				ID:          ulid.Make().String(),
 				NodeID:      "node3",
+				Partition:   partition,
 				HostName:    "host2",
 				RackName:    "rack2",
 				Schedulable: false,
@@ -172,13 +172,13 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
-			Partition: &partition,
 			NodeDAOInfo: dao.NodeDAOInfo{
 				NodeID:      "node4",
+				ID:          ulid.Make().String(),
 				HostName:    "host2",
+				Partition:   partition,
 				RackName:    "rack2",
 				Schedulable: false,
 				IsReserved:  true,
