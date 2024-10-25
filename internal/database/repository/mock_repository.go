@@ -55,6 +55,20 @@ func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
 }
 
+// DeleteApplicationsNotInIDs mocks base method.
+func (m *MockRepository) DeleteApplicationsNotInIDs(arg0 context.Context, arg1 []string, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteApplicationsNotInIDs", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteApplicationsNotInIDs indicates an expected call of DeleteApplicationsNotInIDs.
+func (mr *MockRepositoryMockRecorder) DeleteApplicationsNotInIDs(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteApplicationsNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeleteApplicationsNotInIDs), arg0, arg1, arg2)
+}
+
 // DeleteInactivePartitions mocks base method.
 func (m *MockRepository) DeleteInactivePartitions(arg0 context.Context, arg1 []*dao.PartitionInfo) error {
 	m.ctrl.T.Helper()
@@ -143,6 +157,21 @@ func (mr *MockRepositoryMockRecorder) GetAllQueues(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllQueues", reflect.TypeOf((*MockRepository)(nil).GetAllQueues), arg0)
 }
 
+// GetApplicationByID mocks base method.
+func (m *MockRepository) GetApplicationByID(arg0 context.Context, arg1 string) (*model.Application, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetApplicationByID", arg0, arg1)
+	ret0, _ := ret[0].(*model.Application)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetApplicationByID indicates an expected call of GetApplicationByID.
+func (mr *MockRepositoryMockRecorder) GetApplicationByID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationByID", reflect.TypeOf((*MockRepository)(nil).GetApplicationByID), arg0, arg1)
+}
+
 // GetApplicationsHistory mocks base method.
 func (m *MockRepository) GetApplicationsHistory(arg0 context.Context, arg1 HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error) {
 	m.ctrl.T.Helper()
@@ -186,36 +215,6 @@ func (m *MockRepository) GetContainersHistory(arg0 context.Context, arg1 History
 func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContainersHistory", reflect.TypeOf((*MockRepository)(nil).GetContainersHistory), arg0, arg1)
-}
-
-// GetLatestApplicationByApplicationID mocks base method.
-func (m *MockRepository) GetLatestApplicationByApplicationID(arg0 context.Context, arg1 string) (*model.Application, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLatestApplicationByApplicationID", arg0, arg1)
-	ret0, _ := ret[0].(*model.Application)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLatestApplicationByApplicationID indicates an expected call of GetLatestApplicationByApplicationID.
-func (mr *MockRepositoryMockRecorder) GetLatestApplicationByApplicationID(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestApplicationByApplicationID", reflect.TypeOf((*MockRepository)(nil).GetLatestApplicationByApplicationID), arg0, arg1)
-}
-
-// GetLatestApplicationsByApplicationID mocks base method.
-func (m *MockRepository) GetLatestApplicationsByApplicationID(arg0 context.Context) ([]*model.Application, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLatestApplicationsByApplicationID", arg0)
-	ret0, _ := ret[0].([]*model.Application)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLatestApplicationsByApplicationID indicates an expected call of GetLatestApplicationsByApplicationID.
-func (mr *MockRepositoryMockRecorder) GetLatestApplicationsByApplicationID(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestApplicationsByApplicationID", reflect.TypeOf((*MockRepository)(nil).GetLatestApplicationsByApplicationID), arg0)
 }
 
 // GetNodeUtilizations mocks base method.

@@ -12,8 +12,8 @@ import (
 type Repository interface {
 	InsertApplication(ctx context.Context, app *model.Application) error
 	UpdateApplication(ctx context.Context, app *model.Application) error
-	GetLatestApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error)
-	GetLatestApplicationsByApplicationID(ctx context.Context) ([]*model.Application, error)
+	GetApplicationByID(ctx context.Context, id string) (*model.Application, error)
+	DeleteApplicationsNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error
 	GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.Application, error)
 	GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.Application, error)
 	UpdateHistory(

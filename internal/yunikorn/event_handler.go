@@ -6,7 +6,6 @@ import (
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
-	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -49,7 +48,6 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 	if isNew {
 		app = &model.Application{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: ev.TimestampNano,
 			},
 			ApplicationDAOInfo: daoApp,
@@ -63,7 +61,7 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 		return
 	}
 
-	app, err := s.repo.GetLatestApplicationByApplicationID(ctx, daoApp.ApplicationID)
+	app, err := s.repo.GetApplicationByID(ctx, daoApp.ID)
 	if err != nil {
 		logger.Errorf("could not get application by application id: %v", err)
 		return

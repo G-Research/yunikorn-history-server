@@ -131,7 +131,7 @@ VALUES
 	return err
 }
 
-func (s *PostgresRepository) GetLatestApplicationByApplicationID(ctx context.Context, appID string) (*model.Application, error) {
+func (s *PostgresRepository) GetApplicationByID(ctx context.Context, id string) (*model.Application, error) {
 	const q = `
 SELECT
 	id,
@@ -159,7 +159,7 @@ SELECT
 FROM
 	applications
 WHERE
-	app_id = @app_id
+	id = @id
 ORDER BY id DESC
 LIMIT 1
 	`
@@ -169,7 +169,7 @@ LIMIT 1
 		ctx,
 		q,
 		pgx.NamedArgs{
-			"app_id": appID,
+			"id": id,
 		},
 	)
 
@@ -203,78 +203,21 @@ LIMIT 1
 	return &app, nil
 }
 
-func (s *PostgresRepository) GetLatestApplicationsByApplicationID(ctx context.Context) ([]*model.Application, error) {
+func (s *PostgresRepository) DeleteApplicationsNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error {
 	const q = `
-SELECT DISTINCT ON (app_id)
-	id,
-	created_at_nano,
-	deleted_at_nano,
-	app_id,
-	used_resource,
-	max_used_resource,
-	pending_resource,
-	partition,
-	queue_name,
-	submission_time,
-	finished_time,
-	requests,
-	allocations,
-	state,
-	"user",
-	groups,
-	rejected_message,
-	state_log,
-	place_holder_data,
-	has_reserved,
-	reservations,
-	max_request_priority
-FROM
-	applications
-ORDER BY app_id, id DESC`
+UPDATE applications
+SET deleted_at_nano = @deleted_at_nano
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
 
-	rows, err := s.dbpool.Query(ctx, q)
-	if err != nil {
-		return nil, fmt.Errorf("could not get applications from DB: %v", err)
-	}
-	defer rows.Close()
-
-	var apps []*model.Application
-	for rows.Next() {
-		var app model.Application
-		if err := rows.Scan(
-			&app.ID,
-			&app.CreatedAtNano,
-			&app.DeletedAtNano,
-			&app.ApplicationID,
-			&app.UsedResource,
-			&app.MaxUsedResource,
-			&app.PendingResource,
-			&app.Partition,
-			&app.QueueName,
-			&app.SubmissionTime,
-			&app.FinishedTime,
-			&app.Requests,
-			&app.Allocations,
-			&app.State,
-			&app.User,
-			&app.Groups,
-			&app.RejectedMessage,
-			&app.StateLog,
-			&app.PlaceholderData,
-			&app.HasReserved,
-			&app.Reservations,
-			&app.MaxRequestPriority,
-		); err != nil {
-			return nil, fmt.Errorf("could not scan application from DB: %v", err)
-		}
-		apps = append(apps, &app)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read rows: %v", err)
-	}
-
-	return apps, nil
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"ids":             ids,
+			"deleted_at_nano": deletedAtNano,
+		},
+	)
+	return err
 }
 
 func (s *PostgresRepository) UpdateApplication(ctx context.Context, app *model.Application) error {

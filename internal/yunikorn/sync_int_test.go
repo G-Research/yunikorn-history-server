@@ -605,8 +605,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					response := []*dao.ApplicationDAOInfo{
-						{ApplicationID: "app-1"},
-						{ApplicationID: "app-2"},
+						{ID: "1", ApplicationID: "app-1"},
+						{ID: "2", ApplicationID: "app-2"},
 					}
 					writeResponse(t, w, response)
 				}))
@@ -615,19 +615,19 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			expectedLive: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:            "1",
 						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ID:            "1",
 						ApplicationID: "app-1",
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID:            "2",
 						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ID:            "2",
 						ApplicationID: "app-2",
 					},
 				},
@@ -639,7 +639,7 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					response := []*dao.ApplicationDAOInfo{
-						{ApplicationID: "app-1"},
+						{ID: "1", ApplicationID: "app-1"},
 					}
 					writeResponse(t, w, response)
 				}))
@@ -647,19 +647,19 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			existingApplications: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:            "1",
 						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ID:            "1",
 						ApplicationID: "app-1",
 					},
 				},
 				{
 					Metadata: model.Metadata{
-						ID:            "2",
 						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ID:            "2",
 						ApplicationID: "app-2",
 					},
 				},
@@ -667,10 +667,10 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			expectedLive: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:            "1",
 						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ID:            "1",
 						ApplicationID: "app-1",
 					},
 				},
@@ -678,10 +678,10 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			expectedDeleted: []*model.Application{
 				{
 					Metadata: model.Metadata{
-						ID:            "2",
 						CreatedAtNano: now,
 					},
 					ApplicationDAOInfo: dao.ApplicationDAOInfo{
+						ID:            "2",
 						ApplicationID: "app-2",
 					},
 				},
@@ -711,21 +711,10 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 
 			// Start the service
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			go func() {
 				_ = s.Run(ctx)
 			}()
-
-			// Ensure workqueue is started
-			assert.Eventually(t, func() bool {
-				return s.workqueue.Started()
-			}, 500*time.Millisecond, 50*time.Millisecond)
-			time.Sleep(100 * time.Millisecond)
-
-			// Cleanup after each test case
-			t.Cleanup(func() {
-				cancel()
-				s.workqueue.Shutdown()
-			})
 
 			err := s.syncApplications(ctx)
 			if tt.wantErr {
@@ -734,36 +723,31 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			var applicationsInDB []*model.Application
-			assert.Eventually(t, func() bool {
-				applicationsInDB, err = s.repo.GetLatestApplicationsByApplicationID(ctx)
-				if err != nil {
-					t.Logf("error getting partitions: %v", err)
-				}
-				return len(applicationsInDB) == 2
-			}, 5*time.Second, 50*time.Millisecond)
+			applicationsInDB, err := s.repo.GetAllApplications(
+				ctx,
+				repository.ApplicationFilters{},
+			)
+			require.NoError(t, err)
 
 			require.Equal(t, len(tt.expectedLive)+len(tt.expectedDeleted), len(applicationsInDB))
 
 			lookup := make(map[string]model.Application)
 			for _, app := range applicationsInDB {
-				lookup[app.ApplicationID] = *app
+				lookup[app.ID] = *app
 			}
 
-			t.Logf("Lookup: %v", lookup)
-
 			for _, target := range tt.expectedLive {
-				state, ok := lookup[target.ApplicationID]
+				state, ok := lookup[target.ID]
 				require.True(t, ok)
-				assert.NotEmpty(t, state.Metadata.ID)
+				assert.NotEmpty(t, state.ID)
 				assert.Greater(t, state.Metadata.CreatedAtNano, int64(0))
 				assert.Nil(t, state.Metadata.DeletedAtNano)
 			}
 
 			for _, target := range tt.expectedDeleted {
-				state, ok := lookup[target.ApplicationID]
+				state, ok := lookup[target.ID]
 				require.True(t, ok)
-				assert.NotEmpty(t, state.Metadata.ID)
+				assert.NotEmpty(t, state.ID)
 				assert.Greater(t, state.Metadata.CreatedAtNano, int64(0))
 				assert.NotNil(t, state.Metadata.DeletedAtNano)
 			}
