@@ -142,22 +142,19 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 
 	queues := flattenQueues([]*dao.PartitionQueueDAOInfo{clientQueues})
 
-	dbQueues, err := s.repo.GetQueuesInPartition(ctx, partition.Name)
-	if err != nil {
-		return err
-	}
-
-	lookup := make(map[string]*model.Queue, len(dbQueues))
-	for _, q := range dbQueues {
-		lookup[q.ID] = q
+	ids := make([]string, 0, len(queues))
+	for _, q := range queues {
+		ids = append(ids, q.ID)
 	}
 
 	now := time.Now().UnixNano()
-	var errs []error
+	if err := s.repo.DeleteQueuesNotInIDs(ctx, partition.Name, ids, now); err != nil {
+		return fmt.Errorf("could not delete queues not in IDs: %w", err)
+	}
+
 	for _, q := range queues {
-		current, ok := lookup[q.QueueName]
-		delete(lookup, q.QueueName)
-		if !ok || current.DeletedAtNano != nil { // either not exists or deleted
+		current, err := s.repo.GetQueueInPartition(ctx, partition.Name, q.ID)
+		if err != nil {
 			queue := &model.Queue{
 				Metadata: model.Metadata{
 					CreatedAtNano: now,
@@ -165,25 +162,18 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 				PartitionQueueDAOInfo: *q,
 			}
 			if err := s.repo.InsertQueue(ctx, queue); err != nil {
-				errs = append(errs, fmt.Errorf("could not insert queue %s: %v", q.QueueName, err))
+				return fmt.Errorf("could not insert queue: %w", err)
 			}
 			continue
 		}
 
 		current.MergeFrom(q)
 		if err := s.repo.UpdateQueue(ctx, current); err != nil {
-			errs = append(errs, err)
+			return fmt.Errorf("could not update queue: %w", err)
 		}
 	}
 
-	for _, q := range lookup {
-		q.DeletedAtNano = &now
-		if err := s.repo.UpdateQueue(ctx, q); err != nil {
-			errs = append(errs, fmt.Errorf("failed to update deleted at for queue %q: %v", q.QueueName, err))
-		}
-	}
-
-	return errors.Join(errs...)
+	return nil
 }
 
 // flattenQueues returns a list of all queues in the hierarchy in a flat array.
@@ -279,7 +269,6 @@ func (s *Service) syncApplications(ctx context.Context) error {
 				return err
 			}
 			continue
-
 		}
 
 		current.MergeFrom(app)

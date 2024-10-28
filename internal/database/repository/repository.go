@@ -32,7 +32,7 @@ type Repository interface {
 	GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.Partition, error)
 	GetLatestPartitionsGroupedByName(ctx context.Context) ([]*model.Partition, error)
 	InsertQueue(ctx context.Context, q *model.Queue) error
-	GetQueueInPartition(ctx context.Context, partition, queueName string) (*model.Queue, error)
+	GetQueueInPartition(ctx context.Context, partition, queueID string) (*model.Queue, error)
 	UpdateQueue(ctx context.Context, queue *model.Queue) error
 	GetAllQueues(ctx context.Context) ([]*model.Queue, error)
 	GetQueuesInPartition(ctx context.Context, partition string) ([]*model.Queue, error)

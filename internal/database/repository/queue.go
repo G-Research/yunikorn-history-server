@@ -190,7 +190,7 @@ ORDER BY id DESC
 	return queues, nil
 }
 
-func (s *PostgresRepository) GetQueueInPartition(ctx context.Context, partition, queueName string) (*model.Queue, error) {
+func (s *PostgresRepository) GetQueueInPartition(ctx context.Context, partition, queueID string) (*model.Queue, error) {
 	const q = `
 SELECT
     id,
@@ -217,7 +217,7 @@ SELECT
     current_priority,
     allocating_accepted_apps
 FROM queues
-WHERE queue_name = @queue_name AND partition = @partition
+WHERE queue_name = @id AND partition = @partition
 ORDER BY id DESC
 LIMIT 1
 `
@@ -225,7 +225,10 @@ LIMIT 1
 	err := s.dbpool.QueryRow(
 		ctx,
 		q,
-		&pgx.NamedArgs{"queue_name": queueName, "partition": partition},
+		&pgx.NamedArgs{
+			"id":        queueID,
+			"partition": partition,
+		},
 	).Scan(
 		&queue.ID,
 		&queue.CreatedAtNano,
