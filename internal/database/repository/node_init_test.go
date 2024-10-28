@@ -14,7 +14,7 @@ import (
 	"github.com/G-Research/yunikorn-history-server/test/database"
 )
 
-func TestGetNodeUtilizations_Integration(t *testing.T) {
+func TestGetNodesUtil_Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -30,27 +30,27 @@ func TestGetNodeUtilizations_Integration(t *testing.T) {
 
 	nus := []*model.NodesUtil{
 		{
-			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"},
 		},
 		{
-			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"},
 		},
 		{
-			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster1", Partition: "default"},
 		},
 		{
-			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"},
 		},
 		{
-			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"},
 		},
 		{
-			Metadata:                  model.Metadata{ID: ulid.Make().String()},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: dao.PartitionNodesUtilDAOInfo{ClusterID: "cluster2", Partition: "default"},
 		},
 	}

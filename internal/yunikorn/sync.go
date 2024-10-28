@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -238,9 +239,9 @@ func (s *Service) syncNodesUtils(ctx context.Context) error {
 	for _, nu := range nodesUtils {
 		nodesUtil := &model.NodesUtil{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
+			ID:                        ulid.Make().String(),
 			PartitionNodesUtilDAOInfo: *nu,
 		}
 		if err := s.repo.InsertNodesUtil(ctx, nodesUtil); err != nil {

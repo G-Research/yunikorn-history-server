@@ -188,21 +188,6 @@ func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0, arg1 any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContainersHistory", reflect.TypeOf((*MockRepository)(nil).GetContainersHistory), arg0, arg1)
 }
 
-// GetNodeUtilizations mocks base method.
-func (m *MockRepository) GetNodeUtilizations(arg0 context.Context, arg1 NodeUtilFilters) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNodeUtilizations", arg0, arg1)
-	ret0, _ := ret[0].([]*dao.PartitionNodesUtilDAOInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetNodeUtilizations indicates an expected call of GetNodeUtilizations.
-func (mr *MockRepositoryMockRecorder) GetNodeUtilizations(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).GetNodeUtilizations), arg0, arg1)
-}
-
 // GetNodesPerPartition mocks base method.
 func (m *MockRepository) GetNodesPerPartition(arg0 context.Context, arg1 string, arg2 NodeFilters) ([]*dao.NodeDAOInfo, error) {
 	m.ctrl.T.Helper()
@@ -216,6 +201,21 @@ func (m *MockRepository) GetNodesPerPartition(arg0 context.Context, arg1 string,
 func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1, arg2)
+}
+
+// GetNodesUtils mocks base method.
+func (m *MockRepository) GetNodesUtils(arg0 context.Context, arg1 NodesUtilFilters) ([]*model.NodesUtil, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNodesUtils", arg0, arg1)
+	ret0, _ := ret[0].([]*model.NodesUtil)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNodesUtils indicates an expected call of GetNodesUtils.
+func (mr *MockRepositoryMockRecorder) GetNodesUtils(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesUtils", reflect.TypeOf((*MockRepository)(nil).GetNodesUtils), arg0, arg1)
 }
 
 // GetPartitionByID mocks base method.
@@ -277,18 +277,18 @@ func (mr *MockRepositoryMockRecorder) InsertApplication(arg0, arg1 any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertApplication", reflect.TypeOf((*MockRepository)(nil).InsertApplication), arg0, arg1)
 }
 
-// InsertNodeUtilizations mocks base method.
-func (m *MockRepository) InsertNodeUtilizations(arg0 context.Context, arg1 []*dao.PartitionNodesUtilDAOInfo) error {
+// InsertNodesUtil mocks base method.
+func (m *MockRepository) InsertNodesUtil(arg0 context.Context, arg1 *model.NodesUtil) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertNodeUtilizations", arg0, arg1)
+	ret := m.ctrl.Call(m, "InsertNodesUtil", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// InsertNodeUtilizations indicates an expected call of InsertNodeUtilizations.
-func (mr *MockRepositoryMockRecorder) InsertNodeUtilizations(arg0, arg1 any) *gomock.Call {
+// InsertNodesUtil indicates an expected call of InsertNodesUtil.
+func (mr *MockRepositoryMockRecorder) InsertNodesUtil(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertNodeUtilizations", reflect.TypeOf((*MockRepository)(nil).InsertNodeUtilizations), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertNodesUtil", reflect.TypeOf((*MockRepository)(nil).InsertNodesUtil), arg0, arg1)
 }
 
 // InsertPartition mocks base method.

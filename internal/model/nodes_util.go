@@ -6,6 +6,7 @@ import (
 
 type NodesUtil struct {
 	Metadata                      `json:",inline"`
+	ID                            string `json:"id"`
 	dao.PartitionNodesUtilDAOInfo `json:",inline"`
 }
 
