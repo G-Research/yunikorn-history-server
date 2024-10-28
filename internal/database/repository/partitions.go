@@ -182,9 +182,30 @@ WHERE id = @id`
 	return nil
 }
 
-func (s *PostgresRepository) GetLatestPartitionsGroupedByName(ctx context.Context) ([]*model.Partition, error) {
+func (s *PostgresRepository) DeletePartitionsNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error {
 	const q = `
-SELECT DISTINCT ON (name)
+UPDATE partitions
+SET deleted_at_nano = @deleted_at_nano
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
+
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"ids":             ids,
+			"deleted_at_nano": deletedAtNano,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not delete partitions from DB: %v", err)
+	}
+
+	return nil
+}
+
+func (s *PostgresRepository) GetPartitionByID(ctx context.Context, id string) (*model.Partition, error) {
+	const q = `
+SELECT
 	id,
 	created_at_nano,
 	deleted_at_nano,
@@ -199,40 +220,27 @@ SELECT DISTINCT ON (name)
 	state,
 	last_state_transition_time
 FROM partitions
-ORDER BY name, id DESC`
+WHERE id = @id`
 
-	rows, err := s.dbpool.Query(ctx, q)
-	if err != nil {
-		return nil, fmt.Errorf("could not get partitions from DB: %v", err)
-	}
-	defer rows.Close()
-
-	var partitions []*model.Partition
-	for rows.Next() {
-		var p model.Partition
-		if err := rows.Scan(
-			&p.ID,
-			&p.CreatedAtNano,
-			&p.DeletedAtNano,
-			&p.ClusterID,
-			&p.Name,
-			&p.Capacity.Capacity,
-			&p.Capacity.UsedCapacity,
-			&p.Capacity.Utilization,
-			&p.TotalNodes,
-			&p.Applications,
-			&p.TotalContainers,
-			&p.State,
-			&p.LastStateTransitionTime,
-		); err != nil {
-			return nil, fmt.Errorf("could not scan partition from DB: %v", err)
-		}
-		partitions = append(partitions, &p)
+	row := s.dbpool.QueryRow(ctx, q, id)
+	var p model.Partition
+	if err := row.Scan(
+		&p.ID,
+		&p.CreatedAtNano,
+		&p.DeletedAtNano,
+		&p.ClusterID,
+		&p.Name,
+		&p.Capacity.Capacity,
+		&p.Capacity.UsedCapacity,
+		&p.Capacity.Utilization,
+		&p.TotalNodes,
+		&p.Applications,
+		&p.TotalContainers,
+		&p.State,
+		&p.LastStateTransitionTime,
+	); err != nil {
+		return nil, fmt.Errorf("could not get partition from DB: %v", err)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read rows: %v", err)
-	}
-
-	return partitions, nil
+	return &p, nil
 }
