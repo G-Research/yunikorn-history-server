@@ -453,7 +453,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
+	defer cancel()
 
 	pool, repo, cleanupDB := setupDatabase(t, ctx)
 	t.Cleanup(cleanupDB)
@@ -483,11 +483,13 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			expected: []*model.Partition{
 				{
 					PartitionInfo: dao.PartitionInfo{
+						ID:   "1",
 						Name: "default",
 					},
 				},
 				{
 					PartitionInfo: dao.PartitionInfo{
+						ID:   "2",
 						Name: "secondary",
 					},
 				},
@@ -499,7 +501,10 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			setup: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					response := []*dao.PartitionInfo{
-						{Name: "default"},
+						{
+							ID:   "1",
+							Name: "default",
+						},
 					}
 					writeResponse(t, w, response)
 				}))
@@ -577,7 +582,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			})
 
 			var partitionsInDB []*model.Partition
-			partitionsInDB, err = s.repo.GetLatestPartitionsGroupedByName(ctx)
+			partitionsInDB, err = s.repo.GetAllPartitions(ctx, repository.PartitionFilters{})
 			require.NoError(t, err)
 
 			sort.Slice(partitionsInDB, func(i, j int) bool {
@@ -589,7 +594,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			for i < len(partitions) && j < len(partitionsInDB) {
 				newPartition := partitions[i]
 				dbPartition := partitionsInDB[j]
-				if newPartition.Name == dbPartition.Name {
+				if newPartition.ID == dbPartition.ID {
 					assert.Equal(t, newPartition.PartitionInfo, dbPartition.PartitionInfo)
 					assert.Nil(t, newPartition.DeletedAtNano)
 					i++
