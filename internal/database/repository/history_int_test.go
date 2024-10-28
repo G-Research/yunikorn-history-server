@@ -82,9 +82,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 	apps := []*model.AppHistory{
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-6 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
 				TotalApplications: "0",
 				Timestamp:         now.Add(-6 * time.Hour).UnixNano(),
@@ -92,9 +92,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-5 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
 				TotalApplications: "2",
 				Timestamp:         now.Add(-5 * time.Hour).UnixNano(),
@@ -102,9 +102,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-3 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
 				TotalApplications: "5",
 				Timestamp:         now.Add(-3 * time.Hour).UnixNano(),
@@ -112,9 +112,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-1 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
 				TotalApplications: "7",
 				Timestamp:         now.Add(-1 * time.Hour).UnixNano(),
@@ -125,9 +125,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 	containers := []*model.ContainerHistory{
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-6 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
 				TotalContainers: "0",
 				Timestamp:       now.Add(-6 * time.Hour).UnixNano(),
@@ -135,9 +135,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-5 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
 				TotalContainers: "2",
 				Timestamp:       now.Add(-5 * time.Hour).UnixNano(),
@@ -145,9 +145,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-3 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
 				TotalContainers: "5",
 				Timestamp:       now.Add(-3 * time.Hour).UnixNano(),
@@ -155,9 +155,9 @@ func seedHistory(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 		},
 		{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now.Add(-1 * time.Hour).UnixNano(),
 			},
+			ID: ulid.Make().String(),
 			ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
 				TotalContainers: "7",
 				Timestamp:       now.Add(-1 * time.Hour).UnixNano(),

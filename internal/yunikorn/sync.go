@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
@@ -262,9 +263,9 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for _, ah := range appsHistory {
 		history := &model.AppHistory{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
+			ID:                        ulid.Make().String(),
 			ApplicationHistoryDAOInfo: *ah,
 		}
 		if err := s.repo.InsertAppHistory(ctx, history); err != nil {
@@ -275,9 +276,9 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for _, ch := range containersHistory {
 		history := &model.ContainerHistory{
 			Metadata: model.Metadata{
-				ID:            ulid.Make().String(),
 				CreatedAtNano: now,
 			},
+			ID:                      ulid.Make().String(),
 			ContainerHistoryDAOInfo: *ch,
 		}
 		if err := s.repo.InsertContainerHistory(ctx, history); err != nil {

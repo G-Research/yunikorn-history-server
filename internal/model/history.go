@@ -6,6 +6,7 @@ import (
 
 type AppHistory struct {
 	Metadata                      `json:",inline"`
+	ID                            string `json:"id"`
 	dao.ApplicationHistoryDAOInfo `json:",inline"`
 }
 
@@ -15,6 +16,7 @@ func (h *AppHistory) MergeFromAppHistory(other *dao.ApplicationHistoryDAOInfo) {
 
 type ContainerHistory struct {
 	Metadata                    `json:",inline"`
+	ID                          string `json:"id"`
 	dao.ContainerHistoryDAOInfo `json:",inline"`
 }
 
