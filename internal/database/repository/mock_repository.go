@@ -55,6 +55,20 @@ func (mr *MockRepositoryMockRecorder) DeleteApplicationsNotInIDs(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteApplicationsNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeleteApplicationsNotInIDs), arg0, arg1, arg2)
 }
 
+// DeletePartitionsNotInIDs mocks base method.
+func (m *MockRepository) DeletePartitionsNotInIDs(arg0 context.Context, arg1 []string, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePartitionsNotInIDs", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePartitionsNotInIDs indicates an expected call of DeletePartitionsNotInIDs.
+func (mr *MockRepositoryMockRecorder) DeletePartitionsNotInIDs(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePartitionsNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeletePartitionsNotInIDs), arg0, arg1, arg2)
+}
+
 // DeleteQueuesNotInIDs mocks base method.
 func (m *MockRepository) DeleteQueuesNotInIDs(arg0 context.Context, arg1 string, arg2 []string, arg3 int64) error {
 	m.ctrl.T.Helper()
@@ -174,21 +188,6 @@ func (mr *MockRepositoryMockRecorder) GetContainersHistory(arg0, arg1 any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContainersHistory", reflect.TypeOf((*MockRepository)(nil).GetContainersHistory), arg0, arg1)
 }
 
-// GetLatestPartitionsGroupedByName mocks base method.
-func (m *MockRepository) GetLatestPartitionsGroupedByName(arg0 context.Context) ([]*model.Partition, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLatestPartitionsGroupedByName", arg0)
-	ret0, _ := ret[0].([]*model.Partition)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLatestPartitionsGroupedByName indicates an expected call of GetLatestPartitionsGroupedByName.
-func (mr *MockRepositoryMockRecorder) GetLatestPartitionsGroupedByName(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestPartitionsGroupedByName", reflect.TypeOf((*MockRepository)(nil).GetLatestPartitionsGroupedByName), arg0)
-}
-
 // GetNodeUtilizations mocks base method.
 func (m *MockRepository) GetNodeUtilizations(arg0 context.Context, arg1 NodeUtilFilters) ([]*dao.PartitionNodesUtilDAOInfo, error) {
 	m.ctrl.T.Helper()
@@ -217,6 +216,21 @@ func (m *MockRepository) GetNodesPerPartition(arg0 context.Context, arg1 string,
 func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1, arg2)
+}
+
+// GetPartitionByID mocks base method.
+func (m *MockRepository) GetPartitionByID(arg0 context.Context, arg1 string) (*model.Partition, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPartitionByID", arg0, arg1)
+	ret0, _ := ret[0].(*model.Partition)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPartitionByID indicates an expected call of GetPartitionByID.
+func (mr *MockRepositoryMockRecorder) GetPartitionByID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPartitionByID", reflect.TypeOf((*MockRepository)(nil).GetPartitionByID), arg0, arg1)
 }
 
 // GetQueueInPartition mocks base method.

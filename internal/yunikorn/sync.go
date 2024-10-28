@@ -65,57 +65,51 @@ func (s *Service) sync(ctx context.Context) error {
 
 // syncPartitions fetches partitions from the Yunikorn API and syncs them into the database
 func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error) {
-	logger := log.FromContext(ctx)
 	// Get partitions from Yunikorn API and upsert into DB
 	partitions, err := s.client.GetPartitions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not get partitions: %v", err)
 	}
 
-	current, err := s.repo.GetLatestPartitionsGroupedByName(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not get latest partitions: %v", err)
-	}
-
-	lookup := make(map[string]*model.Partition, len(current))
-	for _, p := range current {
-		lookup[p.Name] = p
+	ids := make([]string, 0, len(partitions))
+	for _, p := range partitions {
+		ids = append(ids, p.ID)
 	}
 
 	now := time.Now().UnixNano()
-	allPartitions := make([]*model.Partition, 0, len(partitions))
+	if err := s.repo.DeletePartitionsNotInIDs(ctx, ids, now); err != nil {
+		return nil, fmt.Errorf("could not delete partitions not in IDs: %w", err)
+	}
+
+	result := make([]*model.Partition, 0, len(partitions))
 	for _, p := range partitions {
-		current, ok := lookup[p.Name]
-		delete(lookup, p.Name)
-		if !ok || current.DeletedAtNano != nil { // either not exists or deleted
+		current, err := s.repo.GetPartitionByID(ctx, p.ID)
+		if err != nil {
 			partition := &model.Partition{
 				Metadata: model.Metadata{
 					CreatedAtNano: now,
 				},
 				PartitionInfo: *p,
 			}
-			allPartitions = append(allPartitions, partition)
+
 			if err := s.repo.InsertPartition(ctx, partition); err != nil {
-				logger.Errorf("could not create partition %s: %v", p.Name, err)
+				return nil, fmt.Errorf("could not insert partition: %w", err)
 			}
+
+			result = append(result, partition)
 			continue
 		}
 
 		current.MergeFrom(p)
-		allPartitions = append(allPartitions, current)
+
 		if err := s.repo.UpdatePartition(ctx, current); err != nil {
-			logger.Errorf("could not update partition %s: %v", p.Name, err)
+			return nil, fmt.Errorf("could not update partition: %w", err)
 		}
+
+		result = append(result, current)
 	}
 
-	for _, p := range lookup {
-		p.DeletedAtNano = &now
-		if err := s.repo.UpdatePartition(ctx, p); err != nil {
-			logger.Errorf("failed to update deleted at for partition %q: %v", p.Name, err)
-		}
-	}
-
-	return allPartitions, nil
+	return result, nil
 }
 
 // syncQueues fetches queues for each partition and upserts them into the database
