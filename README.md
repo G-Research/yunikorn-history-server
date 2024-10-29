@@ -19,8 +19,9 @@ resource usage, etc.).
 **Note:** This project is built on **G-Research's** forks of the [Apache YuniKorn](https://yunikorn.apache.org/) project. 
 Please refer to the following G-Research repositories for the relevant forks: 
 [yunikorn-core](https://github.com/G-Research/yunikorn-core), 
-[yunikorn-k8shim](https://github.com/G-Research/yunikorn-k8shim), and 
-[yunikorn-scheduler-interface](https://github.com/G-Research/yunikorn-scheduler-interface).
+[yunikorn-k8shim](https://github.com/G-Research/yunikorn-k8shim),
+[yunikorn-scheduler-interface](https://github.com/G-Research/yunikorn-scheduler-interface), and
+[yunikorn-web](https://github.com/G-Research/yunikorn-web).
 
 
 ### Quickstart
@@ -55,6 +56,25 @@ start the Yunikorn History Server:
 ```bash
 make run
 ```
+
+###### Run the Yunikorn Web UI:
+
+Once you start Yunikorn History Server, open the home page of the Yunikorn Web. 
+It should be available on the following URL: `http://localhost:8989`
+
+
+<p align="center">
+  <img src="yhs-homepage.png" height="600">
+</p>
+
+Click on the "Copy" button to copy the configuration to the clipboard. 
+Then, open the Yunikorn Web and locate `envconfig.json`. The file is usually located at `src/assets/config/envconfig.json`.
+
+Once values are saved you can proceed with running or building the Yunikorn Web:
+Run `make build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+Or to run the Web UI use `make start-dev` for a development server. Navigate to `http://localhost:4200/`.
+
 
 ## Architecture
 
