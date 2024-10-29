@@ -32,7 +32,6 @@ const (
 	routeAppsHistory              = "/api/v1/history/apps"
 	routeContainersHistory        = "/api/v1/history/containers"
 	routeNodesPerPartition        = "/api/v1/partition/{partition_name}/nodes"
-	routeNodeUtilization          = "/api/v1/scheduler/node-utilizations"
 	routeSchedulerHealthcheck     = "/api/v1/scheduler/healthcheck"
 	routeEventStatistics          = "/api/v1/event-statistics"
 	routeHealthLiveness           = "/api/v1/health/liveness"
@@ -167,18 +166,6 @@ func (ws *WebService) init(ctx context.Context) {
 			Returns(200, "OK", []dao.ContainerHistoryDAOInfo{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get containers history"),
-	)
-	service.Route(
-		service.GET(routeNodeUtilization).
-			To(ws.getNodeUtilizations).
-			Produces(restful.MIME_JSON).
-			Writes([]dao.PartitionNodesUtilDAOInfo{}).
-			Param(service.QueryParameter("clusterID", "Filter by clusterID").DataType("string")).
-			Param(service.QueryParameter("limit", "Limit the number of returned nodes").DataType("int")).
-			Param(service.QueryParameter("offset", "Offset the returned nodes").DataType("int")).
-			Returns(200, "OK", []dao.PartitionNodesUtilDAOInfo{}).
-			Returns(500, "Internal Server Error", ProblemDetails{}).
-			Doc("Get node utilization"),
 	)
 	service.Route(
 		service.GET(routeEventStatistics).
@@ -421,21 +408,6 @@ func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.R
 		return
 	}
 	jsonResponse(resp, containersHistory)
-}
-
-func (ws *WebService) getNodeUtilizations(req *restful.Request, resp *restful.Response) {
-	ctx := req.Request.Context()
-	filters, err := parseNodeUtilizationFilters(req.Request)
-	if err != nil {
-		badRequestResponse(req, resp, err)
-		return
-	}
-	nodeUtilization, err := ws.repository.GetNodeUtilizations(ctx, *filters)
-	if err != nil {
-		errorResponse(req, resp, err)
-		return
-	}
-	jsonResponse(resp, nodeUtilization)
 }
 
 func (ws *WebService) getEventStatistics(req *restful.Request, resp *restful.Response) {

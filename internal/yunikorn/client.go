@@ -17,7 +17,6 @@ type Client interface {
 	GetApplications(ctx context.Context, partitionName, queueName string) ([]*dao.ApplicationDAOInfo, error)
 	GetApplication(ctx context.Context, partitionName, queueName, appID string) (*dao.ApplicationDAOInfo, error)
 	GetPartitionNodes(ctx context.Context, partitionName string) ([]*dao.NodeDAOInfo, error)
-	GetNodeUtil(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error)
 	GetAppsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error)
 	GetContainersHistory(ctx context.Context) ([]*dao.ContainerHistoryDAOInfo, error)
 	GetEventStream(ctx context.Context) (*http.Response, error)

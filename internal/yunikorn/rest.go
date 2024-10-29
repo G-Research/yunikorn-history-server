@@ -19,7 +19,6 @@ const (
 	endpointPartitions        = "/ws/v1/partitions"
 	endpointAppsHistory       = "/ws/v1/history/apps"
 	endpointContainersHistory = "/ws/v1/history/containers"
-	endpointNodeUtil          = "/ws/v1/scheduler/node-utilizations"
 	endpointHealthcheck       = "/ws/v1/scheduler/healthcheck"
 )
 
@@ -180,25 +179,6 @@ func (c *RESTClient) GetPartitionNodes(ctx context.Context, partitionName string
 	}
 
 	return nodes, nil
-}
-
-func (c *RESTClient) GetNodeUtil(ctx context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	resp, err := c.get(ctx, endpointNodeUtil)
-	if err != nil {
-		return nil, err
-	}
-	defer closeBody(ctx, resp)
-
-	if resp.StatusCode != 200 {
-		return nil, handleNonOKResponse(ctx, resp)
-	}
-
-	var nus []*dao.PartitionNodesUtilDAOInfo
-	if err = unmarshallBody(ctx, resp, &nus); err != nil {
-		return nil, err
-	}
-
-	return nus, nil
 }
 
 func (c *RESTClient) GetAppsHistory(ctx context.Context) ([]*dao.ApplicationHistoryDAOInfo, error) {

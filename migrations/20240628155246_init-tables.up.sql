@@ -102,16 +102,6 @@ CREATE TABLE nodes(
     PRIMARY KEY (id)
 );
 
--- Create partition_nodes_util table
-CREATE TABLE partition_nodes_util(
-    id TEXT,
-    cluster_id TEXT NOT NULL,
-    partition TEXT NOT NULL,
-    nodes_util_list JSONB,
-    UNIQUE (id),
-    PRIMARY KEY (id)
-);
-
 -- Drop history_type if it exists
 DROP TYPE IF EXISTS history_type;
 

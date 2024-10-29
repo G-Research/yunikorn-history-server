@@ -116,21 +116,6 @@ func (mr *MockClientMockRecorder) GetEventStream(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventStream", reflect.TypeOf((*MockClient)(nil).GetEventStream), arg0)
 }
 
-// GetNodeUtil mocks base method.
-func (m *MockClient) GetNodeUtil(arg0 context.Context) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNodeUtil", arg0)
-	ret0, _ := ret[0].([]*dao.PartitionNodesUtilDAOInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetNodeUtil indicates an expected call of GetNodeUtil.
-func (mr *MockClientMockRecorder) GetNodeUtil(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeUtil", reflect.TypeOf((*MockClient)(nil).GetNodeUtil), arg0)
-}
-
 // GetPartitionNodes mocks base method.
 func (m *MockClient) GetPartitionNodes(arg0 context.Context, arg1 string) ([]*dao.NodeDAOInfo, error) {
 	m.ctrl.T.Helper()
