@@ -30,7 +30,7 @@ func (s *Service) sync(ctx context.Context) error {
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(4)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -43,13 +43,6 @@ func (s *Service) sync(ctx context.Context) error {
 		defer wg.Done()
 		if err = s.upsertPartitionNodes(ctx, partitions); err != nil {
 			addErr(fmt.Errorf("error getting and upserting nodes: %v", err))
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if err = s.upsertNodeUtilizations(ctx); err != nil {
-			addErr(fmt.Errorf("error getting and upserting node utilizations: %v", err))
 		}
 	}()
 
@@ -289,26 +282,6 @@ func (s *Service) syncApplications(ctx context.Context) error {
 		if err := s.repo.UpdateApplication(ctx, current); err != nil {
 			logger.Errorf("could not update application %s: %v", app.ID, err)
 		}
-	}
-
-	return nil
-}
-
-// upsertNodeUtilizations fetches node utilizations from the Yunikorn API and inserts them into the database
-func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
-	logger := log.FromContext(ctx)
-
-	nus, err := s.client.GetNodeUtil(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get node utilizations: %v", err)
-	}
-
-	err = s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("upserting node utilizations", "count", len(nus))
-		return s.repo.InsertNodeUtilizations(ctx, nus)
-	}, workqueue.WithJobName("upsert_node_utilizations"))
-	if err != nil {
-		logger.Errorf("could not add insert node utilizations job to workqueue: %v", err)
 	}
 
 	return nil

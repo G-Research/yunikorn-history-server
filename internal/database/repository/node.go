@@ -21,23 +21,6 @@ type NodeFilters struct {
 	Limit       *int
 }
 
-type NodeUtilFilters struct {
-	ClusterID *string
-	Partition *string
-	Offset    *int
-	Limit     *int
-}
-
-func applyNodeUtilFilters(builder *sql.Builder, filters NodeUtilFilters) {
-	if filters.ClusterID != nil {
-		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
-	}
-	if filters.Partition != nil {
-		builder.Conditionp("partition", "=", *filters.Partition)
-	}
-	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
-}
-
 func applyNodeFilters(builder *sql.Builder, filters NodeFilters) {
 	if filters.NodeId != nil {
 		builder.Conditionp("node_id", "=", *filters.NodeId)
@@ -97,61 +80,6 @@ func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeD
 		}
 	}
 	return nil
-}
-
-func (s *PostgresRepository) InsertNodeUtilizations(
-	ctx context.Context,
-	nus []*dao.PartitionNodesUtilDAOInfo,
-) error {
-	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
-		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
-
-	for _, nu := range nus {
-		_, err := s.dbpool.Exec(ctx, insertSQL,
-			pgx.NamedArgs{
-				"id":              ulid.Make().String(),
-				"cluster_id":      nu.ClusterID,
-				"partition":       nu.Partition,
-				"nodes_util_list": nu.NodesUtilList,
-			})
-		if err != nil {
-			return fmt.Errorf("could not insert node utilizations into DB: %v", err)
-		}
-
-	}
-	return nil
-}
-
-func (s *PostgresRepository) GetNodeUtilizations(
-	ctx context.Context,
-	filters NodeUtilFilters,
-) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	queryBuilder := sql.NewBuilder().
-		SelectAll("partition_nodes_util", "").
-		OrderBy("id", sql.OrderByDescending)
-
-	applyNodeUtilFilters(queryBuilder, filters)
-
-	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
-
-	query := queryBuilder.Query()
-	args := queryBuilder.Args()
-	rows, err := s.dbpool.Query(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var nu dao.PartitionNodesUtilDAOInfo
-		var id string
-		err := rows.Scan(&id, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
-		if err != nil {
-			return nil, fmt.Errorf("could not scan node utilizations from DB: %v", err)
-		}
-		nodesUtil = append(nodesUtil, &nu)
-	}
-	return nodesUtil, nil
 }
 
 func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error) {
