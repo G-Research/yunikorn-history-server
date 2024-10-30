@@ -79,8 +79,8 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			partitions: []*model.Partition{
 				{
 					PartitionInfo: dao.PartitionInfo{
-						ID:   "default",
-						Name: "default",
+						ID:   "1",
+						Name: "1",
 					},
 				},
 			},
@@ -90,28 +90,28 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "1",
 						QueueName:   "root",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "2",
 						QueueName:   "root.child-1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "3",
 						QueueName:   "root.child-1.1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "4",
 						QueueName:   "root.child-1.2",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 			},
@@ -146,8 +146,8 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			partitions: []*model.Partition{
 				{
 					PartitionInfo: dao.PartitionInfo{
-						ID:   "default",
-						Name: "default",
+						ID:   "1",
+						Name: "1",
 					},
 				},
 			},
@@ -159,7 +159,7 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "1",
 						QueueName:   "root",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 			},
@@ -168,21 +168,21 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "1",
 						QueueName:   "root",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "2",
 						QueueName:   "root.child-1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "3",
 						QueueName:   "root.child-2",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 			},
@@ -199,7 +199,7 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 						PartitionID: partitionName,
 						Children: []dao.PartitionQueueDAOInfo{
 							{
-								ID:          "2",
+								ID:          "3",
 								QueueName:   "root.child-2",
 								PartitionID: partitionName,
 							},
@@ -211,8 +211,8 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			partitions: []*model.Partition{
 				{
 					PartitionInfo: dao.PartitionInfo{
-						ID:   "default",
-						Name: "default",
+						ID:   "1",
+						Name: "1",
 					},
 				},
 			},
@@ -224,7 +224,7 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "1",
 						QueueName:   "root",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
@@ -234,7 +234,7 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "2",
 						QueueName:   "root.child-1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 			},
@@ -243,14 +243,14 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "1",
 						QueueName:   "root",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "2",
+						ID:          "3",
 						QueueName:   "root.child-2",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 			},
@@ -265,8 +265,8 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			},
 			partitions: []*model.Partition{{
 				PartitionInfo: dao.PartitionInfo{
-					ID:   "default",
-					Name: "default",
+					ID:   "1",
+					Name: "1",
 				},
 			}},
 			existingQueues: nil,
@@ -345,42 +345,42 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "21",
 						QueueName:   "root",
-						PartitionID: "secondary",
+						PartitionID: "2",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "22",
 						QueueName:   "root.child-1",
-						PartitionID: "secondary",
+						PartitionID: "2",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "23",
 						QueueName:   "root.child-2",
-						PartitionID: "secondary",
+						PartitionID: "2",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "31",
 						QueueName:   "root",
-						PartitionID: "third",
+						PartitionID: "3",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "32",
 						QueueName:   "root.child-1",
-						PartitionID: "third",
+						PartitionID: "3",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "33",
 						QueueName:   "root.child-2",
-						PartitionID: "third",
+						PartitionID: "3",
 					},
 				},
 			},
@@ -429,8 +429,8 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			},
 			partitions: []*model.Partition{{
 				PartitionInfo: dao.PartitionInfo{
-					ID:   "default",
-					Name: "default",
+					ID:   "1",
+					Name: "1",
 				},
 			}},
 			existingQueues: nil,
@@ -439,35 +439,35 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "1",
 						QueueName:   "root",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "2",
 						QueueName:   "root.child-1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "3",
 						QueueName:   "root.child-1.1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "4",
 						QueueName:   "root.child-1.1.1",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:          "5",
 						QueueName:   "root.child-1.1.2",
-						PartitionID: "default",
+						PartitionID: "1",
 					},
 				},
 			},
@@ -547,11 +547,11 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 					response := []*dao.PartitionInfo{
 						{
 							ID:   "1",
-							Name: "default",
+							Name: "1",
 						},
 						{
 							ID:   "2",
-							Name: "secondary",
+							Name: "2",
 						},
 					}
 					writeResponse(t, w, response)
@@ -562,13 +562,13 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 				{
 					PartitionInfo: dao.PartitionInfo{
 						ID:   "1",
-						Name: "default",
+						Name: "1",
 					},
 				},
 				{
 					PartitionInfo: dao.PartitionInfo{
 						ID:   "2",
-						Name: "secondary",
+						Name: "2",
 					},
 				},
 			},
@@ -581,7 +581,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 					response := []*dao.PartitionInfo{
 						{
 							ID:   "1",
-							Name: "default",
+							Name: "1",
 						},
 					}
 					writeResponse(t, w, response)
@@ -594,7 +594,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 					},
 					PartitionInfo: dao.PartitionInfo{
 						ID:   "1",
-						Name: "default",
+						Name: "1",
 					},
 				},
 				{
@@ -603,7 +603,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 					},
 					PartitionInfo: dao.PartitionInfo{
 						ID:   "2",
-						Name: "secondary",
+						Name: "2",
 					},
 				},
 			},
@@ -614,7 +614,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 					},
 					PartitionInfo: dao.PartitionInfo{
 						ID:   "1",
-						Name: "default",
+						Name: "1",
 					},
 				},
 			},
@@ -644,9 +644,6 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			// Start the service
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			go func() {
-				_ = s.Run(ctx)
-			}()
 
 			partitions, err := s.syncPartitions(ctx)
 			if tt.wantErr {
@@ -918,7 +915,7 @@ func setupDatabase(t *testing.T, ctx context.Context) (*pgxpool.Pool, repository
 	}
 
 	cleanup := func() {
-		database.DropTestSchema(ctx, t, schema)
+		database.DropTestSchema(context.Background(), t, schema)
 	}
 
 	return pool, repo, cleanup
