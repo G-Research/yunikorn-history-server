@@ -81,8 +81,8 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.syncApplications(ctx); err != nil {
 		return fmt.Errorf("error syncing applications: %v", err)
 	}
-	if err := s.upsertPartitionNodes(ctx, partitions); err != nil {
-		return fmt.Errorf("error upserting partition nodes: %v", err)
+	if err := s.syncNodes(ctx, partitions); err != nil {
+		return fmt.Errorf("error syncing nodes: %v", err)
 	}
 
 	g.Add(func() error {

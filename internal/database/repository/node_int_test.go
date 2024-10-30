@@ -3,9 +3,13 @@ package repository
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
+
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 
 	"github.com/G-Research/yunikorn-history-server/internal/util"
 	"github.com/G-Research/yunikorn-history-server/test/database"
@@ -71,7 +75,7 @@ func TestGetNodesPerPartition_Integration(t *testing.T) {
 			filters: NodeFilters{
 				IsReserved: util.ToPtr(true),
 			},
-			expected: 3,
+			expected: 4,
 		},
 		{
 			name:      "Filter By Limit",
@@ -97,7 +101,7 @@ func TestGetNodesPerPartition_Integration(t *testing.T) {
 				HostName:    util.ToPtr("host1"),
 				RackName:    util.ToPtr("rack1"),
 				Schedulable: util.ToPtr(true),
-				IsReserved:  util.ToPtr(false),
+				IsReserved:  util.ToPtr(true),
 				Limit:       util.ToPtr(4),
 			},
 			expected: 1,
@@ -120,37 +124,70 @@ func TestGetNodesPerPartition_Integration(t *testing.T) {
 func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 	t.Helper()
 
-	nodes := []*dao.NodeDAOInfo{
+	now := time.Now().UnixNano()
+	partition := "default"
+
+	nodes := []*model.Node{
 		{
-			NodeID:      "node1",
-			HostName:    "host1",
-			RackName:    "rack1",
-			Schedulable: true,
-			IsReserved:  false,
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			NodeDAOInfo: dao.NodeDAOInfo{
+				ID:          ulid.Make().String(),
+				NodeID:      "node1",
+				Partition:   partition,
+				HostName:    "host1",
+				RackName:    "rack1",
+				Schedulable: true,
+				IsReserved:  true,
+			},
 		},
 		{
-			NodeID:      "node2",
-			HostName:    "host2",
-			RackName:    "rack2",
-			Schedulable: false,
-			IsReserved:  true,
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			NodeDAOInfo: dao.NodeDAOInfo{
+				ID:          ulid.Make().String(),
+				NodeID:      "node2",
+				Partition:   partition,
+				HostName:    "host2",
+				RackName:    "rack2",
+				Schedulable: false,
+				IsReserved:  true,
+			},
 		},
 		{
-			NodeID:      "node3",
-			HostName:    "host2",
-			RackName:    "rack2",
-			Schedulable: false,
-			IsReserved:  true,
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			NodeDAOInfo: dao.NodeDAOInfo{
+				ID:          ulid.Make().String(),
+				NodeID:      "node3",
+				Partition:   partition,
+				HostName:    "host2",
+				RackName:    "rack2",
+				Schedulable: false,
+				IsReserved:  true,
+			},
 		},
 		{
-			NodeID:      "node4",
-			HostName:    "host2",
-			RackName:    "rack2",
-			Schedulable: false,
-			IsReserved:  true,
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			NodeDAOInfo: dao.NodeDAOInfo{
+				NodeID:      "node4",
+				ID:          ulid.Make().String(),
+				HostName:    "host2",
+				Partition:   partition,
+				RackName:    "rack2",
+				Schedulable: false,
+				IsReserved:  true,
+			},
 		},
 	}
 
-	err := repo.UpsertNodes(ctx, nodes, "default")
-	require.NoError(t, err)
+	for _, node := range nodes {
+		err := repo.InsertNode(ctx, node)
+		require.NoError(t, err)
+	}
 }

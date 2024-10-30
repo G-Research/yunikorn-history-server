@@ -22,6 +22,7 @@ func (s *Service) handleEvent(ctx context.Context, ev *si.EventRecord) error {
 	case si.EventRecord_APP:
 		s.handleAppEvent(ctx, ev)
 	case si.EventRecord_NODE:
+		s.handleNodeEvent(ctx, ev)
 	case si.EventRecord_QUEUE:
 		s.handleQueueEvent(ctx, ev)
 	case si.EventRecord_USERGROUP:
@@ -122,6 +123,48 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 
 	if err := s.repo.UpdateQueue(ctx, queue); err != nil {
 		logger.Errorf("could not update queue: %v", err)
+		return
+	}
+}
+
+func (s *Service) handleNodeEvent(ctx context.Context, ev *si.EventRecord) {
+	logger := log.FromContext(ctx)
+
+	var daoNode dao.NodeDAOInfo
+	if err := json.Unmarshal([]byte(ev.GetState()), &daoNode); err != nil {
+		logger.Errorw("Failed to unmarshal node state from event", "error", err)
+		return
+	}
+
+	var node *model.Node
+	isNew := ev.GetEventChangeType() == si.EventRecord_ADD && ev.GetEventChangeDetail() == si.EventRecord_DETAILS_NONE
+	if isNew {
+		node = &model.Node{
+			Metadata: model.Metadata{
+				CreatedAtNano: ev.TimestampNano,
+			},
+			NodeDAOInfo: daoNode,
+		}
+		if err := s.repo.InsertNode(ctx, node); err != nil {
+			logger.Errorf("could not insert node: %v", err)
+			return
+		}
+		return
+	}
+
+	node, err := s.repo.GetNodeByID(ctx, daoNode.ID)
+	if err != nil {
+		logger.Errorf("could not get node by node id: %v", err)
+		return
+	}
+	node.MergeFrom(&daoNode)
+
+	if ev.GetEventChangeType() == si.EventRecord_REMOVE {
+		node.DeletedAtNano = &ev.TimestampNano
+	}
+
+	if err := s.repo.UpdateNode(ctx, node); err != nil {
+		logger.Errorf("could not update node: %v", err)
 		return
 	}
 }

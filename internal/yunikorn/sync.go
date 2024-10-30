@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
@@ -12,7 +11,6 @@ import (
 	"github.com/G-Research/yunikorn-history-server/internal/log"
 	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-history-server/internal/util"
-	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
 )
 
 // syncPartitions fetches partitions from the Yunikorn API and syncs them into the database
@@ -142,49 +140,46 @@ func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo
 	return queues
 }
 
-// upsertPartitionNodes fetches nodes for each partition and upserts them into the database
-func (s *Service) upsertPartitionNodes(ctx context.Context, partitions []*model.Partition) error {
-	logger := log.FromContext(ctx)
-
-	// Create a wait group as a separate goroutine will be spawned for each partition
-	wg := sync.WaitGroup{}
-	wg.Add(len(partitions))
-
-	// Protect the errors slice with a mutex so multiple goroutines can safely append queues
-	mutex := sync.Mutex{}
-
+func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) error {
 	var errs []error
-
-	processPartition := func(p *model.Partition) {
-		defer wg.Done()
+	for _, p := range partitions {
 		nodes, err := s.client.GetPartitionNodes(ctx, p.Name)
 		if err != nil {
-			mutex.Lock()
-			errs = append(errs, fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err))
-			mutex.Unlock()
-			return
+			return fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err)
 		}
-		err = s.workqueue.Add(func(ctx context.Context) error {
-			logger.Infow("upserting nodes for partition", "count", len(nodes), "partition", p.Name)
-			return s.repo.UpsertNodes(ctx, nodes, p.Name)
-		}, workqueue.WithJobName(fmt.Sprintf("upsert_nodes_for_partition_%s", p.Name)))
-		if err != nil {
-			logger.Errorf("could not add upsert nodes for partition %s job to workqueue: %v", p.Name, err)
+
+		ids := make([]string, 0, len(nodes))
+		for _, n := range nodes {
+			ids = append(ids, n.ID)
+		}
+		nowNano := time.Now().UnixNano()
+		if err := s.repo.DeleteNodesNotInIDs(ctx, ids, nowNano); err != nil {
+			errs = append(errs, err)
+		}
+
+		for _, n := range nodes {
+			current, err := s.repo.GetNodeByID(ctx, n.ID)
+			if err != nil { // node not found
+				node := &model.Node{
+					Metadata: model.Metadata{
+						CreatedAtNano: nowNano,
+					},
+					NodeDAOInfo: *n,
+				}
+				if err := s.repo.InsertNode(ctx, node); err != nil {
+					errs = append(errs, fmt.Errorf("could not insert node %s: %v", n.NodeID, err))
+				}
+				continue
+			}
+
+			current.MergeFrom(n)
+			if err := s.repo.UpdateNode(ctx, current); err != nil {
+				errs = append(errs, fmt.Errorf("could not update node %s: %v", n.NodeID, err))
+			}
 		}
 	}
 
-	for _, p := range partitions {
-		go processPartition(p)
-	}
-
-	// wait for all partitions to be processed
-	wg.Wait()
-
-	if len(errs) > 0 {
-		return fmt.Errorf("failed to get nodes for some partitions: %v", errs)
-	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 // syncApplications fetches applications for each queue and upserts them into the database
