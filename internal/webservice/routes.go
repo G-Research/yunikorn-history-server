@@ -80,8 +80,8 @@ func (ws *WebService) init(ctx context.Context) {
 					DataType("string"),
 			).
 			Produces(restful.MIME_JSON).
-			Writes([]*model.PartitionQueueDAOInfo{}).
-			Returns(200, "OK", []*model.PartitionQueueDAOInfo{}).
+			Writes([]*model.Queue{}).
+			Returns(200, "OK", []*model.Queue{}).
 			Returns(500, "Internal Server Error", ProblemDetails{}).
 			Doc("Get all queues for a partition"),
 	)
@@ -281,7 +281,7 @@ func (ws *WebService) getPartitions(req *restful.Request, resp *restful.Response
 func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
 	partition := req.PathParameter(paramsPartitionName)
-	queues, err := ws.repository.GetQueuesPerPartition(ctx, partition)
+	queues, err := ws.repository.GetQueuesInPartition(ctx, partition)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
@@ -293,7 +293,7 @@ func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.
 	jsonResponse(resp, root)
 }
 
-func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueueDAOInfo) ([]*model.PartitionQueueDAOInfo, error) {
+func buildPartitionQueueTrees(ctx context.Context, queues []*model.Queue) ([]*model.Queue, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -302,19 +302,19 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueu
 		return nil, nil
 	}
 
-	queueMap := make(map[string]*model.PartitionQueueDAOInfo)
+	queueMap := make(map[string]*model.Queue)
 	for _, queue := range queues {
-		queueMap[queue.Id] = queue
+		queueMap[queue.ID] = queue
 	}
 
 	var rootIDs []string
 	for _, queue := range queues {
-		if queue.ParentId == nil {
-			rootIDs = append(rootIDs, queue.Id)
+		if queue.ParentID == nil {
+			rootIDs = append(rootIDs, queue.ID)
 			continue
 		}
 
-		parent, ok := queueMap[*queue.ParentId]
+		parent, ok := queueMap[*queue.ParentID]
 		if !ok {
 			return nil, fmt.Errorf("parent queue %q not found", queue.Parent)
 		}
@@ -327,7 +327,7 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.PartitionQueu
 
 	sort.Strings(rootIDs)
 
-	roots := make([]*model.PartitionQueueDAOInfo, 0, len(rootIDs))
+	roots := make([]*model.Queue, 0, len(rootIDs))
 	for _, id := range rootIDs {
 		roots = append(roots, queueMap[id])
 	}

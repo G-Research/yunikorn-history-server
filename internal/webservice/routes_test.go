@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/assert"
@@ -66,40 +67,50 @@ func TestWebServiceServeSPA(t *testing.T) {
 }
 
 func TestBuildPartitionQueueTree(t *testing.T) {
+	now := time.Now().UnixNano()
 	tt := map[string]struct {
-		queues  []*model.PartitionQueueDAOInfo
-		want    []*model.PartitionQueueDAOInfo
+		queues  []*model.Queue
+		want    []*model.Queue
 		wantErr bool
 	}{
 		"no queues": {
-			queues: []*model.PartitionQueueDAOInfo{},
+			queues: []*model.Queue{},
 			want:   nil,
 		},
 		"root queue": {
-			queues: []*model.PartitionQueueDAOInfo{
+			queues: []*model.Queue{
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root",
 					},
 				},
 			},
-			want: []*model.PartitionQueueDAOInfo{
+			want: []*model.Queue{
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root",
 					},
 				},
 			},
 		},
 		"no root queue": {
-			queues: []*model.PartitionQueueDAOInfo{
+			queues: []*model.Queue{
 				{
-					Id:       "2",
-					ParentId: util.ToPtr("1"),
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "2",
 						QueueName: "child",
+						ParentID:  util.ToPtr("1"),
 					},
 				},
 			},
@@ -107,61 +118,85 @@ func TestBuildPartitionQueueTree(t *testing.T) {
 			want:    nil,
 		},
 		"multiple root queues": {
-			queues: []*model.PartitionQueueDAOInfo{
+			queues: []*model.Queue{
 				{
-					Id:       "2",
-					ParentId: util.ToPtr("1"),
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "2",
 						QueueName: "child-1",
+						ParentID:  util.ToPtr("1"),
 					},
 				},
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						QueueName: "root-1",
+						ID:        "1",
 					},
 				},
 				{
-					Id:       "22",
-					ParentId: util.ToPtr("11"),
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "22",
 						QueueName: "child-2",
+						ParentID:  util.ToPtr("11"),
 					},
 				},
 				{
-					Id: "11",
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "11",
 						QueueName: "root-2",
 					},
 				},
 			},
-			want: []*model.PartitionQueueDAOInfo{
+			want: []*model.Queue{
 				{
-					Id: "1",
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "1",
 						QueueName: "root-1",
 					},
-					Children: []*model.PartitionQueueDAOInfo{
+					Children: []*model.Queue{
 						{
-							Id:       "2",
-							ParentId: util.ToPtr("1"),
+							Metadata: model.Metadata{
+								CreatedAtNano: now,
+							},
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+								ID:        "2",
 								QueueName: "child-1",
+								ParentID:  util.ToPtr("1"),
 							},
 						},
 					},
 				},
 				{
-					Id: "11",
+					Metadata: model.Metadata{
+						CreatedAtNano: now,
+					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:        "11",
 						QueueName: "root-2",
 					},
-					Children: []*model.PartitionQueueDAOInfo{
+					Children: []*model.Queue{
 						{
-							Id:       "22",
-							ParentId: util.ToPtr("11"),
+							Metadata: model.Metadata{
+								CreatedAtNano: now,
+							},
 							PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+								ID:        "22",
 								QueueName: "child-2",
+								ParentID:  util.ToPtr("11"),
 							},
 						},
 					},

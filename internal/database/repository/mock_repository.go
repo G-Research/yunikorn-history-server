@@ -41,20 +41,6 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// AddQueues mocks base method.
-func (m *MockRepository) AddQueues(arg0 context.Context, arg1 *string, arg2 []*dao.PartitionQueueDAOInfo) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddQueues", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddQueues indicates an expected call of AddQueues.
-func (mr *MockRepositoryMockRecorder) AddQueues(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQueues", reflect.TypeOf((*MockRepository)(nil).AddQueues), arg0, arg1, arg2)
-}
-
 // DeleteApplicationsNotInIDs mocks base method.
 func (m *MockRepository) DeleteApplicationsNotInIDs(arg0 context.Context, arg1 []string, arg2 int64) error {
 	m.ctrl.T.Helper()
@@ -69,47 +55,32 @@ func (mr *MockRepositoryMockRecorder) DeleteApplicationsNotInIDs(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteApplicationsNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeleteApplicationsNotInIDs), arg0, arg1, arg2)
 }
 
-// DeleteInactivePartitions mocks base method.
-func (m *MockRepository) DeleteInactivePartitions(arg0 context.Context, arg1 []*dao.PartitionInfo) error {
+// DeletePartitionsNotInIDs mocks base method.
+func (m *MockRepository) DeletePartitionsNotInIDs(arg0 context.Context, arg1 []string, arg2 int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteInactivePartitions", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeletePartitionsNotInIDs", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteInactivePartitions indicates an expected call of DeleteInactivePartitions.
-func (mr *MockRepositoryMockRecorder) DeleteInactivePartitions(arg0, arg1 any) *gomock.Call {
+// DeletePartitionsNotInIDs indicates an expected call of DeletePartitionsNotInIDs.
+func (mr *MockRepositoryMockRecorder) DeletePartitionsNotInIDs(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteInactivePartitions", reflect.TypeOf((*MockRepository)(nil).DeleteInactivePartitions), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePartitionsNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeletePartitionsNotInIDs), arg0, arg1, arg2)
 }
 
-// DeleteQueues mocks base method.
-func (m *MockRepository) DeleteQueues(arg0 context.Context, arg1 []*model.PartitionQueueDAOInfo) error {
+// DeleteQueuesNotInIDs mocks base method.
+func (m *MockRepository) DeleteQueuesNotInIDs(arg0 context.Context, arg1 string, arg2 []string, arg3 int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteQueues", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteQueuesNotInIDs", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteQueues indicates an expected call of DeleteQueues.
-func (mr *MockRepositoryMockRecorder) DeleteQueues(arg0, arg1 any) *gomock.Call {
+// DeleteQueuesNotInIDs indicates an expected call of DeleteQueuesNotInIDs.
+func (mr *MockRepositoryMockRecorder) DeleteQueuesNotInIDs(arg0, arg1, arg2, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueues", reflect.TypeOf((*MockRepository)(nil).DeleteQueues), arg0, arg1)
-}
-
-// GetActivePartitions mocks base method.
-func (m *MockRepository) GetActivePartitions(arg0 context.Context) ([]*model.PartitionInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetActivePartitions", arg0)
-	ret0, _ := ret[0].([]*model.PartitionInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetActivePartitions indicates an expected call of GetActivePartitions.
-func (mr *MockRepositoryMockRecorder) GetActivePartitions(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivePartitions", reflect.TypeOf((*MockRepository)(nil).GetActivePartitions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueuesNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeleteQueuesNotInIDs), arg0, arg1, arg2, arg3)
 }
 
 // GetAllApplications mocks base method.
@@ -128,10 +99,10 @@ func (mr *MockRepositoryMockRecorder) GetAllApplications(arg0, arg1 any) *gomock
 }
 
 // GetAllPartitions mocks base method.
-func (m *MockRepository) GetAllPartitions(arg0 context.Context, arg1 PartitionFilters) ([]*model.PartitionInfo, error) {
+func (m *MockRepository) GetAllPartitions(arg0 context.Context, arg1 PartitionFilters) ([]*model.Partition, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllPartitions", arg0, arg1)
-	ret0, _ := ret[0].([]*model.PartitionInfo)
+	ret0, _ := ret[0].([]*model.Partition)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -143,10 +114,10 @@ func (mr *MockRepositoryMockRecorder) GetAllPartitions(arg0, arg1 any) *gomock.C
 }
 
 // GetAllQueues mocks base method.
-func (m *MockRepository) GetAllQueues(arg0 context.Context) ([]*model.PartitionQueueDAOInfo, error) {
+func (m *MockRepository) GetAllQueues(arg0 context.Context) ([]*model.Queue, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllQueues", arg0)
-	ret0, _ := ret[0].([]*model.PartitionQueueDAOInfo)
+	ret0, _ := ret[0].([]*model.Queue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -232,34 +203,49 @@ func (mr *MockRepositoryMockRecorder) GetNodesPerPartition(arg0, arg1, arg2 any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetNodesPerPartition), arg0, arg1, arg2)
 }
 
-// GetQueue mocks base method.
-func (m *MockRepository) GetQueue(arg0 context.Context, arg1, arg2 string) (*model.PartitionQueueDAOInfo, error) {
+// GetPartitionByID mocks base method.
+func (m *MockRepository) GetPartitionByID(arg0 context.Context, arg1 string) (*model.Partition, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueue", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*model.PartitionQueueDAOInfo)
+	ret := m.ctrl.Call(m, "GetPartitionByID", arg0, arg1)
+	ret0, _ := ret[0].(*model.Partition)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetQueue indicates an expected call of GetQueue.
-func (mr *MockRepositoryMockRecorder) GetQueue(arg0, arg1, arg2 any) *gomock.Call {
+// GetPartitionByID indicates an expected call of GetPartitionByID.
+func (mr *MockRepositoryMockRecorder) GetPartitionByID(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueue", reflect.TypeOf((*MockRepository)(nil).GetQueue), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPartitionByID", reflect.TypeOf((*MockRepository)(nil).GetPartitionByID), arg0, arg1)
 }
 
-// GetQueuesPerPartition mocks base method.
-func (m *MockRepository) GetQueuesPerPartition(arg0 context.Context, arg1 string) ([]*model.PartitionQueueDAOInfo, error) {
+// GetQueueInPartition mocks base method.
+func (m *MockRepository) GetQueueInPartition(arg0 context.Context, arg1, arg2 string) (*model.Queue, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueuesPerPartition", arg0, arg1)
-	ret0, _ := ret[0].([]*model.PartitionQueueDAOInfo)
+	ret := m.ctrl.Call(m, "GetQueueInPartition", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*model.Queue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetQueuesPerPartition indicates an expected call of GetQueuesPerPartition.
-func (mr *MockRepositoryMockRecorder) GetQueuesPerPartition(arg0, arg1 any) *gomock.Call {
+// GetQueueInPartition indicates an expected call of GetQueueInPartition.
+func (mr *MockRepositoryMockRecorder) GetQueueInPartition(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueuesPerPartition", reflect.TypeOf((*MockRepository)(nil).GetQueuesPerPartition), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueInPartition", reflect.TypeOf((*MockRepository)(nil).GetQueueInPartition), arg0, arg1, arg2)
+}
+
+// GetQueuesInPartition mocks base method.
+func (m *MockRepository) GetQueuesInPartition(arg0 context.Context, arg1 string) ([]*model.Queue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQueuesInPartition", arg0, arg1)
+	ret0, _ := ret[0].([]*model.Queue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQueuesInPartition indicates an expected call of GetQueuesInPartition.
+func (mr *MockRepositoryMockRecorder) GetQueuesInPartition(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueuesInPartition", reflect.TypeOf((*MockRepository)(nil).GetQueuesInPartition), arg0, arg1)
 }
 
 // InsertApplication mocks base method.
@@ -274,6 +260,34 @@ func (m *MockRepository) InsertApplication(arg0 context.Context, arg1 *model.App
 func (mr *MockRepositoryMockRecorder) InsertApplication(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertApplication", reflect.TypeOf((*MockRepository)(nil).InsertApplication), arg0, arg1)
+}
+
+// InsertPartition mocks base method.
+func (m *MockRepository) InsertPartition(arg0 context.Context, arg1 *model.Partition) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertPartition", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertPartition indicates an expected call of InsertPartition.
+func (mr *MockRepositoryMockRecorder) InsertPartition(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPartition", reflect.TypeOf((*MockRepository)(nil).InsertPartition), arg0, arg1)
+}
+
+// InsertQueue mocks base method.
+func (m *MockRepository) InsertQueue(arg0 context.Context, arg1 *model.Queue) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertQueue", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertQueue indicates an expected call of InsertQueue.
+func (mr *MockRepositoryMockRecorder) InsertQueue(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertQueue", reflect.TypeOf((*MockRepository)(nil).InsertQueue), arg0, arg1)
 }
 
 // UpdateApplication mocks base method.
@@ -304,8 +318,22 @@ func (mr *MockRepositoryMockRecorder) UpdateHistory(arg0, arg1, arg2 any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHistory", reflect.TypeOf((*MockRepository)(nil).UpdateHistory), arg0, arg1, arg2)
 }
 
+// UpdatePartition mocks base method.
+func (m *MockRepository) UpdatePartition(arg0 context.Context, arg1 *model.Partition) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePartition", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePartition indicates an expected call of UpdatePartition.
+func (mr *MockRepositoryMockRecorder) UpdatePartition(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePartition", reflect.TypeOf((*MockRepository)(nil).UpdatePartition), arg0, arg1)
+}
+
 // UpdateQueue mocks base method.
-func (m *MockRepository) UpdateQueue(arg0 context.Context, arg1 *dao.PartitionQueueDAOInfo) error {
+func (m *MockRepository) UpdateQueue(arg0 context.Context, arg1 *model.Queue) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateQueue", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -330,32 +358,4 @@ func (m *MockRepository) UpsertNodes(arg0 context.Context, arg1 []*dao.NodeDAOIn
 func (mr *MockRepositoryMockRecorder) UpsertNodes(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertNodes", reflect.TypeOf((*MockRepository)(nil).UpsertNodes), arg0, arg1, arg2)
-}
-
-// UpsertPartitions mocks base method.
-func (m *MockRepository) UpsertPartitions(arg0 context.Context, arg1 []*dao.PartitionInfo) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertPartitions", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpsertPartitions indicates an expected call of UpsertPartitions.
-func (mr *MockRepositoryMockRecorder) UpsertPartitions(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertPartitions", reflect.TypeOf((*MockRepository)(nil).UpsertPartitions), arg0, arg1)
-}
-
-// UpsertQueues mocks base method.
-func (m *MockRepository) UpsertQueues(arg0 context.Context, arg1 []*dao.PartitionQueueDAOInfo) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertQueues", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpsertQueues indicates an expected call of UpsertQueues.
-func (mr *MockRepositoryMockRecorder) UpsertQueues(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertQueues", reflect.TypeOf((*MockRepository)(nil).UpsertQueues), arg0, arg1)
 }

@@ -2,10 +2,9 @@ package yunikorn
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
-
-	"sync/atomic"
 
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/stretchr/testify/require"
