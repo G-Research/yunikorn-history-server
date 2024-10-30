@@ -194,9 +194,9 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				CreatedAtNano: now.UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "1",
-				Partition: "default",
-				QueueName: "root",
+				ID:          "1",
+				PartitionID: "1",
+				QueueName:   "root",
 			},
 		},
 		{
@@ -204,10 +204,11 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				CreatedAtNano: now.UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "2",
-				Partition: "default",
-				Parent:    "root",
-				QueueName: "root.default",
+				ID:          "2",
+				PartitionID: "1",
+				Parent:      "root",
+				ParentID:    util.ToPtr("1"),
+				QueueName:   "root.default",
 			},
 		},
 	}

@@ -83,8 +83,12 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error
 
 	result := make([]*model.Partition, 0, len(partitions))
 	for _, p := range partitions {
+
+		fmt.Printf("PARTITION: %+v\n", p)
 		current, err := s.repo.GetPartitionByID(ctx, p.ID)
+		fmt.Printf("Getting partition resulted in current: %+v, err: %v\n", current, err)
 		if err != nil {
+			fmt.Printf("Error getting partition: %v\n", err)
 			partition := &model.Partition{
 				Metadata: model.Metadata{
 					CreatedAtNano: now,
@@ -180,7 +184,7 @@ func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo
 		if len(q.Children) > 0 {
 			// update partitionName for children #148
 			for i := range q.Children {
-				q.Children[i].Partition = q.Partition
+				q.Children[i].PartitionID = q.PartitionID
 			}
 			queues = append(queues, flattenQueues(util.ToPtrSlice(q.Children))...)
 		}

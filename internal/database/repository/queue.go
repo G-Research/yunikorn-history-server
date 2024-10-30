@@ -11,18 +11,13 @@ import (
 
 func (s *PostgresRepository) InsertQueue(ctx context.Context, q *model.Queue) error {
 	insertSQL := `INSERT INTO queues (
-		id, created_at_nano, queue_name, parent_id, status, partition, pending_resource, max_resource,
+		id, created_at_nano, queue_name, parent_id, parent, status, partition_id, pending_resource, max_resource,
 		guaranteed_resource, allocated_resource, preempting_resource, head_room, is_leaf, is_managed,
-		properties, parent, template_info, abs_used_capacity, max_running_apps, running_apps,
+		properties, template_info, abs_used_capacity, max_running_apps, running_apps,
 		current_priority, allocating_accepted_apps)
-		VALUES (@id, @created_at_nano, @queue_name, (
-			SELECT CASE WHEN CAST(@parent AS TEXT) IS NOT NULL THEN
-				(SELECT id FROM queues WHERE partition = @partition AND queue_name = @queue_name ORDER BY ID DESC LIMIT 1)
-			ELSE NULL
-			END
-		), @status, @partition, @pending_resource, @max_resource,
+		VALUES (@id, @created_at_nano, @queue_name, @parent_id, @parent, @status, @partition_id, @pending_resource, @max_resource,
 		@guaranteed_resource, @allocated_resource, @preempting_resource, @head_room, @is_leaf, @is_managed,
-		@properties, @parent, @template_info, @abs_used_capacity, @max_running_apps, @running_apps,
+		@properties, @template_info, @abs_used_capacity, @max_running_apps, @running_apps,
 		@current_priority, @allocating_accepted_apps)
 		RETURNING id`
 
@@ -31,8 +26,10 @@ func (s *PostgresRepository) InsertQueue(ctx context.Context, q *model.Queue) er
 			"id":                       q.ID,
 			"created_at_nano":          q.CreatedAtNano,
 			"queue_name":               q.QueueName,
+			"parent_id":                q.ParentID,
+			"parent":                   q.Parent,
 			"status":                   q.Status,
-			"partition":                q.Partition,
+			"partition_id":             q.PartitionID,
 			"pending_resource":         q.PendingResource,
 			"max_resource":             q.MaxResource,
 			"guaranteed_resource":      q.GuaranteedResource,
@@ -42,7 +39,6 @@ func (s *PostgresRepository) InsertQueue(ctx context.Context, q *model.Queue) er
 			"is_leaf":                  q.IsLeaf,
 			"is_managed":               q.IsManaged,
 			"properties":               q.Properties,
-			"parent":                   q.Parent,
 			"template_info":            q.TemplateInfo,
 			"abs_used_capacity":        q.AbsUsedCapacity,
 			"max_running_apps":         q.MaxRunningApps,
@@ -54,16 +50,14 @@ func (s *PostgresRepository) InsertQueue(ctx context.Context, q *model.Queue) er
 	return err
 }
 
-// UpdateQueue updates the queue based on the queue_name and partition.
-// If the queue has children, the function will recursively update them.
-// If provided child queue does not exist, the function will add it.
-// The function returns an error if the update operation fails.
 func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *model.Queue) error {
 	updateSQL := `
     UPDATE queues SET
 		deleted_at_nano = @deleted_at_nano,
         status = @status,
-        partition = @partition,
+		parent_id = @parent_id,
+        parent = @parent,
+        partition_id = @partition_id,
         pending_resource = @pending_resource,
         max_resource = @max_resource,
         guaranteed_resource = @guaranteed_resource,
@@ -73,7 +67,6 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *model.Queue
         is_leaf = @is_leaf,
         is_managed = @is_managed,
         properties = @properties,
-        parent = @parent,
         template_info = @template_info,
         abs_used_capacity = @abs_used_capacity,
         max_running_apps = @max_running_apps,
@@ -86,8 +79,10 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *model.Queue
 			"id":                       queue.ID,
 			"deleted_at_nano":          queue.DeletedAtNano,
 			"queue_name":               queue.QueueName,
+			"parent_id":                queue.ParentID,
+			"parent":                   queue.Parent,
 			"status":                   queue.Status,
-			"partition":                queue.Partition,
+			"partition_id":             queue.PartitionID,
 			"pending_resource":         queue.PendingResource,
 			"max_resource":             queue.MaxResource,
 			"guaranteed_resource":      queue.GuaranteedResource,
@@ -97,7 +92,6 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *model.Queue
 			"is_leaf":                  queue.IsLeaf,
 			"is_managed":               queue.IsManaged,
 			"properties":               queue.Properties,
-			"parent":                   queue.Parent,
 			"template_info":            queue.TemplateInfo,
 			"abs_used_capacity":        queue.AbsUsedCapacity,
 			"max_running_apps":         queue.MaxRunningApps,
@@ -117,8 +111,6 @@ func (s *PostgresRepository) UpdateQueue(ctx context.Context, queue *model.Queue
 	return nil
 }
 
-// GetAllQueues returns all queues from the database as a flat list
-// child queues are not nested in the parent queue.Children field
 func (s *PostgresRepository) GetAllQueues(ctx context.Context) ([]*model.Queue, error) {
 	const q = `
 SELECT
@@ -127,8 +119,9 @@ SELECT
     deleted_at_nano,
     queue_name,
 	parent_id,
+    parent,
     status,
-    partition,
+    partition_id,
     pending_resource,
     max_resource,
     guaranteed_resource,
@@ -138,7 +131,6 @@ SELECT
     is_leaf,
     is_managed,
     properties,
-    parent,
     template_info,
     abs_used_capacity,
     max_running_apps,
@@ -163,8 +155,9 @@ ORDER BY id DESC
 			&q.DeletedAtNano,
 			&q.QueueName,
 			&q.ParentID,
+			&q.Parent,
 			&q.Status,
-			&q.Partition,
+			&q.PartitionID,
 			&q.PendingResource,
 			&q.MaxResource,
 			&q.GuaranteedResource,
@@ -174,7 +167,6 @@ ORDER BY id DESC
 			&q.IsLeaf,
 			&q.IsManaged,
 			&q.Properties,
-			&q.Parent,
 			&q.TemplateInfo,
 			&q.AbsUsedCapacity,
 			&q.MaxRunningApps,
@@ -190,7 +182,7 @@ ORDER BY id DESC
 	return queues, nil
 }
 
-func (s *PostgresRepository) GetQueueInPartition(ctx context.Context, partition, queueID string) (*model.Queue, error) {
+func (s *PostgresRepository) GetQueueInPartition(ctx context.Context, partitionID, queueID string) (*model.Queue, error) {
 	const q = `
 SELECT
     id,
@@ -198,8 +190,9 @@ SELECT
     deleted_at_nano,
     queue_name,
 	parent_id,
+    parent,
     status,
-    partition,
+    partition_id,
     pending_resource,
     max_resource,
     guaranteed_resource,
@@ -209,7 +202,6 @@ SELECT
     is_leaf,
     is_managed,
     properties,
-    parent,
     template_info,
     abs_used_capacity,
     max_running_apps,
@@ -217,7 +209,7 @@ SELECT
     current_priority,
     allocating_accepted_apps
 FROM queues
-WHERE queue_name = @id AND partition = @partition
+WHERE id = @id AND partition_id = @partition_id
 ORDER BY id DESC
 LIMIT 1
 `
@@ -226,8 +218,8 @@ LIMIT 1
 		ctx,
 		q,
 		&pgx.NamedArgs{
-			"id":        queueID,
-			"partition": partition,
+			"id":           queueID,
+			"partition_id": partitionID,
 		},
 	).Scan(
 		&queue.ID,
@@ -235,8 +227,9 @@ LIMIT 1
 		&queue.DeletedAtNano,
 		&queue.QueueName,
 		&queue.ParentID,
+		&queue.Parent,
 		&queue.Status,
-		&queue.Partition,
+		&queue.PartitionID,
 		&queue.PendingResource,
 		&queue.MaxResource,
 		&queue.GuaranteedResource,
@@ -246,7 +239,6 @@ LIMIT 1
 		&queue.IsLeaf,
 		&queue.IsManaged,
 		&queue.Properties,
-		&queue.Parent,
 		&queue.TemplateInfo,
 		&queue.AbsUsedCapacity,
 		&queue.MaxRunningApps,
@@ -261,15 +253,16 @@ LIMIT 1
 	return &queue, nil
 }
 
-func (s *PostgresRepository) GetQueuesInPartition(ctx context.Context, partition string) ([]*model.Queue, error) {
+func (s *PostgresRepository) GetQueuesInPartition(ctx context.Context, partitionID string) ([]*model.Queue, error) {
 	const q = `
-SELECT DISTINCT ON (queue_name)
+SELECT
     id,
     created_at_nano,
     deleted_at_nano,
     queue_name,
     status,
-    partition,
+    partition_id,
+    parent,
     pending_resource,
     max_resource,
     guaranteed_resource,
@@ -279,7 +272,7 @@ SELECT DISTINCT ON (queue_name)
     is_leaf,
     is_managed,
     properties,
-    parent,
+	parent_id,
     template_info,
     abs_used_capacity,
     max_running_apps,
@@ -287,14 +280,14 @@ SELECT DISTINCT ON (queue_name)
     current_priority,
     allocating_accepted_apps
 FROM queues
-WHERE partition = @partition
-ORDER BY queue_name, id DESC
+WHERE partition_id = @partition_id
+ORDER BY id DESC
 `
 	var queues []*model.Queue
 	rows, err := s.dbpool.Query(
 		ctx,
 		q,
-		&pgx.NamedArgs{"partition": partition},
+		&pgx.NamedArgs{"partition_id": partitionID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not get queue from DB: %v", err)
@@ -308,7 +301,8 @@ ORDER BY queue_name, id DESC
 			&queue.DeletedAtNano,
 			&queue.QueueName,
 			&queue.Status,
-			&queue.Partition,
+			&queue.PartitionID,
+			&queue.Parent,
 			&queue.PendingResource,
 			&queue.MaxResource,
 			&queue.GuaranteedResource,
@@ -318,7 +312,7 @@ ORDER BY queue_name, id DESC
 			&queue.IsLeaf,
 			&queue.IsManaged,
 			&queue.Properties,
-			&queue.Parent,
+			&queue.ParentID,
 			&queue.TemplateInfo,
 			&queue.AbsUsedCapacity,
 			&queue.MaxRunningApps,
@@ -339,11 +333,11 @@ ORDER BY queue_name, id DESC
 	return queues, nil
 }
 
-func (s *PostgresRepository) DeleteQueuesNotInIDs(ctx context.Context, partition string, ids []string, deletedAtNano int64) error {
+func (s *PostgresRepository) DeleteQueuesNotInIDs(ctx context.Context, partitionID string, ids []string, deletedAtNano int64) error {
 	const q = `
 UPDATE queues
 SET deleted_at_nano = @deleted_at_nano
-WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids)) AND partition = @partition
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids)) AND partition_id = @partition_id
 		`
 
 	_, err := s.dbpool.Exec(
@@ -352,7 +346,7 @@ WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids)) AND partition = @partitio
 		pgx.NamedArgs{
 			"ids":             ids,
 			"deleted_at_nano": deletedAtNano,
-			"partition":       partition,
+			"partition_id":    partitionID,
 		},
 	)
 

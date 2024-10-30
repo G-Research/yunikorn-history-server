@@ -70,24 +70,24 @@ func TestGetQueuesInPartition_Integration(t *testing.T) {
 
 	tests := []struct {
 		name                string
-		partition           string
+		partitionID         string
 		expectedTotalQueues int
 	}{
 		{
 			name:                "Get Queues for default partition",
-			partition:           "default",
+			partitionID:         "1",
 			expectedTotalQueues: 9,
 		},
 		{
 			name:                "Get Queues for second partition",
-			partition:           "second",
+			partitionID:         "2",
 			expectedTotalQueues: 3,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queues, err := repo.GetQueuesInPartition(context.Background(), tt.partition)
+			queues, err := repo.GetQueuesInPartition(context.Background(), tt.partitionID)
 			require.NoError(t, err)
 			assert.Len(t, queues, tt.expectedTotalQueues)
 		})
@@ -108,53 +108,47 @@ func TestGetQueue_Integration(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		queueName     string
-		partition     string
+		queueID       string
+		partitionID   string
 		expectedError bool
 	}{
 		{
-			name:      "Get Queue root",
-			queueName: "root",
-			partition: "default",
+			name:        "Get Queue root",
+			queueID:     "1",
+			partitionID: "1",
 		},
 		{
-			name:      "Get Queue root.org.eng",
-			queueName: "root.org.eng",
-			partition: "default",
+			name:        "Get Queue root.org.eng",
+			queueID:     "3",
+			partitionID: "1",
 		},
 		{
 			name:          "Get non-existent Queue",
-			queueName:     "non-existent",
-			partition:     "default",
+			queueID:       "99",
+			partitionID:   "1",
 			expectedError: true,
 		},
 		{
-			name:      "Get Queue with no children",
-			queueName: "root.org.sales.prod",
-			partition: "default",
-		},
-		{
-			name:          "Get deleted Queue",
-			queueName:     "deletedQueue",
-			partition:     "default",
-			expectedError: true,
+			name:        "Get Queue with no children",
+			queueID:     "8",
+			partitionID: "1",
 		},
 		{
 			name:          "Get Queue from non-existent partition",
-			queueName:     "root",
-			partition:     "nonExistentPartition",
+			queueID:       "1",
+			partitionID:   "nonExistentPartition",
 			expectedError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queue, err := repo.GetQueueInPartition(context.Background(), tt.partition, tt.queueName)
+			queue, err := repo.GetQueueInPartition(context.Background(), tt.partitionID, tt.queueID)
 			require.Equal(t, tt.expectedError, err != nil, "unexpected error", err)
 			if tt.expectedError {
 				return
 			}
-			assert.Equal(t, tt.queueName, queue.QueueName)
+			assert.Equal(t, tt.queueID, queue.ID)
 		})
 	}
 }
@@ -175,23 +169,23 @@ func TestDeleteQueues_Integration(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		partition         string
+		partitionID       string
 		expectedDelQueues int
 	}{
 		{
 			name:              "Delete Queues for default partition",
-			partition:         "default",
+			partitionID:       "1",
 			expectedDelQueues: 9,
 		},
 		{
 			name:              "Delete Queues for second partition",
-			partition:         "second",
+			partitionID:       "2",
 			expectedDelQueues: 3,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queues, err := repo.GetQueuesInPartition(context.Background(), tt.partition)
+			queues, err := repo.GetQueuesInPartition(context.Background(), tt.partitionID)
 			if err != nil {
 				t.Fatalf("could not get queues: %v", err)
 			}
@@ -210,7 +204,7 @@ func TestDeleteQueues_Integration(t *testing.T) {
 			// count the deleted queues
 			var delQueues int
 			for _, q := range queues {
-				if q.DeletedAtNano != nil && q.Partition == tt.partition {
+				if q.DeletedAtNano != nil && q.PartitionID == tt.partitionID {
 					delQueues++
 				}
 			}
@@ -248,7 +242,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 						ID:              "1",
-						Partition:       "default",
+						PartitionID:     "1",
 						QueueName:       "root",
 						CurrentPriority: 0,
 					},
@@ -260,7 +254,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 				},
 				PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 					ID:              "1",
-					Partition:       "default",
+					PartitionID:     "2",
 					QueueName:       "root",
 					CurrentPriority: 1,
 				},
@@ -276,7 +270,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 				},
 				PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
 					ID:              "2",
-					Partition:       "default",
+					PartitionID:     "1",
 					QueueName:       "root",
 					CurrentPriority: 1,
 				},
@@ -306,10 +300,15 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			}
 			require.NoError(t, err)
 			// check if the queue is updated along with its children
-			queueFromDB, err := repo.GetQueueInPartition(ctx, tt.queueToUpdate.Partition, tt.queueToUpdate.QueueName)
+			queueFromDB, err := repo.GetQueueInPartition(
+				ctx,
+				tt.queueToUpdate.PartitionID,
+				tt.queueToUpdate.ID,
+			)
 			require.NoError(t, err)
+			assert.Equal(t, tt.queueToUpdate.ID, queueFromDB.ID)
 			assert.Equal(t, tt.queueToUpdate.QueueName, queueFromDB.QueueName)
-			assert.Equal(t, tt.queueToUpdate.Partition, queueFromDB.Partition)
+			assert.Equal(t, tt.queueToUpdate.PartitionID, queueFromDB.PartitionID)
 			assert.Equal(t, tt.queueToUpdate.CurrentPriority, queueFromDB.CurrentPriority)
 			// compare the children
 			for i, child := range tt.queueToUpdate.Children {
@@ -328,9 +327,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "1",
-				Partition: "default",
-				QueueName: "root",
+				ID:          "1",
+				PartitionID: "1",
+				QueueName:   "root",
 			},
 		},
 		{
@@ -338,9 +337,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "2",
-				Partition: "default",
-				QueueName: "root.org",
+				ID:          "2",
+				PartitionID: "1",
+				QueueName:   "root.org",
 			},
 		},
 		{
@@ -348,9 +347,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "3",
-				Partition: "default",
-				QueueName: "root.org.eng",
+				ID:          "3",
+				PartitionID: "1",
+				QueueName:   "root.org.eng",
 			},
 		},
 		{
@@ -358,9 +357,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "4",
-				Partition: "default",
-				QueueName: "root.org.eng.test",
+				ID:          "4",
+				PartitionID: "1",
+				QueueName:   "root.org.eng.test",
 			},
 		},
 		{
@@ -368,9 +367,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "5",
-				Partition: "default",
-				QueueName: "root.org.eng.prod",
+				ID:          "5",
+				PartitionID: "1",
+				QueueName:   "root.org.eng.prod",
 			},
 		},
 		{
@@ -378,9 +377,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "6",
-				Partition: "default",
-				QueueName: "root.org.sales",
+				ID:          "6",
+				PartitionID: "1",
+				QueueName:   "root.org.sales",
 			},
 		},
 		{
@@ -388,9 +387,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "7",
-				Partition: "default",
-				QueueName: "root.org.sales.test",
+				ID:          "7",
+				PartitionID: "1",
+				QueueName:   "root.org.sales.test",
 			},
 		},
 		{
@@ -398,9 +397,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "8",
-				Partition: "default",
-				QueueName: "root.org.sales.prod",
+				ID:          "8",
+				PartitionID: "1",
+				QueueName:   "root.org.sales.prod",
 			},
 		},
 		{
@@ -408,9 +407,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "9",
-				Partition: "default",
-				QueueName: "root.system",
+				ID:          "9",
+				PartitionID: "1",
+				QueueName:   "root.system",
 			},
 		},
 		{
@@ -418,9 +417,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "10",
-				Partition: "second",
-				QueueName: "root",
+				ID:          "10",
+				PartitionID: "2",
+				QueueName:   "root",
 			},
 		},
 		{
@@ -428,9 +427,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "11",
-				Partition: "second",
-				QueueName: "root.child",
+				ID:          "11",
+				PartitionID: "2",
+				QueueName:   "root.child",
 			},
 		},
 		{
@@ -438,9 +437,9 @@ func seedQueues(t *testing.T, repo *PostgresRepository) {
 				CreatedAtNano: time.Now().UnixNano(),
 			},
 			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:        "12",
-				Partition: "second",
-				QueueName: "root.child2",
+				ID:          "12",
+				PartitionID: "2",
+				QueueName:   "root.child2",
 			},
 		},
 	}

@@ -222,7 +222,7 @@ SELECT
 FROM partitions
 WHERE id = @id`
 
-	row := s.dbpool.QueryRow(ctx, q, id)
+	row := s.dbpool.QueryRow(ctx, q, pgx.NamedArgs{"id": id})
 	var p model.Partition
 	if err := row.Scan(
 		&p.ID,

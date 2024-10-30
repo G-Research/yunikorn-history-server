@@ -40,12 +40,8 @@ CREATE TABLE applications(
     has_reserved BOOLEAN,
     reservations JSONB,
     max_request_priority INTEGER,
-    UNIQUE (id),
     PRIMARY KEY (id)
 );
-
--- Create unique index on applications
-CREATE UNIQUE INDEX idx_partition_queue_app_id ON applications (partition, queue_name, app_id);
 
 -- Create queues table
 CREATE TABLE queues(
@@ -54,8 +50,9 @@ CREATE TABLE queues(
     deleted_at_nano BIGINT,
     queue_name TEXT NOT NULL,
     parent_id TEXT REFERENCES queues(id),
+    parent TEXT,
     status TEXT,
-    partition TEXT NOT NULL CHECK (partition <> ''),
+    partition_id TEXT NOT NULL CHECK (partition_id <> ''),
     pending_resource JSONB,
     max_resource JSONB,
     guaranteed_resource JSONB,
@@ -65,14 +62,12 @@ CREATE TABLE queues(
     is_leaf BOOLEAN,
     is_managed BOOLEAN,
     properties JSONB,
-    parent TEXT,
     template_info JSONB,
     abs_used_capacity JSONB,
     max_running_apps INTEGER,
     running_apps INTEGER NOT NULL,
     current_priority INTEGER,
     allocating_accepted_apps TEXT[],
-    UNIQUE (id),
     PRIMARY KEY (id)
 );
 
