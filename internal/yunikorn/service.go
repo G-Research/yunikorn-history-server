@@ -84,9 +84,6 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.upsertPartitionNodes(ctx, partitions); err != nil {
 		return fmt.Errorf("error upserting partition nodes: %v", err)
 	}
-	if err := s.upsertNodeUtilizations(ctx); err != nil {
-		return fmt.Errorf("error upserting node utilizations: %v", err)
-	}
 
 	g.Add(func() error {
 		return s.runEventCollector(ctx)

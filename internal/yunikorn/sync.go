@@ -301,23 +301,3 @@ func (s *Service) updateAppsHistory(ctx context.Context) error {
 
 	return nil
 }
-
-// upsertNodeUtilizations fetches node utilizations from the Yunikorn API and inserts them into the database
-func (s *Service) upsertNodeUtilizations(ctx context.Context) error {
-	logger := log.FromContext(ctx)
-
-	nus, err := s.client.GetNodeUtil(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get node utilizations: %v", err)
-	}
-
-	err = s.workqueue.Add(func(ctx context.Context) error {
-		logger.Infow("upserting node utilizations", "count", len(nus))
-		return s.repo.InsertNodeUtilizations(ctx, nus)
-	}, workqueue.WithJobName("upsert_node_utilizations"))
-	if err != nil {
-		logger.Errorf("could not add insert node utilizations job to workqueue: %v", err)
-	}
-
-	return nil
-}
