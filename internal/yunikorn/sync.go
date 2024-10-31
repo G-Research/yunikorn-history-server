@@ -99,7 +99,7 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 	}
 
 	for _, q := range queues {
-		current, err := s.repo.GetQueueInPartition(ctx, partition.Name, q.ID)
+		current, err := s.repo.GetQueue(ctx, q.ID)
 		if err != nil {
 			queue := &model.Queue{
 				Metadata: model.Metadata{

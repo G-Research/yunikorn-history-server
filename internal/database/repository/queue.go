@@ -182,7 +182,7 @@ ORDER BY id DESC
 	return queues, nil
 }
 
-func (s *PostgresRepository) GetQueueInPartition(ctx context.Context, partitionID, queueID string) (*model.Queue, error) {
+func (s *PostgresRepository) GetQueue(ctx context.Context, queueID string) (*model.Queue, error) {
 	const q = `
 SELECT
     id,
@@ -209,7 +209,7 @@ SELECT
     current_priority,
     allocating_accepted_apps
 FROM queues
-WHERE id = @id AND partition_id = @partition_id
+WHERE id = @id
 ORDER BY id DESC
 LIMIT 1
 `
@@ -218,8 +218,7 @@ LIMIT 1
 		ctx,
 		q,
 		&pgx.NamedArgs{
-			"id":           queueID,
-			"partition_id": partitionID,
+			"id": queueID,
 		},
 	).Scan(
 		&queue.ID,

@@ -110,7 +110,7 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 		return
 	}
 
-	queue, err := s.repo.GetQueueInPartition(ctx, daoQueue.PartitionID, daoQueue.QueueName)
+	queue, err := s.repo.GetQueue(ctx, daoQueue.ID)
 	if err != nil {
 		logger.Errorf("could not get queue by partition name and queue name: %v", err)
 		return
