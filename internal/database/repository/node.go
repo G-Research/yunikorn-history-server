@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/jackc/pgx/v5"
-	"github.com/oklog/ulid/v2"
-
 	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 )
@@ -202,29 +199,6 @@ WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
 		},
 	)
 	return err
-}
-
-func (s *PostgresRepository) InsertNodeUtilizations(
-	ctx context.Context,
-	nus []*dao.PartitionNodesUtilDAOInfo,
-) error {
-	insertSQL := `INSERT INTO partition_nodes_util (id, cluster_id, partition, nodes_util_list)
-		VALUES (@id, @cluster_id, @partition, @nodes_util_list)`
-
-	for _, nu := range nus {
-		_, err := s.dbpool.Exec(ctx, insertSQL,
-			pgx.NamedArgs{
-				"id":              ulid.Make().String(),
-				"cluster_id":      nu.ClusterID,
-				"partition":       nu.Partition,
-				"nodes_util_list": nu.NodesUtilList,
-			})
-		if err != nil {
-			return fmt.Errorf("could not insert node utilizations into DB: %v", err)
-		}
-
-	}
-	return nil
 }
 
 func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*model.Node, error) {
