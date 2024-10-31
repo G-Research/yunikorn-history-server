@@ -20,7 +20,6 @@ func (n *Node) MergeFrom(nodeInfo *dao.NodeDAOInfo) {
 	n.Occupied = nodeInfo.Occupied
 	n.Available = nodeInfo.Available
 	n.Utilized = nodeInfo.Utilized
-	n.Allocations = nodeInfo.Allocations
 	n.Schedulable = nodeInfo.Schedulable
 	n.IsReserved = nodeInfo.IsReserved
 
