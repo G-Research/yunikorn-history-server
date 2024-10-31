@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/G-Research/yunikorn-history-server/internal/model"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 )
