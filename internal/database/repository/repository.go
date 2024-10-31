@@ -23,8 +23,11 @@ type Repository interface {
 	) error
 	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error)
 	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error)
-	UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error
-	GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error)
+	InsertNode(ctx context.Context, node *model.Node) error
+	UpdateNode(ctx context.Context, node *model.Node) error
+	GetNodeByID(ctx context.Context, id string) (*model.Node, error)
+	DeleteNodesNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error
+	GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*model.Node, error)
 	InsertPartition(ctx context.Context, partition *model.Partition) error
 	UpdatePartition(ctx context.Context, partition *model.Partition) error
 	GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.Partition, error)

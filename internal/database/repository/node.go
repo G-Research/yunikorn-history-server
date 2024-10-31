@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5"
-	"github.com/oklog/ulid/v2"
+
+	"github.com/G-Research/yunikorn-history-server/internal/model"
 
 	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
 )
@@ -40,56 +40,176 @@ func applyNodeFilters(builder *sql.Builder, filters NodeFilters) {
 	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
 }
 
-func (s *PostgresRepository) UpsertNodes(ctx context.Context, nodes []*dao.NodeDAOInfo, partition string) error {
-	upsertSQL := `INSERT INTO nodes (id, node_id, partition, host_name, rack_name, attributes, capacity, allocated,
-		occupied, available, utilized, allocations, schedulable, is_reserved, reservations )
-		VALUES (@id, @node_id, @partition, @host_name, @rack_name, @attributes, @capacity, @allocated,
-		@occupied, @available, @utilized, @allocations, @schedulable, @is_reserved, @reservations)
-	ON CONFLICT (node_id) DO UPDATE SET
-		capacity = EXCLUDED.capacity,
-		allocated = EXCLUDED.allocated,
-		occupied = EXCLUDED.occupied,
-		available = EXCLUDED.available,
-		utilized = EXCLUDED.utilized,
-		allocations = EXCLUDED.allocations,
-		schedulable = EXCLUDED.schedulable,
-		is_reserved = EXCLUDED.is_reserved,
-		reservations = EXCLUDED.reservations`
+func (s *PostgresRepository) InsertNode(ctx context.Context, node *model.Node) error {
+	const q = `
+INSERT INTO nodes (
+	id,
+    created_at_nano,
+	deleted_at_nano,
+	node_id,
+	partition,
+	host_name,
+	rack_name,
+	attributes,
+	capacity,
+	allocated,
+	occupied,
+	available,
+	utilized,
+	allocations,
+	schedulable,
+	is_reserved,
+	reservations
+) VALUES (
+	@id,
+	@created_at_nano,
+	@deleted_at_nano,
+	@node_id,
+	@partition,
+	@host_name,
+	@rack_name,
+	@attributes,
+	@capacity,
+	@allocated,
+	@occupied,
+	@available,
+	@utilized,
+	@allocations,
+	@schedulable,
+	@is_reserved,
+	@reservations
+)`
 
-	for _, n := range nodes {
-		_, err := s.dbpool.Exec(ctx, upsertSQL,
-			pgx.NamedArgs{
-				"id":           ulid.Make().String(),
-				"node_id":      n.NodeID,
-				"partition":    partition,
-				"host_name":    n.HostName,
-				"rack_name":    n.RackName,
-				"attributes":   n.Attributes,
-				"capacity":     n.Capacity,
-				"allocated":    n.Allocated,
-				"occupied":     n.Occupied,
-				"available":    n.Available,
-				"utilized":     n.Utilized,
-				"allocations":  n.Allocations,
-				"schedulable":  n.Schedulable,
-				"is_reserved":  n.IsReserved,
-				"reservations": n.Reservations,
-			})
-		if err != nil {
-			return fmt.Errorf("could not insert application into DB: %v", err)
-		}
+	_, err := s.dbpool.Exec(ctx, q,
+		pgx.NamedArgs{
+			"id":              node.ID,
+			"created_at_nano": node.CreatedAtNano,
+			"deleted_at_nano": node.DeletedAtNano,
+			"node_id":         node.NodeID,
+			"partition":       node.Partition,
+			"host_name":       node.HostName,
+			"rack_name":       node.RackName,
+			"attributes":      node.Attributes,
+			"capacity":        node.Capacity,
+			"allocated":       node.Allocated,
+			"occupied":        node.Occupied,
+			"available":       node.Available,
+			"utilized":        node.Utilized,
+			"allocations":     node.Allocations,
+			"schedulable":     node.Schedulable,
+			"is_reserved":     node.IsReserved,
+			"reservations":    node.Reservations,
+		})
+	if err != nil {
+		return fmt.Errorf("could not insert node into DB: %v", err)
 	}
 	return nil
 }
 
-func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*dao.NodeDAOInfo, error) {
+func (s *PostgresRepository) UpdateNode(ctx context.Context, node *model.Node) error {
+	const q = `
+UPDATE nodes
+SET
+	deleted_at_nano = @deleted_at_nano,
+	node_id = @node_id,
+	partition = @partition,
+	host_name = @host_name,
+	rack_name = @rack_name,
+	attributes = @attributes,
+	capacity = @capacity,
+	allocated = @allocated,
+	occupied = @occupied,
+	available = @available,
+	utilized = @utilized,
+	allocations = @allocations,
+	schedulable = @schedulable,
+	is_reserved = @is_reserved,
+	reservations = @reservations
+WHERE id = @id`
+
+	res, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"id":              node.ID,
+			"deleted_at_nano": node.DeletedAtNano,
+			"node_id":         node.NodeID,
+			"partition":       node.Partition,
+			"host_name":       node.HostName,
+			"rack_name":       node.RackName,
+			"attributes":      node.Attributes,
+			"capacity":        node.Capacity,
+			"allocated":       node.Allocated,
+			"occupied":        node.Occupied,
+			"available":       node.Available,
+			"utilized":        node.Utilized,
+			"allocations":     node.Allocations,
+			"schedulable":     node.Schedulable,
+			"is_reserved":     node.IsReserved,
+			"reservations":    node.Reservations,
+		})
+	if err != nil {
+		return fmt.Errorf("could not update node in DB: %v", err)
+	}
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("failed to update node %q: no rows affected", node.ID)
+	}
+
+	return nil
+}
+
+func (s *PostgresRepository) GetNodeByID(ctx context.Context, id string) (*model.Node, error) {
+	const q = `SELECT * FROM nodes WHERE id = @id ORDER BY id DESC LIMIT 1`
+	var node model.Node
+	row := s.dbpool.QueryRow(ctx, q, pgx.NamedArgs{"id": id})
+	if err := row.Scan(
+		&node.ID,
+		&node.CreatedAtNano,
+		&node.DeletedAtNano,
+		&node.NodeID,
+		&node.Partition,
+		&node.HostName,
+		&node.RackName,
+		&node.Attributes,
+		&node.Capacity,
+		&node.Allocated,
+		&node.Occupied,
+		&node.Available,
+		&node.Utilized,
+		&node.Allocations,
+		&node.Schedulable,
+		&node.IsReserved,
+		&node.Reservations,
+	); err != nil {
+		return nil, fmt.Errorf("could not get node from DB: %v", err)
+	}
+	return &node, nil
+}
+
+func (s *PostgresRepository) DeleteNodesNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error {
+	const q = `
+UPDATE nodes 
+SET deleted_at_nano = @deleted_at_nano
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
+	_, err := s.dbpool.Exec(
+		ctx,
+		q,
+		pgx.NamedArgs{
+			"deleted_at_nano": deletedAtNano,
+			"ids":             ids,
+		},
+	)
+	return err
+}
+
+func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*model.Node, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("nodes", "").
 		Conditionp("partition", "=", partition).
 		OrderBy("node_id", sql.OrderByDescending)
 	applyNodeFilters(queryBuilder, filters)
 
-	var nodes []*dao.NodeDAOInfo
+	var nodes []*model.Node
 
 	query := queryBuilder.Query()
 	args := queryBuilder.Args()
@@ -99,11 +219,26 @@ func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var n dao.NodeDAOInfo
-		var id string
-		err := rows.Scan(&id, &n.NodeID, nil, &n.HostName, &n.RackName, &n.Attributes, &n.Capacity,
-			&n.Allocated, &n.Occupied, &n.Available, &n.Utilized, &n.Allocations, &n.Schedulable,
-			&n.IsReserved, &n.Reservations)
+		var n model.Node
+		err := rows.Scan(
+			&n.ID,
+			&n.CreatedAtNano,
+			&n.DeletedAtNano,
+			&n.NodeID,
+			&n.Partition,
+			&n.HostName,
+			&n.RackName,
+			&n.Attributes,
+			&n.Capacity,
+			&n.Allocated,
+			&n.Occupied,
+			&n.Available,
+			&n.Utilized,
+			&n.Allocations,
+			&n.Schedulable,
+			&n.IsReserved,
+			&n.Reservations,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan node: %v", err)
 		}
