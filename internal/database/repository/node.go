@@ -23,23 +23,6 @@ type NodeFilters struct {
 	Limit       *int
 }
 
-type NodeUtilFilters struct {
-	ClusterID *string
-	Partition *string
-	Offset    *int
-	Limit     *int
-}
-
-func applyNodeUtilFilters(builder *sql.Builder, filters NodeUtilFilters) {
-	if filters.ClusterID != nil {
-		builder.Conditionp("cluster_id", "=", *filters.ClusterID)
-	}
-	if filters.Partition != nil {
-		builder.Conditionp("partition", "=", *filters.Partition)
-	}
-	applyLimitAndOffset(builder, filters.Limit, filters.Offset)
-}
-
 func applyNodeFilters(builder *sql.Builder, filters NodeFilters) {
 	if filters.NodeId != nil {
 		builder.Conditionp("node_id", "=", *filters.NodeId)
@@ -178,9 +161,9 @@ WHERE id = @id`
 }
 
 func (s *PostgresRepository) GetNodeByID(ctx context.Context, id string) (*model.Node, error) {
-	const q = ` SELECT * FROM nodes WHERE id = $1 ORDER BY id DESC LIMIT 1`
+	const q = `SELECT * FROM nodes WHERE id = @id ORDER BY id DESC LIMIT 1`
 	var node model.Node
-	row := s.dbpool.QueryRow(ctx, q, id)
+	row := s.dbpool.QueryRow(ctx, q, pgx.NamedArgs{"id": id})
 	if err := row.Scan(
 		&node.ID,
 		&node.CreatedAtNano,
@@ -242,38 +225,6 @@ func (s *PostgresRepository) InsertNodeUtilizations(
 
 	}
 	return nil
-}
-
-func (s *PostgresRepository) GetNodeUtilizations(
-	ctx context.Context,
-	filters NodeUtilFilters,
-) ([]*dao.PartitionNodesUtilDAOInfo, error) {
-	queryBuilder := sql.NewBuilder().
-		SelectAll("partition_nodes_util", "").
-		OrderBy("id", sql.OrderByDescending)
-
-	applyNodeUtilFilters(queryBuilder, filters)
-
-	var nodesUtil []*dao.PartitionNodesUtilDAOInfo
-
-	query := queryBuilder.Query()
-	args := queryBuilder.Args()
-	rows, err := s.dbpool.Query(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("could not get node utilizations from DB: %v", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var nu dao.PartitionNodesUtilDAOInfo
-		var id string
-		err := rows.Scan(&id, &nu.ClusterID, &nu.Partition, &nu.NodesUtilList)
-		if err != nil {
-			return nil, fmt.Errorf("could not scan node utilizations from DB: %v", err)
-		}
-		nodesUtil = append(nodesUtil, &nu)
-	}
-	return nodesUtil, nil
 }
 
 func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*model.Node, error) {
