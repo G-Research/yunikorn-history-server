@@ -247,19 +247,19 @@ func (mr *MockRepositoryMockRecorder) GetPartitionByID(arg0, arg1 any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPartitionByID", reflect.TypeOf((*MockRepository)(nil).GetPartitionByID), arg0, arg1)
 }
 
-// GetQueueInPartition mocks base method.
-func (m *MockRepository) GetQueueInPartition(arg0 context.Context, arg1, arg2 string) (*model.Queue, error) {
+// GetQueue mocks base method.
+func (m *MockRepository) GetQueue(arg0 context.Context, arg1 string) (*model.Queue, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueueInPartition", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetQueue", arg0, arg1)
 	ret0, _ := ret[0].(*model.Queue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetQueueInPartition indicates an expected call of GetQueueInPartition.
-func (mr *MockRepositoryMockRecorder) GetQueueInPartition(arg0, arg1, arg2 any) *gomock.Call {
+// GetQueue indicates an expected call of GetQueue.
+func (mr *MockRepositoryMockRecorder) GetQueue(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueInPartition", reflect.TypeOf((*MockRepository)(nil).GetQueueInPartition), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueue", reflect.TypeOf((*MockRepository)(nil).GetQueue), arg0, arg1)
 }
 
 // GetQueuesInPartition mocks base method.

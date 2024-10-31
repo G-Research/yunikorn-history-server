@@ -109,41 +109,30 @@ func TestGetQueue_Integration(t *testing.T) {
 	tests := []struct {
 		name          string
 		queueID       string
-		partitionID   string
 		expectedError bool
 	}{
 		{
-			name:        "Get Queue root",
-			queueID:     "1",
-			partitionID: "1",
+			name:    "Get Queue root",
+			queueID: "1",
 		},
 		{
-			name:        "Get Queue root.org.eng",
-			queueID:     "3",
-			partitionID: "1",
+			name:    "Get Queue root.org.eng",
+			queueID: "3",
 		},
 		{
 			name:          "Get non-existent Queue",
 			queueID:       "99",
-			partitionID:   "1",
 			expectedError: true,
 		},
 		{
-			name:        "Get Queue with no children",
-			queueID:     "8",
-			partitionID: "1",
-		},
-		{
-			name:          "Get Queue from non-existent partition",
-			queueID:       "1",
-			partitionID:   "nonExistentPartition",
-			expectedError: true,
+			name:    "Get Queue with no children",
+			queueID: "8",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queue, err := repo.GetQueueInPartition(context.Background(), tt.partitionID, tt.queueID)
+			queue, err := repo.GetQueue(context.Background(), tt.queueID)
 			require.Equal(t, tt.expectedError, err != nil, "unexpected error", err)
 			if tt.expectedError {
 				return
@@ -300,9 +289,8 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			}
 			require.NoError(t, err)
 			// check if the queue is updated along with its children
-			queueFromDB, err := repo.GetQueueInPartition(
+			queueFromDB, err := repo.GetQueue(
 				ctx,
-				tt.queueToUpdate.PartitionID,
 				tt.queueToUpdate.ID,
 			)
 			require.NoError(t, err)
