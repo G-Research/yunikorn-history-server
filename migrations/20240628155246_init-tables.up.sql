@@ -25,6 +25,7 @@ CREATE TABLE applications(
     used_resource JSONB,
     max_used_resource JSONB,
     pending_resource JSONB,
+    partition_id TEXT NOT NULL,
     partition TEXT NOT NULL,
     queue_name TEXT NOT NULL,
     submission_time BIGINT,
