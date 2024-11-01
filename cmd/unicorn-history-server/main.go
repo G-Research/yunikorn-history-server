@@ -6,7 +6,7 @@ import (
 
 	_ "go.uber.org/mock/mockgen/model"
 
-	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
+	"github.com/G-Research/unicorn-history-server/cmd/unicorn-history-server/commands"
 )
 
 func main() {

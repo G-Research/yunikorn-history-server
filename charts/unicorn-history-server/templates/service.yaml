@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "yunikorn-history-server.fullname" . }}
+  name: {{ include "unicorn-history-server.fullname" . }}
   labels:
-    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
+    {{- include "unicorn-history-server.labels" . | nindent 4 }}
     {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -23,4 +23,4 @@ spec:
       targetPort: http
       name: http
   selector:
-    {{- include "yunikorn-history-server.selectorLabels" . | nindent 4 }}
+    {{- include "unicorn-history-server.selectorLabels" . | nindent 4 }}

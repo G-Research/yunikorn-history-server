@@ -1,4 +1,4 @@
-yhs:
+uhs:
   port: 8080
   assets_dir: assets
   cors:

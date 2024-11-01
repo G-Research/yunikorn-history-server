@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
+	"github.com/G-Research/unicorn-history-server/internal/database/sql"
 )
 
 // applyLimitAndOffset adds limit and offset to the sql query.

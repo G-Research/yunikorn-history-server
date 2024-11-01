@@ -10,9 +10,9 @@ import (
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/oklog/run"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/workqueue"
+	"github.com/G-Research/unicorn-history-server/internal/database/repository"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/workqueue"
 )
 
 type Service struct {

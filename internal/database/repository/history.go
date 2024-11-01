@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/oklog/ulid/v2"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/sql"
+	"github.com/G-Research/unicorn-history-server/internal/database/sql"
 )
 
 type HistoryFilters struct {

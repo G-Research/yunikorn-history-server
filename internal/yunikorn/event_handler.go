@@ -7,8 +7,8 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/model"
 )
 
 type EventHandler func(context.Context, *si.EventRecord) error

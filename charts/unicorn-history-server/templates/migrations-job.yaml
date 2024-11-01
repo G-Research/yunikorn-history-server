@@ -1,16 +1,16 @@
-{{- if .Values.yhs.migrations.enabled }}
+{{- if .Values.uhs.migrations.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "yunikorn-history-server.fullname" . }}-migrate
+  name: {{ include "unicorn-history-server.fullname" . }}-migrate
   labels:
-    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
+    {{- include "unicorn-history-server.labels" . | nindent 4 }}
     {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- if or .Values.global.annotations .Values.yhs.migrations.useHelmHooks }}
+  {{- if or .Values.global.annotations .Values.uhs.migrations.useHelmHooks }}
   annotations:
-    {{- if .Values.yhs.migrations.useHelmHooks }}
+    {{- if .Values.uhs.migrations.useHelmHooks }}
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
     {{- end }}
@@ -22,14 +22,14 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "yunikorn-history-server.labels" . | nindent 8 }}
+        {{- include "unicorn-history-server.labels" . | nindent 8 }}
         {{- with .Values.global.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
       containers:
-        - name: "yunikorn-history-server-migrate"
-          image: "{{ include "yunikorn-history-server.image" . }}"
+        - name: "unicorn-history-server-migrate"
+          image: "{{ include "unicorn-history-server.image" . }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
             - "migrate"
@@ -40,12 +40,12 @@ spec:
             - mountPath: /app/config
               name: config
           env:
-            - name: YHS_DB_PASSWORD
+            - name: UHS_DB_PASSWORD
               {{- if .Values.db.passwordSecretRef }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.passwordSecretRef }}
-                  key: YHS_DB_PASSWORD
+                  key: UHS_DB_PASSWORD
               {{- else }}
               value: "{{ .Values.db.password }}"
               {{- end }}
@@ -53,6 +53,6 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "yunikorn-history-server.fullname" . }}
-  backoffLimit: {{ .Values.yhs.migrations.backoffLimit}}
+            name: {{ include "unicorn-history-server.fullname" . }}
+  backoffLimit: {{ .Values.uhs.migrations.backoffLimit}}
 {{- end }}

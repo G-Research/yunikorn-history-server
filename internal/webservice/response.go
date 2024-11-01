@@ -5,7 +5,7 @@ import (
 
 	restful "github.com/emicklei/go-restful/v3"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/log"
 )
 
 // jsonResponse writes the data to the response writer as a JSON object.

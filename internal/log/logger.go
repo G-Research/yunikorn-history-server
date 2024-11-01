@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
 )
 
 type loggerKey struct{}

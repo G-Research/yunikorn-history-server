@@ -11,14 +11,14 @@ export default function HeroSectionView(): React.JSX.Element {
         <header>
             <div className={clsx("padding--lg", styles.topBanner)}>
                 <h1 className={styles.topBannerTitle}>
-                    Yunikorn History Server (YHS)
+                    Unicorn History Server (UHS)
                 </h1>
             </div>
             <div className={clsx("padding-vert--xl padding-horiz--md", styles.hero)}>
                 <div className="container">
                     <div className={styles.heroInner}>
                         <img
-                            alt='YHS logo'
+                            alt='UHS logo'
                             className={clsx("padding--sm", styles.heroLogo)}
                             src={useBaseUrl('/img/logo/project-logo-dark-bg.svg')}
                             width="500"
@@ -36,13 +36,13 @@ export default function HeroSectionView(): React.JSX.Element {
                         </Link>
                         <Link
                             className="button button--secondary button--lg shadow--md"
-                            to="https://github.com/G-Research/yunikorn-history-server">
+                            to="https://github.com/G-Research/unicorn-history-server">
                             <IconBrandGithub size={18} color="currentcolor" stroke={3}/> GitHub
                         </Link>
                         <span className={styles.gitHubButtonWrapper}>
                             <iframe
                                 className={styles.gitHubButton}
-                                src="https://ghbtns.com/github-btn.html?user=G-Research&amp;repo=yunikorn-history-server&amp;type=star&amp;count=true&amp;size=large"
+                                src="https://ghbtns.com/github-btn.html?user=G-Research&amp;repo=unicorn-history-server&amp;type=star&amp;count=true&amp;size=large"
                                 width={160}
                                 height={30}
                                 title="GitHub Stars"

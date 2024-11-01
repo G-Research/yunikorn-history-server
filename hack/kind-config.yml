@@ -14,7 +14,7 @@ nodes:
       - containerPort: 30002
         hostPort: 30002
         protocol: TCP
-      # Expose Yunikorn History Server
+      # Expose Unicorn History Server
       - containerPort: 30003
         hostPort: 30003
         protocol: TCP

@@ -6,7 +6,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  title = 'yhs-components';
+  title = 'uhs-components';
   remoteEntry: string = '';
 
   ngOnInit(): void {

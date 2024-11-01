@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/database/repository"
+	"github.com/G-Research/unicorn-history-server/internal/health"
+	"github.com/G-Research/unicorn-history-server/internal/log"
 )
 
 type WebService struct {
@@ -17,11 +17,11 @@ type WebService struct {
 	repository      repository.Repository
 	eventRepository repository.EventRepository
 	healthService   health.Interface
-	config          config.YHSConfig
+	config          config.UHSConfig
 }
 
 func NewWebService(
-	cfg config.YHSConfig,
+	cfg config.UHSConfig,
 	repository repository.Repository,
 	eventRepository repository.EventRepository,
 	healthService health.Interface,

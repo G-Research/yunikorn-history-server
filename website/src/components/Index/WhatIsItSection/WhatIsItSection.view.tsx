@@ -9,7 +9,7 @@ const featuresList: FeatureItem[] = [
         Svg: require('@site/static/img/features/data_trends.svg').default,
         description: (
             <>
-                YHS provides detailed insights into past scheduling decisions and resource utilization within Kubernetes
+                UHS provides detailed insights into past scheduling decisions and resource utilization within Kubernetes
                 clusters. This helps teams optimize cluster performance and troubleshoot issues effectively.
             </>
         ),
@@ -19,7 +19,7 @@ const featuresList: FeatureItem[] = [
         Svg: require('@site/static/img/features/certification.svg').default,
         description: (
             <>
-                YHS is designed to seamlessly integrate with the
+                UHS is designed to seamlessly integrate with the
                 <a href="https://yunikorn.apache.org/" target="_blank"> Yunikorn Scheduler</a>, ensuring smooth data
                 collection and storage without disrupting existing workflows or adding significant overhead.
             </>
@@ -30,7 +30,7 @@ const featuresList: FeatureItem[] = [
         Svg: require('@site/static/img/features/community.svg').default,
         description: (
             <>
-                YHS encourages contributions and collaboration from the community, fostering innovation and
+                UHS encourages contributions and collaboration from the community, fostering innovation and
                 continuous improvement through shared knowledge and feedback.
             </>
         ),
@@ -44,7 +44,7 @@ export default function WhatIsItSectionView(): React.JSX.Element {
             <div className={clsx("container padding-bottom--xl padding-top--lg", styles.sectionDiv)}>
                 <h2 id="what-is-it" className={clsx("text--center section__ref")}>What is it?</h2>
                 <p className={clsx("text--center padding-horiz--xl", styles.description)}>
-                    Yunikorn History Server (YHS) is an ancillary service for K8s Clusters using the Yunikorn
+                    Unicorn History Server (UHS) is an ancillary service for K8s Clusters using the Yunikorn
                     Scheduler to persist the state
                     of a Yunikorn-managed cluster to a database, allowing for long-term access to historical data of the cluster's
                     operations (e.g. to view past Applications, resource usage, etc.).

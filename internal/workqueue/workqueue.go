@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/log"
 )
 
 var ErrNotStarted = errors.New("workqueue not started")

@@ -17,8 +17,8 @@
  */
 
 export interface EnvConfig {
-  localYhsComponentsWebAddress?: string;
+  localUhsComponentsWebAddress?: string;
   externalLogsURL?: string;
   yunikornApiURL?: string;
-  yhsApiURL?: string;
+  uhsApiURL?: string;
 }

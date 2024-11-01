@@ -1,6 +1,6 @@
 {
-  "name": "yunikorn-history-server-website",
-  "description": "Documentation website for Yunikorn History Server (YHS)",
+  "name": "unicorn-history-server-website",
+  "description": "Documentation website for Unicorn History Server (UHS)",
   "version": "0.1.0",
   "private": false,
   "license": "Apache-2.0",

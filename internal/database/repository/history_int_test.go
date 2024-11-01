@@ -8,8 +8,8 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/require"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
-	"github.com/G-Research/yunikorn-history-server/test/database"
+	"github.com/G-Research/unicorn-history-server/internal/util"
+	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
 func TestHistory_Integration(t *testing.T) {

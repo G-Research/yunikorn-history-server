@@ -10,14 +10,14 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	testconfig "github.com/G-Research/yunikorn-history-server/test/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	testconfig "github.com/G-Research/unicorn-history-server/test/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/test/util"
+	"github.com/G-Research/unicorn-history-server/internal/database/postgres"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/test/util"
 )
 
 // NewTestConnectionPool creates a new test schema, applies migrations and returns a connection pool to the test database.

@@ -3,7 +3,7 @@
 	"version": 1,
 	"newProjectRoot": "projects",
 	"projects": {
-		"yhs-components": {
+		"uhs-components": {
 			"projectType": "application",
 			"schematics": {
 				"@schematics/angular:component": {
@@ -69,11 +69,11 @@
 					"builder": "ngx-build-plus:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "yhs-components:build:production",
+							"buildTarget": "uhs-components:build:production",
 							"extraWebpackConfig": "webpack.prod.config.js"
 						},
 						"development": {
-							"buildTarget": "yhs-components:build:development"
+							"buildTarget": "uhs-components:build:development"
 						}
 					},
 					"defaultConfiguration": "development",
@@ -86,7 +86,7 @@
 				"extract-i18n": {
 					"builder": "ngx-build-plus:extract-i18n",
 					"options": {
-						"buildTarget": "yhs-components:build",
+						"buildTarget": "uhs-components:build",
 						"extraWebpackConfig": "webpack.config.js"
 					}
 				},

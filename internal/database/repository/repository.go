@@ -5,10 +5,10 @@ import (
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 
-	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/G-Research/unicorn-history-server/internal/model"
 )
 
-//go:generate mockgen -destination=mock_repository.go -package=repository github.com/G-Research/yunikorn-history-server/internal/database/repository Repository
+//go:generate mockgen -destination=mock_repository.go -package=repository github.com/G-Research/unicorn-history-server/internal/database/repository Repository
 type Repository interface {
 	InsertApplication(ctx context.Context, app *model.Application) error
 	UpdateApplication(ctx context.Context, app *model.Application) error

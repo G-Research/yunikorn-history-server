@@ -9,22 +9,22 @@
 {{- $dbPoolMinConns := .Values.db.poolMinConns | required "A valid .db.poolMinConns is required!" -}}
 {{- $dbPoolMaxConnLifetime := .Values.db.poolMaxConnLifetime | required "A valid .db.poolMaxConnLifetime is required!" -}}
 {{- $dbPoolMaxConnIdleTime := .Values.db.poolMaxConnIdleTime | required "A valid .db.poolMaxConnIdleTime is required!" -}}
-{{- $yhsPort := .Values.yhs.port | required "A valid .yhs.port is required!" -}}
+{{- $uhsPort := .Values.uhs.port | required "A valid .uhs.port is required!" -}}
 {{- $logJSONFormat := .Values.log.jsonFormat | required "A valid .log.jsonFormat is required!" -}}
 {{- $logLevel := .Values.log.level | required "A valid .log.level is required!" -}}
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "yunikorn-history-server.fullname" . }}
+  name: {{ include "unicorn-history-server.fullname" . }}
   labels:
-    {{- include "yunikorn-history-server.labels" . | nindent 4 }}
+    {{- include "unicorn-history-server.labels" . | nindent 4 }}
     {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    {{- if or .Values.global.annotations .Values.yhs.migrations.useHelmHooks }}
+    {{- if or .Values.global.annotations .Values.uhs.migrations.useHelmHooks }}
   annotations:
-    {{- if .Values.yhs.migrations.useHelmHooks }}
+    {{- if .Values.uhs.migrations.useHelmHooks }}
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
     {{- end }}
@@ -48,8 +48,8 @@ data:
       pool_max_conn_lifetime: {{ $dbPoolMaxConnLifetime }}
       pool_max_conn_idle_time: {{ $dbPoolMaxConnIdleTime }}
       sslmode: "disable"
-    yhs:
-      port: {{ $yhsPort }}
+    uhs:
+      port: {{ $uhsPort }}
     log:
       json_format: {{ $logJSONFormat }}
       level: "{{ $logLevel }}"

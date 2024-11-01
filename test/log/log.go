@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	testconfig "github.com/G-Research/yunikorn-history-server/test/config"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	testconfig "github.com/G-Research/unicorn-history-server/test/config"
 )
 
 func GetTestLogger(ctx context.Context) (context.Context, *zap.SugaredLogger) {

@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
-	"github.com/G-Research/yunikorn-history-server/test/config"
-	"github.com/G-Research/yunikorn-history-server/test/database"
+	"github.com/G-Research/unicorn-history-server/internal/database/migrations"
+	"github.com/G-Research/unicorn-history-server/internal/database/postgres"
+	"github.com/G-Research/unicorn-history-server/internal/database/repository"
+	"github.com/G-Research/unicorn-history-server/internal/model"
+	"github.com/G-Research/unicorn-history-server/test/config"
+	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
 func TestSync_syncNodes_Integration(t *testing.T) {
