@@ -158,7 +158,7 @@ jobs:
         id: docker-metadata
         uses: docker/metadata-action@v5
         with:
-          images: yunikorn-history-server
+          images: unicorn-history-server
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -175,8 +175,8 @@ jobs:
       - name: Upload Docker artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yunikorn-history-server-oci-images-${{ matrix.arch }}
-          path: bin/docker/yunikorn-history-server-oci-*.tar
+          name: unicorn-history-server-oci-images-${{ matrix.arch }}
+          path: bin/docker/unicorn-history-server-oci-*.tar
   # Virtual job that can be configured as a required check before a PR can be merged.
   # As GitHub considers a check as successful if it is skipped, we need to check its status in
   # another workflow (check-required.yml) and create a check there.
