@@ -327,11 +327,11 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 }
 
 //nolint:all
-func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.Application, error) {
+func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partitionID, queueID string, filters ApplicationFilters) ([]*model.Application, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("applications", "").
-		Conditionp("queue_name", "=", queue).
-		Conditionp("partition", "=", partition).
+		Conditionp("queue_id", "=", queueID).
+		Conditionp("partition_id", "=", partitionID).
 		OrderBy("submission_time", sql.OrderByDescending)
 	applyApplicationFilters(queryBuilder, filters)
 

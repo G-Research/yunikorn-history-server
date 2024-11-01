@@ -27,19 +27,15 @@ const (
 	// routes
 	routeClusters                 = "/api/v1/clusters"
 	routePartitions               = "/api/v1/partitions"
-	routeQueuesPerPartition       = "/api/v1/partition/{partition_name}/queues"
-	routeAppsPerPartitionPerQueue = "/api/v1/partition/{partition_name}/queue/{queue_name}/applications"
+	routeQueuesPerPartition       = "/api/v1/partition/{partition_id}/queues"
+	routeAppsPerPartitionPerQueue = "/api/v1/partition/{partition_id}/queue/{queue_id}/applications"
 	routeAppsHistory              = "/api/v1/history/apps"
 	routeContainersHistory        = "/api/v1/history/containers"
-	routeNodesPerPartition        = "/api/v1/partition/{partition_name}/nodes"
+	routeNodesPerPartition        = "/api/v1/partition/{partition_id}/nodes"
 	routeSchedulerHealthcheck     = "/api/v1/scheduler/healthcheck"
 	routeEventStatistics          = "/api/v1/event-statistics"
 	routeHealthLiveness           = "/api/v1/health/liveness"
 	routeHealthReadiness          = "/api/v1/health/readiness"
-
-	// params
-	paramsPartitionName = "partition_name"
-	paramsQueueName     = "queue_name"
 )
 
 var startupTime = time.Now()
@@ -52,7 +48,7 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getPartitions).
 			Produces(restful.MIME_JSON).
 			Doc("Get all partitions").
-			Writes([]dao.PartitionInfo{}).
+			Writes([]model.Partition{}).
 			Param(service.QueryParameter("name", "Filter by partition name").DataType("string")).
 			Param(service.QueryParameter("clusterId", "Filter by clusterId").DataType("string")).
 			Param(service.QueryParameter("state", "Filter by state").DataType("string")).
@@ -74,8 +70,8 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getQueuesPerPartition).
 			Param(
 				service.PathParameter(
-					"partition_name",
-					"partition name",
+					"partition_id",
+					"partition id",
 				).
 					DataType("string"),
 			).
@@ -90,15 +86,15 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getAppsPerPartitionPerQueue).
 			Param(
 				service.PathParameter(
-					"partition_name",
-					"partition name",
+					"partition_id",
+					"partition id",
 				).
 					DataType("string"),
 			).
 			Param(
 				service.PathParameter(
-					"queue_name",
-					"queue name",
+					"queue_id",
+					"queue id",
 				).
 					DataType("string"),
 			).
@@ -123,8 +119,8 @@ func (ws *WebService) init(ctx context.Context) {
 			To(ws.getNodesPerPartition).
 			Param(
 				service.PathParameter(
-					"partition_name",
-					"partition name",
+					"partition_id",
+					"partition id",
 				).
 					DataType("string"),
 			).
@@ -280,8 +276,8 @@ func (ws *WebService) getPartitions(req *restful.Request, resp *restful.Response
 
 func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	partition := req.PathParameter(paramsPartitionName)
-	queues, err := ws.repository.GetQueuesInPartition(ctx, partition)
+	partitionID := req.PathParameter("partition_id")
+	queues, err := ws.repository.GetQueuesInPartition(ctx, partitionID)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
@@ -341,8 +337,8 @@ func buildPartitionQueueTrees(ctx context.Context, queues []*model.Queue) ([]*mo
 
 func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	partition := req.PathParameter(paramsPartitionName)
-	queue := req.PathParameter(paramsQueueName)
+	partitionID := req.PathParameter("partition_id")
+	queueID := req.PathParameter("queue_id")
 
 	filters, err := parseApplicationFilters(req.Request)
 	if err != nil {
@@ -350,22 +346,18 @@ func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *re
 		return
 	}
 
-	apps, err := ws.repository.GetAppsPerPartitionPerQueue(ctx, partition, queue, *filters)
+	apps, err := ws.repository.GetAppsPerPartitionPerQueue(ctx, partitionID, queueID, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
 	}
-	daoApps := make([]*dao.ApplicationDAOInfo, 0, len(apps))
-	for _, app := range apps {
-		daoApps = append(daoApps, &app.ApplicationDAOInfo)
-	}
 
-	jsonResponse(resp, daoApps)
+	jsonResponse(resp, apps)
 }
 
 func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	partition := req.PathParameter(paramsPartitionName)
+	partition := req.PathParameter("partition_id")
 	filters, err := parseNodeFilters(req.Request)
 	if err != nil {
 		badRequestResponse(req, resp, err)
