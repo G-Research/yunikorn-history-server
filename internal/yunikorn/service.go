@@ -84,6 +84,9 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.syncNodes(ctx, partitions); err != nil {
 		return fmt.Errorf("error syncing nodes: %v", err)
 	}
+	if err := s.syncHistory(ctx); err != nil {
+		return fmt.Errorf("error syncing app and container history: %v", err)
+	}
 
 	g.Add(func() error {
 		return s.runEventCollector(ctx)

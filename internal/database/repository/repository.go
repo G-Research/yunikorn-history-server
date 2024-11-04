@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 
-	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-
 	"github.com/G-Research/unicorn-history-server/internal/model"
 )
 
@@ -16,13 +14,10 @@ type Repository interface {
 	DeleteApplicationsNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error
 	GetAllApplications(ctx context.Context, filters ApplicationFilters) ([]*model.Application, error)
 	GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.Application, error)
-	UpdateHistory(
-		ctx context.Context,
-		apps []*dao.ApplicationHistoryDAOInfo,
-		containers []*dao.ContainerHistoryDAOInfo,
-	) error
-	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error)
-	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error)
+	InsertAppHistory(ctx context.Context, appHistory *model.AppHistory) error
+	InsertContainerHistory(ctx context.Context, containerHistory *model.ContainerHistory) error
+	GetApplicationsHistory(ctx context.Context, filters HistoryFilters) ([]*model.AppHistory, error)
+	GetContainersHistory(ctx context.Context, filters HistoryFilters) ([]*model.ContainerHistory, error)
 	InsertNode(ctx context.Context, node *model.Node) error
 	UpdateNode(ctx context.Context, node *model.Node) error
 	GetNodeByID(ctx context.Context, id string) (*model.Node, error)

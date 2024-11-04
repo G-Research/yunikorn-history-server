@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/oklog/ulid/v2"
 
 	"github.com/G-Research/unicorn-history-server/internal/log"
 	"github.com/G-Research/unicorn-history-server/internal/model"
@@ -221,4 +222,46 @@ func (s *Service) syncApplications(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s *Service) syncHistory(ctx context.Context) error {
+
+	appsHistory, err := s.client.GetAppsHistory(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get apps history: %w", err)
+	}
+	containersHistory, err := s.client.GetContainersHistory(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get containers history: %w", err)
+	}
+
+	now := time.Now().UnixNano()
+	var errs []error
+	for _, ah := range appsHistory {
+		history := &model.AppHistory{
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			ID:                        ulid.Make().String(),
+			ApplicationHistoryDAOInfo: *ah,
+		}
+		if err := s.repo.InsertAppHistory(ctx, history); err != nil {
+			errs = append(errs, fmt.Errorf("could not insert app history: %v", err))
+		}
+	}
+
+	for _, ch := range containersHistory {
+		history := &model.ContainerHistory{
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			ID:                      ulid.Make().String(),
+			ContainerHistoryDAOInfo: *ch,
+		}
+		if err := s.repo.InsertContainerHistory(ctx, history); err != nil {
+			errs = append(errs, fmt.Errorf("could not insert container history: %v", err))
+		}
+	}
+
+	return errors.Join(errs...)
 }
