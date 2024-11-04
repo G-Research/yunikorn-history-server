@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
 )
 
 func GetTestLogConfig() *config.LogConfig {

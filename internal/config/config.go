@@ -14,8 +14,8 @@ import (
 )
 
 type Config struct {
-	// YHSConfig specifies the configuration for the Yunikorn History Server.
-	YHSConfig YHSConfig
+	// UHSConfig specifies the configuration for the Unicorn History Server.
+	UHSConfig UHSConfig
 	// PostgresConfig specifies the configuration for the Postgres database.
 	PostgresConfig PostgresConfig
 	// YunikornConfig specifies the configuration for the Yunikorn API.
@@ -24,8 +24,8 @@ type Config struct {
 	LogConfig LogConfig
 }
 
-type YHSConfig struct {
-	// Port specifies the port on which the Yunikorn History Server listens for incoming requests.
+type UHSConfig struct {
+	// Port specifies the port on which the Unicorn History Server listens for incoming requests.
 	Port int
 	// AssetsDir specifies the directory where the static assets are stored.
 	AssetsDir string
@@ -41,13 +41,13 @@ type CORSConfig struct {
 	AllowedHeaders []string
 }
 
-func (c *YHSConfig) Validate() error {
+func (c *UHSConfig) Validate() error {
 	var errorMessages []string
 	if c.Port < 1 {
-		errorMessages = append(errorMessages, "yhs config validation error: port is required")
+		errorMessages = append(errorMessages, "uhs config validation error: port is required")
 	}
 	if len(errorMessages) > 0 {
-		return fmt.Errorf("yhs config validation errors: %v", errorMessages)
+		return fmt.Errorf("uhs config validation errors: %v", errorMessages)
 	}
 	return nil
 }
@@ -117,34 +117,34 @@ type LogConfig struct {
 }
 
 // New creates a new Config object by loading the configuration from the provided path if provided,
-// then load the configuration from environment variables prefixed with YHS_, so that environment variables take precedence.
+// then load the configuration from environment variables prefixed with UHS_, so that environment variables take precedence.
 func New(path string) (*Config, error) {
 	k, err := loadConfig(path)
 	if err != nil {
 		return nil, err
 	}
 
-	assetsDir := k.String("yhs_assets_dir")
+	assetsDir := k.String("uhs_assets_dir")
 	if assetsDir == "" {
 		assetsDir = "assets"
 	}
-	dataSyncInterval := k.Duration("yhs_data_sync_interval")
+	dataSyncInterval := k.Duration("uhs_data_sync_interval")
 	if dataSyncInterval == 0 {
 		dataSyncInterval = 5 * time.Minute
 	}
 	corsConfig := CORSConfig{
-		AllowedOrigins: k.Strings("yhs_cors_allowed_origins"),
-		AllowedMethods: k.Strings("yhs_cors_allowed_methods"),
-		AllowedHeaders: k.Strings("yhs_cors_allowed_headers"),
+		AllowedOrigins: k.Strings("uhs_cors_allowed_origins"),
+		AllowedMethods: k.Strings("uhs_cors_allowed_methods"),
+		AllowedHeaders: k.Strings("uhs_cors_allowed_headers"),
 	}
 
-	yhsConfig := YHSConfig{
-		Port:             k.Int("yhs_port"),
+	uhsConfig := UHSConfig{
+		Port:             k.Int("uhs_port"),
 		AssetsDir:        assetsDir,
 		DataSyncInterval: dataSyncInterval,
 		CORSConfig:       corsConfig,
 	}
-	if err := yhsConfig.Validate(); err != nil {
+	if err := uhsConfig.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -174,7 +174,7 @@ func New(path string) (*Config, error) {
 	}
 
 	config := &Config{
-		YHSConfig:      yhsConfig,
+		UHSConfig:      uhsConfig,
 		YunikornConfig: yunikornConfig,
 		PostgresConfig: postgresConfig,
 		LogConfig:      logConfig,
@@ -183,7 +183,7 @@ func New(path string) (*Config, error) {
 }
 
 // loadConfig loads the configuration from a config file if provided,
-// otherwise it loads the configuration from environment variables prefixed with YHS_.
+// otherwise it loads the configuration from environment variables prefixed with UHS_.
 func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 	k := koanf.NewWithConf(koanf.Conf{
 		Delim:       "_",
@@ -199,14 +199,14 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 		}
 	}
 
-	if err := k.Load(env.Provider("YHS_", "_", processEnvVar), nil); err != nil {
+	if err := k.Load(env.Provider("UHS_", "_", processEnvVar), nil); err != nil {
 		return nil, fmt.Errorf("error loading environment variables: %v", err)
 	}
 
 	return k, nil
 }
 
-// Removes the prefix "YHS_" and converts the value to lowercase
+// Removes the prefix "UHS_" and converts the value to lowercase
 func processEnvVar(s string) string {
-	return strings.ToLower(strings.TrimPrefix(s, "YHS_"))
+	return strings.ToLower(strings.TrimPrefix(s, "UHS_"))
 }

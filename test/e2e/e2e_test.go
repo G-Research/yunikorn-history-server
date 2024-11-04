@@ -19,11 +19,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
 
-	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/commands"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
-	"github.com/G-Research/yunikorn-history-server/test/k8s"
-	"github.com/G-Research/yunikorn-history-server/test/util"
+	"github.com/G-Research/unicorn-history-server/cmd/unicorn-history-server/commands"
+	"github.com/G-Research/unicorn-history-server/internal/health"
+	"github.com/G-Research/unicorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/unicorn-history-server/test/k8s"
+	"github.com/G-Research/unicorn-history-server/test/util"
 )
 
 const (
@@ -225,7 +225,7 @@ func deleteTestNamespace(ctx context.Context, t *testing.T, k8sClient kubernetes
 	}
 }
 
-// getReadinessStatus performs a readiness check on the yunikorn history server.
+// getReadinessStatus performs a readiness check on the unicorn history server.
 func getReadinessStatus(serverURL string) (bool, error) {
 	var status health.ReadinessStatus
 	url := fmt.Sprintf("%s/api/v1/health/readiness", serverURL)
@@ -279,7 +279,7 @@ func httpGet(url string, out any) error {
 }
 
 func runApp(ctx context.Context) {
-	os.Args = []string{"yunikorn-history-server", "--config", "../../config/yunikorn-history-server/local.yml"}
+	os.Args = []string{"unicorn-history-server", "--config", "../../config/unicorn-history-server/local.yml"}
 	if err := commands.New().ExecuteContext(ctx); err != nil {
 		panic(err)
 	}

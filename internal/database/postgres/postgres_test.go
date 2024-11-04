@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
 )
 
 func TestBuildConnectionInfoFromConfig(t *testing.T) {

@@ -9,21 +9,21 @@ import (
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 
-	"github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info"
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/webservice"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
+	"github.com/G-Research/unicorn-history-server/cmd/unicorn-history-server/info"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/database/postgres"
+	"github.com/G-Research/unicorn-history-server/internal/database/repository"
+	"github.com/G-Research/unicorn-history-server/internal/health"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/webservice"
+	"github.com/G-Research/unicorn-history-server/internal/yunikorn"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "yunikorn-history-server",
-	Short: "Yunikorn History Server warehouses Yunikorn events.",
-	Long:  `Yunikorn History Server is a service that listens for events from the Yunikorn Scheduler and stores them in a database.`,
+	Use:   "unicorn-history-server",
+	Short: "Unicorn History Server warehouses Yunikorn events.",
+	Long:  `Unicorn History Server is a service that listens for events from the Yunikorn Scheduler and stores them in a database.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.New(ConfigFile)
 		if err != nil {
@@ -34,12 +34,12 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// Run is the main entry point for the yunikorn history server.
+// Run is the main entry point for the unicorn history server.
 func Run(ctx context.Context, cfg *config.Config) error {
 	log.Init(&cfg.LogConfig)
 
 	log.Logger.Infow(
-		"starting yunikorn history server",
+		"starting unicorn history server",
 		"version", info.Version, "buildTime", info.BuildTime, "commit", info.Commit,
 	)
 
@@ -72,7 +72,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 
 	healthService := health.New(info.Version, health.NewYunikornComponent(client), health.NewPostgresComponent(pool))
 
-	ws := webservice.NewWebService(cfg.YHSConfig, mainRepository, eventRepository, healthService)
+	ws := webservice.NewWebService(cfg.UHSConfig, mainRepository, eventRepository, healthService)
 	g.Add(
 		func() error {
 			return ws.Start(ctx)

@@ -14,7 +14,7 @@ const testConfig = `yunikorn:
   protocol: http
   host: localhost
   port: 8080
-yhs:
+uhs:
   serverAddr: localhost:8081
 `
 
@@ -29,7 +29,7 @@ func TestNew(t *testing.T) {
 			name: "valid config file",
 			path: filepath.Join("testdata", "config.yml"),
 			want: &Config{
-				YHSConfig: YHSConfig{
+				UHSConfig: UHSConfig{
 					Port:             8080,
 					AssetsDir:        "assets",
 					DataSyncInterval: 5 * time.Minute,
@@ -72,8 +72,8 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.NoError(t, os.Setenv("YHS_DB_PASSWORD", "password"))
-			t.Cleanup(func() { assert.NoError(t, os.Unsetenv("YHS_DB_PASSWORD")) })
+			assert.NoError(t, os.Setenv("UHS_DB_PASSWORD", "password"))
+			t.Cleanup(func() { assert.NoError(t, os.Unsetenv("UHS_DB_PASSWORD")) })
 			got, err := New(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
@@ -87,22 +87,22 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestYHSConfigValidate(t *testing.T) {
+func TestUHSConfigValidate(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  YHSConfig
+		config  UHSConfig
 		wantErr bool
 	}{
 		{
 			name: "valid config",
-			config: YHSConfig{
+			config: UHSConfig{
 				Port: 8080,
 			},
 			wantErr: false,
 		},
 		{
 			name: "invalid config - port missing",
-			config: YHSConfig{
+			config: UHSConfig{
 				Port: 0,
 			},
 			wantErr: true,
@@ -112,7 +112,7 @@ func TestYHSConfigValidate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.config.Validate(); (err != nil) != tt.wantErr {
-				t.Errorf("YHSConfig.Validate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("UHSConfig.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -254,10 +254,10 @@ func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 	}
 
 	// Set environment variables
-	if err = os.Setenv("YHS_YUNIKORN_HOST", "example.com"); err != nil {
+	if err = os.Setenv("UHS_YUNIKORN_HOST", "example.com"); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = os.Unsetenv("YHS_YUNIKORN_HOST") })
+	t.Cleanup(func() { _ = os.Unsetenv("UHS_YUNIKORN_HOST") })
 
 	// Load the configuration
 	k, err := loadConfig(tmpfile.Name())
@@ -269,7 +269,7 @@ func TestLoadConfig_FromFileAndEnv(t *testing.T) {
 	assert.Equal(t, "http", k.String("yunikorn_protocol"))
 	assert.Equal(t, "example.com", k.String("yunikorn_host"))
 	assert.Equal(t, 8080, k.Int("yunikorn_port"))
-	assert.Equal(t, "localhost:8081", k.String("yhs_serverAddr"))
+	assert.Equal(t, "localhost:8081", k.String("uhs_serverAddr"))
 }
 
 func TestLoadConfig_FromFile(t *testing.T) {
@@ -298,25 +298,25 @@ func TestLoadConfig_FromFile(t *testing.T) {
 	assert.Equal(t, "http", k.String("yunikorn_protocol"))
 	assert.Equal(t, "localhost", k.String("yunikorn_host"))
 	assert.Equal(t, 8080, k.Int("yunikorn_port"))
-	assert.Equal(t, "localhost:8081", k.String("yhs_serverAddr"))
+	assert.Equal(t, "localhost:8081", k.String("uhs_serverAddr"))
 }
 
 func TestLoadConfig_FromEnv(t *testing.T) {
 	// Set environment variables
-	err := os.Setenv("YHS_DB_PASSWORD", "psw")
+	err := os.Setenv("UHS_DB_PASSWORD", "psw")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Setenv("YHS_YUNIKORN_PROTOCOL", "http")
+	err = os.Setenv("UHS_YUNIKORN_PROTOCOL", "http")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = os.Unsetenv("YHS_YUNIKORN_PROTOCOL") })
-	err = os.Setenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME", "120s")
+	t.Cleanup(func() { _ = os.Unsetenv("UHS_YUNIKORN_PROTOCOL") })
+	err = os.Setenv("UHS_DB_POOL_MAX_CONN_IDLE_TIME", "120s")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = os.Unsetenv("YHS_DB_POOL_MAX_CONN_IDLE_TIME") })
+	t.Cleanup(func() { _ = os.Unsetenv("UHS_DB_POOL_MAX_CONN_IDLE_TIME") })
 
 	k, err := loadConfig("")
 	if err != nil {

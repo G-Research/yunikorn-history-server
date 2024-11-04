@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
 )
 
 func NewConnectionPool(ctx context.Context, cfg *config.PostgresConfig) (*pgxpool.Pool, error) {

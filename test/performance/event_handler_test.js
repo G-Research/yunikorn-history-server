@@ -8,7 +8,7 @@ const jobErrorCounter = new Counter('job_error_counter');
 const appAddCounter = new Counter('app_add_counter');
 
 const namespace = __ENV.NAMESPACE || 'default';
-const yhsServer = __ENV.YHS_SERVER || 'http://localhost:8989';
+const uhsServer = __ENV.UHS_SERVER || 'http://localhost:8989';
 
 const EVENT_STATISTICS_PATH = '/ws/v1/event-statistics';
 const jobTemplate = {
@@ -52,9 +52,9 @@ function createJob(kubernetes) {
     }
 }
 
-// Function to get statistics from YHS server
+// Function to get statistics from UHS server
 function getStats() {
-    const res = http.get(`${yhsServer}${EVENT_STATISTICS_PATH}`);
+    const res = http.get(`${uhsServer}${EVENT_STATISTICS_PATH}`);
     if (res.status !== 200) {
         console.error(`Failed to fetch statistics: ${res.status} ${res.statusText}`);
         return null;

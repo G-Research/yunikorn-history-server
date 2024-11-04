@@ -8,9 +8,9 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/database/postgres"
+	"github.com/G-Research/unicorn-history-server/internal/log"
 )
 
 type GoMigrate struct {

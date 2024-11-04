@@ -10,7 +10,7 @@ import (
 
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/log"
 )
 
 func (s *Service) ProcessEvents(ctx context.Context) error {

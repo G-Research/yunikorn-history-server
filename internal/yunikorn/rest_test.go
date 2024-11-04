@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"testing"
 
-	testconfig "github.com/G-Research/yunikorn-history-server/test/config"
+	testconfig "github.com/G-Research/unicorn-history-server/test/config"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/stretchr/testify/assert"

@@ -9,9 +9,9 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/oklog/ulid/v2"
 
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
-	"github.com/G-Research/yunikorn-history-server/internal/util"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/model"
+	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
 // syncPartitions fetches partitions from the Yunikorn API and syncs them into the database

@@ -3,10 +3,10 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/migrations"
+	"github.com/G-Research/unicorn-history-server/internal/database/migrations"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/log"
 )
 
 // migrateCmd represents the migrate command which is used to run database migrations

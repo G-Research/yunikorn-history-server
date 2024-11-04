@@ -1,4 +1,4 @@
-module github.com/G-Research/yunikorn-history-server
+module github.com/G-Research/unicorn-history-server
 
 go 1.22.4
 

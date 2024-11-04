@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-    title: 'Yunikorn History Server (YHS)',
+    title: 'Unicorn History Server (UHS)',
     tagline: 'A service to store and provide historical data for K8s clusters using the Yunikorn scheduler',
     favicon: 'favicon.ico',
 
@@ -14,12 +14,12 @@ const config: Config = {
     url: 'https://g-research.github.io',
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
-    baseUrl: '/yunikorn-history-server/',
+    baseUrl: '/unicorn-history-server/',
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
     organizationName: 'G-Research', // Usually your GitHub org name.
-    projectName: 'yunikorn-history-server', // Usually your repo name.
+    projectName: 'unicorn-history-server', // Usually your repo name.
 
     i18n: {
         defaultLocale: 'en',
@@ -47,7 +47,7 @@ const config: Config = {
         navbar: {
             title: ``,
             logo: {
-                alt: 'Yunikorn History Server',
+                alt: 'Unicorn History Server',
                 src: 'img/navbar/logo-light-bg.svg',
                 srcDark: 'img/navbar/logo-dark-bg.svg',
                 width: 112,
@@ -74,7 +74,7 @@ const config: Config = {
                 },
                 // right
                 {
-                    href: 'https://github.com/G-Research/yunikorn-history-server',
+                    href: 'https://github.com/G-Research/unicorn-history-server',
                     label: 'GitHub',
                     position: 'right',
                 },
@@ -108,15 +108,15 @@ const config: Config = {
                     title: 'Contribute',
                     items: [
                         {
-                            href: 'https://github.com/G-Research/yunikorn-history-server/discussions',
+                            href: 'https://github.com/G-Research/unicorn-history-server/discussions',
                             label: `Start a Discussion`,
                         },
                         {
-                            href: 'https://github.com/G-Research/yunikorn-history-server/issues',
+                            href: 'https://github.com/G-Research/unicorn-history-server/issues',
                             label: `Report an Issue`,
                         },
                         {
-                            href: 'https://github.com/G-Research/yunikorn-history-server/pulls',
+                            href: 'https://github.com/G-Research/unicorn-history-server/pulls',
                             label: `Create a Pull Request`,
                         },
                     ],
@@ -125,7 +125,7 @@ const config: Config = {
                     title: 'More',
                     items: [
                         {
-                            href: 'https://github.com/G-Research/yunikorn-history-server',
+                            href: 'https://github.com/G-Research/unicorn-history-server',
                             label: 'GitHub',
                         },
                         {
@@ -151,7 +151,7 @@ const config: Config = {
         announcementBar: {
             // https://docusaurus.io/docs/api/themes/configuration#announcement-bar
             id: `announcement-bar__support-project`,
-            content: `Support the <a href="https://github.com/G-Research/yunikorn-history-server" target="_blank">project ⭐️!</a>`,
+            content: `Support the <a href="https://github.com/G-Research/unicorn-history-server" target="_blank">project ⭐️!</a>`,
             isCloseable: true,
         },
         colorMode: {
@@ -172,7 +172,7 @@ const config: Config = {
             },
             {
                 name: 'keywords',
-                content: 'Yunikorn History Server, YHS, Kubernetes, K8s, Apache YuniKorn, Scheduler',
+                content: 'Unicorn History Server, UHS, Kubernetes, K8s, Apache YuniKorn, Scheduler',
             },
         ],
     } satisfies Preset.ThemeConfig,

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/G-Research/yunikorn-history-server/internal/database/repository"
+	"github.com/G-Research/unicorn-history-server/internal/database/repository"
 )
 
 const (

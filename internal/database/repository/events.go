@@ -7,7 +7,7 @@ import (
 
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/unicorn-history-server/internal/yunikorn/model"
 )
 
 type EventRepository interface {

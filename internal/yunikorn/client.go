@@ -9,7 +9,7 @@ import (
 
 // Client defines the interface for interacting with the Yunikorn REST API.
 //
-//go:generate mockgen -destination=mock_client.go -package=yunikorn github.com/G-Research/yunikorn-history-server/internal/yunikorn Client
+//go:generate mockgen -destination=mock_client.go -package=yunikorn github.com/G-Research/unicorn-history-server/internal/yunikorn Client
 type Client interface {
 	GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error)
 	GetPartitionQueues(ctx context.Context, partitionName string) (*dao.PartitionQueueDAOInfo, error)

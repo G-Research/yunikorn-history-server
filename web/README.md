@@ -1,8 +1,8 @@
-# YuniKorn Histry Server Components
+# Unicorn History Server Components
 
 **Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions.
 
-YuniKorn History Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/G-Research/yunikorn-web/)
+Unicorn History Server Components provides a remote components that are consumed by the [YuniKorn Web](https://github.com/G-Research/yunikorn-web/)
 
 ## Development environment setup
 ### Dependencies
@@ -36,7 +36,7 @@ This will start the JSON Server and serve mock data. You can access it at `http:
 
 ### Build
 
-Run `make web-build` from the project root or `npm run build`. Build output is set to `/assets` folder in project root as it will be served from the YHS server.
+Run `make web-build` from the project root or `npm run build`. Build output is set to `/assets` folder in project root as it will be served from the UHS server.
 
 ## Further help
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).

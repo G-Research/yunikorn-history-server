@@ -48,7 +48,7 @@ PLATFORMS ?= linux/amd64,linux/arm64
 # IMAGE_REGISTRY defines the registry where the operator image will be pushed.
 IMAGE_REGISTRY ?= gresearch
 # IMAGE_NAME defines the name of the operator image.
-IMAGE_NAME := yunikorn-history-server
+IMAGE_NAME := unicorn-history-server
 # IMAGE_REPO defines the image repository and name where the operator image will be pushed.
 IMAGE_REPO ?= $(IMAGE_REGISTRY)/$(IMAGE_NAME)
 # BUILD_TIME defines the build time of the operator image.
@@ -88,7 +88,7 @@ ARCH ?= $(shell $(GO) env GOARCH)
 
 # Local Development
 CLUSTER_MGR ?= kind     # either 'kind' or 'minikube'
-CLUSTER_NAME ?= yhs
+CLUSTER_NAME ?= uhs
 NAMESPACE ?= yunikorn
 
 KIND ?= $(LOCALBIN_TOOLING)/kind
@@ -116,10 +116,10 @@ help: ## display this help.
 
 ##@ Database
 
-YHS_CONFIG ?= config/yunikorn-history-server/local.yml
+UHS_CONFIG ?= config/unicorn-history-server/local.yml
 
 define yq_get
-    $(YQ) e '$(1)' $(YHS_CONFIG)
+    $(YQ) e '$(1)' $(UHS_CONFIG)
 endef
 
 define yq_get_db
@@ -134,8 +134,8 @@ define yq_get_jk
     $(shell $(call yq_get, .yunikorn.$(1)))
 endef
 
-define yq_get_yhs
-	$(shell $(call yq_get, .yhs.$(1)))
+define yq_get_uhs
+	$(shell $(call yq_get, .uhs.$(1)))
 endef
 
 DB_USER ?= $(strip $(call url_escape,$(strip $(call yq_get_db,user))))
@@ -145,7 +145,7 @@ DB_PORT ?= $(strip $(call yq_get_db,port))
 DB_NAME ?= $(strip $(call url_escape,$(strip $(call yq_get_db,dbname))))
 YUNIKORN_HOST ?= $(strip $(call yq_get_jk,host))
 YUNIKORN_PORT ?= $(strip $(call yq_get_jk,port))
-YHS_PORT ?= $(strip $(call yq_get_yhs,port))
+UHS_PORT ?= $(strip $(call yq_get_uhs,port))
 
 define database_url
 	postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
@@ -155,8 +155,8 @@ define yunikorn_api_url
 	http://$(YUNIKORN_HOST):$(YUNIKORN_PORT)
 endef
 
-define yhs_api_url
-	http://$(YUNIKORN_HOST):$(YHS_PORT)
+define uhs_api_url
+	http://$(YUNIKORN_HOST):$(UHS_PORT)
 endef
 
 .PHONY: migrate
@@ -180,8 +180,8 @@ codegen: mockgen ## generate code using go generate (mocks).
 ##@ Run
 
 .PHONY: run
-run: ## run the yunikorn-history-server binary.
-	go run cmd/yunikorn-history-server/main.go --config config/yunikorn-history-server/local.yml
+run: ## run the unicorn-history-server binary.
+	go run cmd/unicorn-history-server/main.go --config config/unicorn-history-server/local.yml
 
 ##@ Json Server
 
@@ -208,7 +208,7 @@ define start-cluster
 	@echo "**********************************"
 	@echo "Creating cluster"
 	@echo "**********************************"
-	@CLUSTER_NAME=yhs-test $(MAKE) create-cluster
+	@CLUSTER_NAME=uhs-test $(MAKE) create-cluster
 
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
@@ -221,7 +221,7 @@ define cleanup-cluster
 	    echo "**********************************"
 	    echo "Deleting cluster"
 	    echo "**********************************"
-	    CLUSTER_NAME=yhs-test $(MAKE) delete-cluster
+	    CLUSTER_NAME=uhs-test $(MAKE) delete-cluster
     }
 endef
 
@@ -233,50 +233,50 @@ test: test-go-unit integration-tests ## run all tests.
 integration-tests: ## start dependencies and run integration tests.
 	@$(cleanup-cluster); trap cleanup EXIT
 	@$(start-cluster)
-	YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-integration
+	UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-integration
 
 .PHONY: e2e-tests
 .ONESHELL:
 e2e-tests: ## start dependencies and run e2e tests.
 	@$(cleanup-cluster); trap cleanup EXIT
 	@$(start-cluster)
-	CLUSTER_NAME=yhs-test YHS_SERVER=${YHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
+	CLUSTER_NAME=uhs-test UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
 .ONESHELL:
 performance-tests: k6 ## start dependencies and run performance tests.
 	@$(cleanup-cluster)
 	@stop_perf_cluster() {
-	    yhs_pid=`ps ax | grep 'yunikorn-history-server' | grep -v grep | awk '{print $$1}'`
-		if [ "$${yhs_pid}" != "" ] ; then
+	    uhs_pid=`ps ax | grep 'unicorn-history-server' | grep -v grep | awk '{print $$1}'`
+		if [ "$${uhs_pid}" != "" ] ; then
 		    echo "**********************************"
-		    echo "Terminating yunikorn-history-server"
+		    echo "Terminating unicorn-history-server"
 		    echo "**********************************"
-		    kill -TERM $${yhs_pid}
+		    kill -TERM $${uhs_pid}
 		fi
 		cleanup
 	}; trap stop_perf_cluster EXIT
 	@$(start-cluster)
 	@echo "**********************************"
-	@echo "Run yunikorn history server"
+	@echo "Run unicorn history server"
 	@mkdir -p test-reports/performance
 	$(MAKE) clean build
-	bin/app/yunikorn-history-server \
-		--config config/yunikorn-history-server/local.yml > test-reports/performance/yhs.log & disown
-	YHS_SERVER=$${YHS_SERVER:-http://localhost:8989}
-	@echo "YHS_SERVER is $${YHS_SERVER}"
+	bin/app/unicorn-history-server \
+		--config config/unicorn-history-server/local.yml > test-reports/performance/uhs.log & disown
+	UHS_SERVER=$${UHS_SERVER:-http://localhost:8989}
+	@echo "UHS_SERVER is $${UHS_SERVER}"
 	@echo "**********************************"
-	@echo "Waiting for yunikorn history server to start"
+	@echo "Waiting for unicorn history server to start"
 	@echo "**********************************"
 	while true; do
-		echo "Sending request to yunikorn history server..."
-		URL="$${YHS_SERVER}/ws/v1/health/readiness"
+		echo "Sending request to unicorn history server..."
+		URL="$${UHS_SERVER}/ws/v1/health/readiness"
 		http_status=`curl --write-out %{http_code} --silent --output /dev/null $${URL} || true`
 		if [ $$http_status -eq 200 ] ; then
-			echo "Yunikorn history server is up and running."
+			echo "Unicorn history server is up and running."
 			break
 		else
-			echo "Waiting for yunikorn history server to start..."
+			echo "Waiting for unicorn history server to start..."
 			sleep 10
 		fi
 	done
@@ -305,20 +305,20 @@ test-k6-performance: ## run k6 performance tests.
 .PHONY: web-build
 web-build: ng ## build the web components.
 	npm install --prefix web
-	yhsApiURL=$(strip $(call yhs_api_url)) yunikornApiURL=$(strip $(call yunikorn_api_url)) npm run setenv --prefix web
+	uhsApiURL=$(strip $(call uhs_api_url)) yunikornApiURL=$(strip $(call yunikorn_api_url)) npm run setenv --prefix web
 	npm run build --prefix web
 
 .PHONY: build
-build: bin/app ## build the yunikorn-history-server binary for current OS and architecture.
-	echo "Building yunikorn-history-server binary for $(OS)/$(ARCH)"
-	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/yunikorn-history-server 										\
-		-ldflags "-X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Version=$(GIT_TAG) 		\
-				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.Commit=$(GIT_COMMIT) 	\
-				  -X github.com/G-Research/yunikorn-history-server/cmd/yunikorn-history-server/info.BuildTime=$(BUILD_TIME)" \
-	  	./cmd/yunikorn-history-server
+build: bin/app ## build the unicorn-history-server binary for current OS and architecture.
+	echo "Building unicorn-history-server binary for $(OS)/$(ARCH)"
+	CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) $(GO) build -o $(LOCALBIN_APP)/unicorn-history-server 										\
+		-ldflags "-X github.com/G-Research/unicorn-history-server/cmd/unicorn-history-server/info.Version=$(GIT_TAG) 		\
+				  -X github.com/G-Research/unicorn-history-server/cmd/unicorn-history-server/info.Commit=$(GIT_COMMIT) 	\
+				  -X github.com/G-Research/unicorn-history-server/cmd/unicorn-history-server/info.BuildTime=$(BUILD_TIME)" \
+	  	./cmd/unicorn-history-server
 
 .PHONY: build-linux-amd64
-build-linux-amd64: ## build the yunikorn-history-server binary for linux/amd64.
+build-linux-amd64: ## build the unicorn-history-server binary for linux/amd64.
 	OS=linux ARCH=amd64 $(MAKE) build
 
 .PHONY: clean
@@ -348,7 +348,7 @@ else
   # e.g. DOCKER_TAGS="image:tag1 image:tag2"
   # We do not set DOCKER_LABELS because of the way make handles spaces
   # in variable values. Use DOCKER_METADATA if you need to set labels.
-  DOCKER_TAGS?=yunikorn-history-server:$(VERSION) yunikorn-history-server:latest
+  DOCKER_TAGS?=unicorn-history-server:$(VERSION) unicorn-history-server:latest
   DOCKER_TAGS:=$(addprefix --tag ,$(DOCKER_TAGS))
 endif
 
@@ -357,7 +357,7 @@ docker-build: OS=linux
 docker-build: bin/docker clean build ## build docker image using buildx.
 	echo "Building docker image for linux/$(ARCH)"
 	docker buildx build    				     			 \
-		--file build/yunikorn-history-server/Dockerfile  \
+		--file build/unicorn-history-server/Dockerfile  \
 		--platform linux/$(ARCH) 		 				 \
 		--output $(DOCKER_OUTPUT) 						 \
 		--build-arg NODE_VERSION=$(NODE_VERSION) 		 \
@@ -380,7 +380,7 @@ docker-push: docker-build-amd64 ## push linux/amd64 docker image to registry usi
 ##@ External Dependencies
 
 .PHONY: kind-all-local
-kind-all-local: kind-all helm-install-yhs-local ## create kind cluster, install dependencies locally and build & install yunikorn-history-server.
+kind-all-local: kind-all helm-install-uhs-local ## create kind cluster, install dependencies locally and build & install unicorn-history-server.
 
 .PHONY: kind-all
 kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies.
@@ -432,9 +432,9 @@ helm-install-postgres: ## install postgres using helm.
 helm-uninstall-postgres: ## uninstall postgres using helm.
 	$(HELM) uninstall postgres --namespace $(NAMESPACE)
 
-.PHONY: helm-install-yhs-local
-helm-install-yhs-local: kind-load-image ## build & install yunikorn-history-server using helm.
-	helm upgrade --install yunikorn-history-server charts/yunikorn-history-server \
+.PHONY: helm-install-uhs-local
+helm-install-uhs-local: kind-load-image ## build & install unicorn-history-server using helm.
+	helm upgrade --install unicorn-history-server charts/unicorn-history-server \
 		--set image.registry=""   			 \
 		--set image.repository=$(IMAGE_REPO) \
 		--set image.tag=$(GIT_TAG) 			 \
@@ -442,8 +442,8 @@ helm-install-yhs-local: kind-load-image ## build & install yunikorn-history-serv
 		--namespace $(NAMESPACE)  			 \
 		--create-namespace
 
-helm-uninstall-yhs-local:
-	helm uninstall yunikorn-history-server --namespace $(NAMESPACE)
+helm-uninstall-uhs-local:
+	helm uninstall unicorn-history-server --namespace $(NAMESPACE)
 
 .PHONY: helm-repos
 helm-repos: helm

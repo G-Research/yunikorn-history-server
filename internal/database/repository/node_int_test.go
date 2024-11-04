@@ -9,10 +9,10 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 
-	"github.com/G-Research/yunikorn-history-server/internal/model"
+	"github.com/G-Research/unicorn-history-server/internal/model"
 
-	"github.com/G-Research/yunikorn-history-server/internal/util"
-	"github.com/G-Research/yunikorn-history-server/test/database"
+	"github.com/G-Research/unicorn-history-server/internal/util"
+	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
 func TestGetNodesPerPartition_Integration(t *testing.T) {

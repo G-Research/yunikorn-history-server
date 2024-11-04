@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/database/postgres"
-	"github.com/G-Research/yunikorn-history-server/internal/yunikorn"
-	testconfig "github.com/G-Research/yunikorn-history-server/test/config"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/database/postgres"
+	"github.com/G-Research/unicorn-history-server/internal/yunikorn"
+	testconfig "github.com/G-Research/unicorn-history-server/test/config"
 )
 
 func TestService_Readiness_Integration(t *testing.T) {

@@ -1,30 +1,30 @@
-# yunikorn-history-server
+# unicorn-history-server
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-A Helm charts for Yunikorn History Server (YHS)
+A Helm charts for Unicorn History Server (UHS)
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| db.host | string | `"postgresql"` | YHS database host |
-| db.name | string | `"postgres"` | YHS database name |
-| db.password | string | `"psw"` | YHS database password (insecure, use secrets) |
-| db.passwordSecretRef | string | `""` | YHS database password secret reference |
+| db.host | string | `"postgresql"` | UHS database host |
+| db.name | string | `"postgres"` | UHS database name |
+| db.password | string | `"psw"` | UHS database password (insecure, use secrets) |
+| db.passwordSecretRef | string | `""` | UHS database password secret reference |
 | db.poolMaxConnIdleTime | int | `120` | Maximum idle time of a connection in the database pool |
 | db.poolMaxConnLifetime | int | `1800` | Maximum lifetime of a connection in the database pool |
 | db.poolMaxConns | int | `0` | Maximum number of connections in the database pool |
 | db.poolMinConns | int | `0` | Minimum number of connections in the database pool |
-| db.port | string | `"5432"` | YHS database port |
+| db.port | string | `"5432"` | UHS database port |
 | db.sslmode | string | `"disable"` | SSL mode for the database connection |
-| db.user | string | `"postgres"` | YHS database user |
+| db.user | string | `"postgres"` | UHS database user |
 | fullnameOverride | string | `""` | fullnameOverride completely replaces the generated name. |
 | global.annotations | object | `{}` | Annotations to add to all deployed resources |
 | global.labels | object | `{}` | Labels to add to all deployed resources |
 | image.pullPolicy | string | `"IfNotPresent"` | Docker image pull policy |
 | image.registry | string | `"docker.io"` | Docker registry |
-| image.repository | string | `"gresearch/yunikorn-history-server"` | Docker image repository |
+| image.repository | string | `"gresearch/unicorn-history-server"` | Docker image repository |
 | image.tag | string | `"main"` | Docker image tag |
 | log.jsonFormat | bool | `true` | Output type of the log, if true, log will be output in json format |
 | log.level | string | `"INFO"` | Log level, one of DEBUG, INFO, WARN, ERROR, DPANIC, PANIC, FATAL |
@@ -33,10 +33,10 @@ A Helm charts for Yunikorn History Server (YHS)
 | service.nodePort | int | `30003` | Service node port |
 | service.port | int | `8989` | Service port |
 | service.type | string | `"ClusterIP"` | Service type |
-| yhs.migrations.backoffLimit | int | `2` | Backoff limit for migrations job |
-| yhs.migrations.enabled | bool | `true` | Toggle whether to run migrations job on install/upgrade. |
-| yhs.migrations.useHelmHooks | bool | `true` | Toggle whether to use Helm pre-install and pre-upgrade hooks for migrations job. |
-| yhs.port | int | `8989` | YHS port |
+| uhs.migrations.backoffLimit | int | `2` | Backoff limit for migrations job |
+| uhs.migrations.enabled | bool | `true` | Toggle whether to run migrations job on install/upgrade. |
+| uhs.migrations.useHelmHooks | bool | `true` | Toggle whether to use Helm pre-install and pre-upgrade hooks for migrations job. |
+| uhs.port | int | `8989` | UHS port |
 | yunikorn.host | string | `"yunikorn-service"` | Yunikorn scheduler host |
 | yunikorn.port | string | `"9889"` | Yunikorn scheduler port |
 | yunikorn.protocol | string | `"http"` | Yunikorn scheduler protocol |

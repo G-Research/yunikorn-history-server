@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/G-Research/yunikorn-history-server/test/log"
+	"github.com/G-Research/unicorn-history-server/test/log"
 
 	"github.com/stretchr/testify/assert"
 )

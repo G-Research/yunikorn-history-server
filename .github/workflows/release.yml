@@ -45,7 +45,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          pattern: yunikorn-history-server-oci-images-*
+          pattern: unicorn-history-server-oci-images-*
           merge-multiple: true
 
       - name: Login to Docker Hub
@@ -57,7 +57,7 @@ jobs:
       - name: Push to Docker Hub
         run: |
           tags=(${{ steps.tags.outputs.tags }})
-          for image in yunikorn-history-server-oci-*.tar
+          for image in unicorn-history-server-oci-*.tar
           do
             digest=$(tar -xOf $image index.json | jq -r '.manifests[0].digest')
             digests+=($digest)

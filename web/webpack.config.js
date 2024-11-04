@@ -10,7 +10,7 @@ sharedMappings.register(
 
 module.exports = {
   output: {
-    uniqueName: "yhsComponents",
+    uniqueName: "uhsComponents",
     publicPath: "auto"
   },
   optimization: {
@@ -29,7 +29,7 @@ module.exports = {
         library: { type: "module" },
 
         // For remotes (please adjust)
-        name: "yhsComponents",
+        name: "uhsComponents",
         filename: "remoteEntry.js",
         exposes: {
             './AllocationsDrawerComponent': './/src/app/allocations-drawer/allocations-drawer.component.ts',

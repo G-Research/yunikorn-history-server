@@ -42,7 +42,7 @@ export class EnvConfigService {
     this.uiPort = window.location.port;
     this.envConfig = {
       yunikornApiURL: 'http://localhost:9889',
-      yhsApiURL: 'http://localhost:8989',
+      uhsApiURL: 'http://localhost:8989',
     };
   }
 
@@ -63,9 +63,9 @@ export class EnvConfigService {
     return `${this.uiProtocol}//${this.uiHostname}:${this.uiPort}/ws`;
   }
 
-  getYHSWebAddress() {
-    if (this.envConfig.yhsApiURL) {
-      return `${this.envConfig.yhsApiURL}/api`;
+  getUHSWebAddress() {
+    if (this.envConfig.uhsApiURL) {
+      return `${this.envConfig.uhsApiURL}/api`;
     }
 
     return `${this.uiProtocol}//${this.uiHostname}:${this.uiPort}/api`;

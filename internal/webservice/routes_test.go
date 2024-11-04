@@ -12,14 +12,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/G-Research/yunikorn-history-server/internal/config"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
-	"github.com/G-Research/yunikorn-history-server/internal/util"
+	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/unicorn-history-server/internal/model"
+	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
 func TestWebServiceServeSPA(t *testing.T) {
 	ws := &WebService{
-		config: config.YHSConfig{
+		config: config.UHSConfig{
 			AssetsDir: "testdir",
 		},
 	}

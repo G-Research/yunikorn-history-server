@@ -1,15 +1,15 @@
-# Yunikorn History Server (YHS)
+# Unicorn History Server (UHS)
 
 **Disclaimer:** This project is currently in development and is in the pre-alpha phase. We warmly welcome all input, contributions, and suggestions.
 
 [![GoReport Widget]][GoReport Status]
-[![Latest Release](https://img.shields.io/github/v/release/G-Research/yunikorn-history-server?include_prereleases)](https://github.com/armadaproject/armada-operator/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/G-Research/unicorn-history-server?include_prereleases)](https://github.com/armadaproject/armada-operator/releases/latest)
 
-[GoReport Widget]: https://goreportcard.com/badge/github.com/G-Research/yunikorn-history-server
+[GoReport Widget]: https://goreportcard.com/badge/github.com/G-Research/unicorn-history-server
 
-[GoReport Status]: https://goreportcard.com/report/github.com/G-Research/yunikorn-history-server
+[GoReport Status]: https://goreportcard.com/report/github.com/G-Research/unicorn-history-server
 
-Yunikorn History Server (YHS) is an ancillary service for K8S Clusters using the Yunikorn Scheduler to
+Unicorn History Server (UHS) is an ancillary service for K8S Clusters using the Yunikorn Scheduler to
 persist the state of a Yunikorn-managed cluster to a database, allowing for long-term
 access to historical data of the cluster's operations (e.g. to view past Applications,
 resource usage, etc.).
@@ -25,7 +25,7 @@ Please refer to the following G-Research repositories for the relevant forks:
 
 ### Quickstart
 
-Use the following `make` commands to run **YHS** for a quick test.
+Use the following `make` commands to run **UHS** for a quick test.
 These commands will install all the necessary dependencies in [kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 
 #### Prerequisites
@@ -34,7 +34,7 @@ Make sure you have the following dependencies installed:
 
 * [Docker](https://docs.docker.com/get-docker/) - containerization platform.
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) - tool for running local Kubernetes clusters using Docker container "nodes".
-* [Go v1.22+](https://golang.org/doc/install) programming language used to build the Yunikorn History Server.
+* [Go v1.22+](https://golang.org/doc/install) programming language used to build the Unicorn History Server.
 
 ##### Setup local cluster and install dependencies:
 
@@ -50,7 +50,7 @@ If you want to use minikube for your cluster:
 env CLUSTER_MGR=minikube make minikube-all
 ```
 
-start the Yunikorn History Server:
+start the Unicorn History Server:
 
 ```bash
 make run
@@ -58,15 +58,15 @@ make run
 
 ## Architecture
 
-The Yunikorn History Server (YHS) is a standalone service that enhances the capabilities of the
+The Unicorn History Server (UHS) is a standalone service that enhances the capabilities of the
 Yunikorn Scheduler by providing long-term persistence of cluster operational data.
 It achieves this by listening for events from the Yunikorn Scheduler and persisting them to a database.
 
 <p align="center">
-  <img src="yhs-architecture.png" height="300">
+  <img src="uhs-architecture.png" height="300">
 </p>
 
-YHS is composed of three main components:
+UHS is composed of three main components:
 
 1. **Event Collector:** This component is responsible for listening to events stream API from the Yunikorn Scheduler  
    and persisting them to the database.
@@ -78,11 +78,11 @@ YHS is composed of three main components:
    querying capabilities to filter and retrieve specific data.
 
 3. **Web Frontend:** This component enhances the existing Yunikorn Web interface by providing additional features that utilize
-   the historical data stored by YHS. It is loaded on the application page of Yunikorn Web. The home page served by YHS
-   will display instructions on how to connect YHS to the YuniKorn Web.
+   the historical data stored by UHS. It is loaded on the application page of Yunikorn Web. The home page served by UHS
+   will display instructions on how to connect UHS to the YuniKorn Web.
    More details on the web component is available [here](web/README.md).
 
-By integrating these components, YHS provides a comprehensive view of the historical operations of a Yunikorn-managed cluster,
+By integrating these components, UHS provides a comprehensive view of the historical operations of a Yunikorn-managed cluster,
 enabling detailed analysis and insights.
 
 ## Contributing
@@ -92,7 +92,7 @@ We welcome and appreciate your contributions!
 ### General
 
 Report issues, request features, and ask questions
-using [GitHub Issues](https://github.com/G-Research/yunikorn-history-server/issues/new).
+using [GitHub Issues](https://github.com/G-Research/unicorn-history-server/issues/new).
 
 ### Code Contributions
 
@@ -142,7 +142,7 @@ should all succeed without error.
 
 ## Security
 
-Please see our [security policy](https://github.com/G-Research/yunikorn-history-server/blob/main/SECURITY.md) for details on reporting security vulnerabilities.
+Please see our [security policy](https://github.com/G-Research/unicorn-history-server/blob/main/SECURITY.md) for details on reporting security vulnerabilities.
 
 ## License
 

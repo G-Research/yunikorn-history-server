@@ -1,7 +1,7 @@
 # Performance Tests using k6
 K6 is an open-source load testing tool for testing the performance of your backend infrastructure. `xk6` is a tool that makes easy to 
 interact with kubernetes while writing load tests using `k6.` In this setup we use `k6` with `xk6` extension to test the performance of 
-different components of the Yunikorn History Server.
+different components of the Unicorn History Server.
 
 ## Prerequisites
 - [K6](https://grafana.com/docs/k6/latest/)

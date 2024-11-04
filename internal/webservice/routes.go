@@ -17,10 +17,10 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/google/uuid"
 
-	"github.com/G-Research/yunikorn-history-server/internal/health"
-	"github.com/G-Research/yunikorn-history-server/internal/log"
-	"github.com/G-Research/yunikorn-history-server/internal/model"
-	ykmodel "github.com/G-Research/yunikorn-history-server/internal/yunikorn/model"
+	"github.com/G-Research/unicorn-history-server/internal/health"
+	"github.com/G-Research/unicorn-history-server/internal/log"
+	"github.com/G-Research/unicorn-history-server/internal/model"
+	ykmodel "github.com/G-Research/unicorn-history-server/internal/yunikorn/model"
 )
 
 const (
@@ -225,8 +225,8 @@ func (ws *WebService) init(ctx context.Context) {
 func enrichSwaggerObject(swo *spec.Swagger) {
 	swo.Info = &spec.Info{
 		InfoProps: spec.InfoProps{
-			Title:       "Yunikorn History Server",
-			Description: "Yunikorn History Server API",
+			Title:       "Unicorn History Server",
+			Description: "Unicorn History Server API",
 			License: &spec.License{
 				LicenseProps: spec.LicenseProps{
 					Name: "Apache 2.0",

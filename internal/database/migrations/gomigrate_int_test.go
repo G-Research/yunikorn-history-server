@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/G-Research/yunikorn-history-server/test/config"
-	"github.com/G-Research/yunikorn-history-server/test/database"
+	"github.com/G-Research/unicorn-history-server/test/config"
+	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
 func TestGoMigrate_Integration(t *testing.T) {

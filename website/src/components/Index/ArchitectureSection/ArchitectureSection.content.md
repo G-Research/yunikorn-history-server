@@ -1,10 +1,10 @@
-The Yunikorn History Server (YHS) is a standalone service that enhances the capabilities of the
+The Unicorn History Server (UHS) is a standalone service that enhances the capabilities of the
 Yunikorn Scheduler by providing long-term persistence of cluster operational data.
 It achieves this by listening for events from the Yunikorn Scheduler and persisting them to a database.
 
-![YHS Architecture](https://github.com/G-Research/yunikorn-history-server/raw/main/yhs-architecture.png)
+![UHS Architecture](https://github.com/G-Research/unicorn-history-server/raw/main/uhs-architecture.png)
 
-YHS is composed of three main components:
+UHS is composed of three main components:
 
 1. **Event Collector:** This component is responsible for listening to events stream API from the Yunikorn Scheduler  
    and persisting them to the database.
@@ -16,8 +16,8 @@ YHS is composed of three main components:
    querying capabilities to filter and retrieve specific data.
 
 3. **Web Frontend:** This component enhances the existing Yunikorn Web interface by providing additional features that utilize
-   the historical data stored by YHS. It is loaded on the application page of Yunikorn Web.
-   More details on the web component is available [here](https://github.com/G-Research/yunikorn-history-server/tree/main/web).
+   the historical data stored by UHS. It is loaded on the application page of Yunikorn Web.
+   More details on the web component is available [here](https://github.com/G-Research/unicorn-history-server/tree/main/web).
 
-By integrating these components, YHS provides a comprehensive view of the historical operations of a Yunikorn-managed cluster,
+By integrating these components, UHS provides a comprehensive view of the historical operations of a Yunikorn-managed cluster,
 enabling detailed analysis and insights.

@@ -16,7 +16,7 @@ image:
   # -- Docker registry
   registry: "docker.io"
   # -- Docker image repository
-  repository: "gresearch/yunikorn-history-server"
+  repository: "gresearch/unicorn-history-server"
   # -- Docker image tag
   tag: "main"
   # -- Docker image pull policy
@@ -46,8 +46,8 @@ ingress:
         - path: /
           pathType: ImplementationSpecific
 
-yhs:
-  # -- YHS port
+uhs:
+  # -- UHS port
   port: 8989
   migrations:
     # -- Toggle whether to run migrations job on install/upgrade.
@@ -58,17 +58,17 @@ yhs:
     backoffLimit: 2
 
 db:
-  # -- YHS database host
+  # -- UHS database host
   host: "postgresql"
-  # -- YHS database port
+  # -- UHS database port
   port: "5432"
-  # -- YHS database name
-  name: "yhs"
-  # -- YHS database user
+  # -- UHS database name
+  name: "uhs"
+  # -- UHS database user
   user: "postgres"
-  # -- YHS database password (insecure, use secrets)
+  # -- UHS database password (insecure, use secrets)
   password: "psw"
-  # -- YHS database password secret reference
+  # -- UHS database password secret reference
   passwordSecretRef: ""
   # -- Maximum number of connections in the database pool
   poolMaxConns: 0
