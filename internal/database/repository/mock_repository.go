@@ -13,7 +13,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	dao "github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	model "github.com/G-Research/yunikorn-history-server/internal/model"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -158,10 +157,10 @@ func (mr *MockRepositoryMockRecorder) GetApplicationByID(arg0, arg1 any) *gomock
 }
 
 // GetApplicationsHistory mocks base method.
-func (m *MockRepository) GetApplicationsHistory(arg0 context.Context, arg1 HistoryFilters) ([]*dao.ApplicationHistoryDAOInfo, error) {
+func (m *MockRepository) GetApplicationsHistory(arg0 context.Context, arg1 HistoryFilters) ([]*model.AppHistory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetApplicationsHistory", arg0, arg1)
-	ret0, _ := ret[0].([]*dao.ApplicationHistoryDAOInfo)
+	ret0, _ := ret[0].([]*model.AppHistory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -188,10 +187,10 @@ func (mr *MockRepositoryMockRecorder) GetAppsPerPartitionPerQueue(arg0, arg1, ar
 }
 
 // GetContainersHistory mocks base method.
-func (m *MockRepository) GetContainersHistory(arg0 context.Context, arg1 HistoryFilters) ([]*dao.ContainerHistoryDAOInfo, error) {
+func (m *MockRepository) GetContainersHistory(arg0 context.Context, arg1 HistoryFilters) ([]*model.ContainerHistory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetContainersHistory", arg0, arg1)
-	ret0, _ := ret[0].([]*dao.ContainerHistoryDAOInfo)
+	ret0, _ := ret[0].([]*model.ContainerHistory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -277,6 +276,20 @@ func (mr *MockRepositoryMockRecorder) GetQueuesInPartition(arg0, arg1 any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueuesInPartition", reflect.TypeOf((*MockRepository)(nil).GetQueuesInPartition), arg0, arg1)
 }
 
+// InsertAppHistory mocks base method.
+func (m *MockRepository) InsertAppHistory(arg0 context.Context, arg1 *model.AppHistory) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertAppHistory", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertAppHistory indicates an expected call of InsertAppHistory.
+func (mr *MockRepositoryMockRecorder) InsertAppHistory(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAppHistory", reflect.TypeOf((*MockRepository)(nil).InsertAppHistory), arg0, arg1)
+}
+
 // InsertApplication mocks base method.
 func (m *MockRepository) InsertApplication(arg0 context.Context, arg1 *model.Application) error {
 	m.ctrl.T.Helper()
@@ -289,6 +302,20 @@ func (m *MockRepository) InsertApplication(arg0 context.Context, arg1 *model.App
 func (mr *MockRepositoryMockRecorder) InsertApplication(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertApplication", reflect.TypeOf((*MockRepository)(nil).InsertApplication), arg0, arg1)
+}
+
+// InsertContainerHistory mocks base method.
+func (m *MockRepository) InsertContainerHistory(arg0 context.Context, arg1 *model.ContainerHistory) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertContainerHistory", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertContainerHistory indicates an expected call of InsertContainerHistory.
+func (mr *MockRepositoryMockRecorder) InsertContainerHistory(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertContainerHistory", reflect.TypeOf((*MockRepository)(nil).InsertContainerHistory), arg0, arg1)
 }
 
 // InsertNode mocks base method.
@@ -345,20 +372,6 @@ func (m *MockRepository) UpdateApplication(arg0 context.Context, arg1 *model.App
 func (mr *MockRepositoryMockRecorder) UpdateApplication(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateApplication", reflect.TypeOf((*MockRepository)(nil).UpdateApplication), arg0, arg1)
-}
-
-// UpdateHistory mocks base method.
-func (m *MockRepository) UpdateHistory(arg0 context.Context, arg1 []*dao.ApplicationHistoryDAOInfo, arg2 []*dao.ContainerHistoryDAOInfo) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateHistory", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateHistory indicates an expected call of UpdateHistory.
-func (mr *MockRepositoryMockRecorder) UpdateHistory(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHistory", reflect.TypeOf((*MockRepository)(nil).UpdateHistory), arg0, arg1, arg2)
 }
 
 // UpdateNode mocks base method.
