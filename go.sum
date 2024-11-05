@@ -1,7 +1,7 @@
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
-github.com/G-Research/yunikorn-core v0.0.0-20241029155547-9e7d3e3499aa h1:+p7LQH2+nkc8s4pbv0IZKBWVb96gUH4Sh2RL/oXqtNo=
-github.com/G-Research/yunikorn-core v0.0.0-20241029155547-9e7d3e3499aa/go.mod h1:N5oF1SL8ZznKnwu227/wUhatP3EzWMb5wHgwZwNTAzw=
+github.com/G-Research/yunikorn-core v0.0.0-20241104160512-441cd84df3cb h1:Iw8CXMw+jP+BEChtwLuNK1/hhFYHlMn5UT4rSCZO+sM=
+github.com/G-Research/yunikorn-core v0.0.0-20241104160512-441cd84df3cb/go.mod h1:N5oF1SL8ZznKnwu227/wUhatP3EzWMb5wHgwZwNTAzw=
 github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08 h1:uV9X13Of+UNRBhvhHzf6A1KT2j85emuVMNEua5rO8g4=
 github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08/go.mod h1:FQMPzj6bVpw0SLjDxVSdbp8DaQGeUrVD4WdxyI3go9Q=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=

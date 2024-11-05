@@ -27,6 +27,7 @@ CREATE TABLE applications(
     pending_resource JSONB,
     partition_id TEXT NOT NULL,
     partition TEXT NOT NULL,
+    queue_id TEXT, -- can be null if the app is not assigned to any queue yet
     queue_name TEXT NOT NULL,
     submission_time BIGINT,
     finished_time BIGINT,
