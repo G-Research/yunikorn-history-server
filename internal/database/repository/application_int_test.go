@@ -176,7 +176,7 @@ func TestGetAppsPerPartitionPerQueue_Integration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apps, err := repo.GetAppsPerPartitionPerQueue(context.Background(), "default", "root.default", tt.filters)
+			apps, err := repo.GetAppsPerPartitionPerQueue(context.Background(), "1", "1", tt.filters)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, len(apps))
 		})
@@ -187,6 +187,22 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 	t.Helper()
 
 	now := time.Now()
+
+	partitions := []*model.Partition{
+		{
+			Metadata: model.Metadata{
+				CreatedAtNano: now.UnixNano(),
+			},
+			PartitionInfo: dao.PartitionInfo{
+				ID: "1",
+			},
+		},
+	}
+
+	for _, p := range partitions {
+		err := repo.InsertPartition(ctx, p)
+		require.NoError(t, err, "could not seed partitions")
+	}
 
 	queues := []*model.Queue{
 		{
