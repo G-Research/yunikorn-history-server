@@ -176,7 +176,7 @@ func TestGetAppsPerPartitionPerQueue_Integration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apps, err := repo.GetAppsPerPartitionPerQueue(context.Background(), "default", "root.default", tt.filters)
+			apps, err := repo.GetAppsPerPartitionPerQueue(context.Background(), "1", "1", tt.filters)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, len(apps))
 		})
@@ -187,6 +187,22 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 	t.Helper()
 
 	now := time.Now()
+
+	partitions := []*model.Partition{
+		{
+			Metadata: model.Metadata{
+				CreatedAtNano: now.UnixNano(),
+			},
+			PartitionInfo: dao.PartitionInfo{
+				ID: "1",
+			},
+		},
+	}
+
+	for _, p := range partitions {
+		err := repo.InsertPartition(ctx, p)
+		require.NoError(t, err, "could not seed partitions")
+	}
 
 	queues := []*model.Queue{
 		{
@@ -230,6 +246,8 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				MaxUsedResource: map[string]int64{"cpu": 2},
 				PendingResource: map[string]int64{"cpu": 1},
 				Partition:       "default",
+				PartitionID:     "1",
+				QueueID:         util.ToPtr("1"),
 				QueueName:       "root.default",
 				SubmissionTime:  now.Add(-6 * time.Hour).UnixMilli(),
 				User:            "user1",
@@ -246,7 +264,9 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				UsedResource:    map[string]int64{"memory": 1},
 				MaxUsedResource: map[string]int64{"memory": 2},
 				PendingResource: map[string]int64{"memory": 1},
+				PartitionID:     "1",
 				Partition:       "default",
+				QueueID:         util.ToPtr("1"),
 				QueueName:       "root.default",
 				SubmissionTime:  now.Add(-5 * time.Hour).UnixMilli(),
 				FinishedTime:    util.ToPtr(now.Add(-4 * time.Hour).Add(-20 * time.Minute).UnixMilli()),
@@ -264,7 +284,9 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				UsedResource:    map[string]int64{"cpu": 3},
 				MaxUsedResource: map[string]int64{"cpu": 6},
 				PendingResource: map[string]int64{"cpu": 3},
+				PartitionID:     "1",
 				Partition:       "default",
+				QueueID:         util.ToPtr("1"),
 				QueueName:       "root.default",
 				SubmissionTime:  now.Add(-3 * time.Hour).UnixMilli(),
 				FinishedTime:    util.ToPtr(now.Add(-1 * time.Hour).Add(-33 * time.Minute).UnixMilli()),
@@ -283,7 +305,9 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				UsedResource:    map[string]int64{"memory": 4},
 				MaxUsedResource: map[string]int64{"memory": 8},
 				PendingResource: map[string]int64{"memory": 4},
+				PartitionID:     "1",
 				Partition:       "default",
+				QueueID:         util.ToPtr("1"),
 				QueueName:       "root.default",
 				SubmissionTime:  now.Add(-2 * time.Hour).UnixMilli(),
 				User:            "user3",
@@ -301,7 +325,9 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				UsedResource:    map[string]int64{"cpu": 5},
 				MaxUsedResource: map[string]int64{"cpu": 10},
 				PendingResource: map[string]int64{"cpu": 5},
+				PartitionID:     "1",
 				Partition:       "default",
+				QueueID:         util.ToPtr("1"),
 				QueueName:       "root.default",
 				SubmissionTime:  now.Add(-1 * time.Hour).UnixMilli(),
 				User:            "user1",
@@ -319,7 +345,9 @@ func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepositor
 				UsedResource:    map[string]int64{"memory": 6},
 				MaxUsedResource: map[string]int64{"memory": 12},
 				PendingResource: map[string]int64{"memory": 6},
+				PartitionID:     "1",
 				Partition:       "default",
+				QueueID:         util.ToPtr("1"),
 				QueueName:       "root.default",
 				SubmissionTime:  now.Add(-43 * time.Minute).UnixMilli(),
 				FinishedTime:    util.ToPtr(now.Add(-5 * time.Minute).UnixMilli()),
