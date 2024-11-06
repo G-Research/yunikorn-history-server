@@ -18,8 +18,7 @@ func (s *PostgresRepository) InsertQueue(ctx context.Context, q *model.Queue) er
 		VALUES (@id, @created_at_nano, @queue_name, @parent_id, @parent, @status, @partition_id, @pending_resource, @max_resource,
 		@guaranteed_resource, @allocated_resource, @preempting_resource, @head_room, @is_leaf, @is_managed,
 		@properties, @template_info, @abs_used_capacity, @max_running_apps, @running_apps,
-		@current_priority, @allocating_accepted_apps)
-		RETURNING id`
+		@current_priority, @allocating_accepted_apps)`
 
 	_, err := s.dbpool.Exec(ctx, insertSQL,
 		pgx.NamedArgs{
