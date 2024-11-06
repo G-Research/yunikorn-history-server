@@ -13,6 +13,7 @@ func (app *Application) MergeFrom(appInfo *dao.ApplicationDAOInfo) {
 	app.ID = appInfo.ID
 	app.PartitionID = appInfo.PartitionID
 	app.Partition = appInfo.Partition
+	app.QueueID = appInfo.QueueID
 	app.QueueName = appInfo.QueueName
 	app.SubmissionTime = appInfo.SubmissionTime
 	app.FinishedTime = appInfo.FinishedTime

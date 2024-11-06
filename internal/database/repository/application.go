@@ -60,6 +60,7 @@ INSERT INTO applications
 	pending_resource,
 	partition_id,
 	partition,
+	queue_id,
 	queue_name,
 	submission_time,
 	finished_time,
@@ -86,6 +87,7 @@ VALUES
 	@pending_resource,
 	@partition_id,
 	@partition,
+	@queue_id,
 	@queue_name,
 	@submission_time,
 	@finished_time,
@@ -116,6 +118,7 @@ VALUES
 			"pending_resource":     app.PendingResource,
 			"partition_id":         app.PartitionID,
 			"partition":            app.Partition,
+			"queue_id":             app.QueueID,
 			"queue_name":           app.QueueName,
 			"submission_time":      app.SubmissionTime,
 			"finished_time":        app.FinishedTime,
@@ -146,6 +149,7 @@ SELECT
 	pending_resource,
 	partition_id,
 	partition,
+	queue_id,
 	queue_name,
 	submission_time,
 	finished_time,
@@ -187,6 +191,7 @@ LIMIT 1
 		&app.PendingResource,
 		&app.PartitionID,
 		&app.Partition,
+		&app.QueueID,
 		&app.QueueName,
 		&app.SubmissionTime,
 		&app.FinishedTime,
@@ -303,6 +308,7 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 			&app.PendingResource,
 			&app.PartitionID,
 			&app.Partition,
+			&app.QueueID,
 			&app.QueueName,
 			&app.SubmissionTime,
 			&app.FinishedTime,
@@ -327,11 +333,11 @@ func (s *PostgresRepository) GetAllApplications(ctx context.Context, filters App
 }
 
 //nolint:all
-func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partition, queue string, filters ApplicationFilters) ([]*model.Application, error) {
+func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, partitionID, queueID string, filters ApplicationFilters) ([]*model.Application, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("applications", "").
-		Conditionp("queue_name", "=", queue).
-		Conditionp("partition", "=", partition).
+		Conditionp("queue_id", "=", queueID).
+		Conditionp("partition_id", "=", partitionID).
 		OrderBy("submission_time", sql.OrderByDescending)
 	applyApplicationFilters(queryBuilder, filters)
 
@@ -357,6 +363,7 @@ func (s *PostgresRepository) GetAppsPerPartitionPerQueue(ctx context.Context, pa
 			&app.PendingResource,
 			&app.PartitionID,
 			&app.Partition,
+			&app.QueueID,
 			&app.QueueName,
 			&app.SubmissionTime,
 			&app.FinishedTime,

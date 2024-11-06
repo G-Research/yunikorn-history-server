@@ -216,7 +216,6 @@ func getClusterIDQueryParam(r *http.Request) *string {
 	clusterId := r.URL.Query().Get(queryParamClusterID)
 	if clusterId != "" {
 		return &clusterId
-
 	}
 	return nil
 }
@@ -225,10 +224,10 @@ func getStateQueryParam(r *http.Request) *string {
 	state := r.URL.Query().Get(queryParamState)
 	if state != "" {
 		return &state
-
 	}
 	return nil
 }
+
 func getNameQueryParam(r *http.Request) *string {
 	name := r.URL.Query().Get(queryParamName)
 	if name != "" {

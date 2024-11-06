@@ -3,7 +3,7 @@ module github.com/G-Research/unicorn-history-server
 go 1.22.4
 
 require (
-	github.com/G-Research/yunikorn-core v0.0.0-20241029155547-9e7d3e3499aa
+	github.com/G-Research/yunikorn-core v0.0.0-20241104160512-441cd84df3cb
 	github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08
 	github.com/emicklei/go-restful-openapi/v2 v2.11.0
 	github.com/emicklei/go-restful/v3 v3.12.1
