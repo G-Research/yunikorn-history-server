@@ -47,7 +47,7 @@ func (a *accumulator) add(event *si.EventRecord) {
 }
 
 // run is responsible for running the accumulator.
-func (a *accumulator) run(ctx context.Context) error {
+func (a *accumulator) run(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
@@ -99,6 +99,4 @@ func (a *accumulator) run(ctx context.Context) error {
 	}()
 
 	wg.Wait()
-
-	return nil
 }
