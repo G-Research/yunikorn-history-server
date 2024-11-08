@@ -83,17 +83,17 @@ func (mr *MockRepositoryMockRecorder) DeletePartitionsNotInIDs(arg0, arg1, arg2 
 }
 
 // DeleteQueuesNotInIDs mocks base method.
-func (m *MockRepository) DeleteQueuesNotInIDs(arg0 context.Context, arg1 string, arg2 []string, arg3 int64) error {
+func (m *MockRepository) DeleteQueuesNotInIDs(arg0 context.Context, arg1 []string, arg2 int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteQueuesNotInIDs", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "DeleteQueuesNotInIDs", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteQueuesNotInIDs indicates an expected call of DeleteQueuesNotInIDs.
-func (mr *MockRepositoryMockRecorder) DeleteQueuesNotInIDs(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) DeleteQueuesNotInIDs(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueuesNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeleteQueuesNotInIDs), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueuesNotInIDs", reflect.TypeOf((*MockRepository)(nil).DeleteQueuesNotInIDs), arg0, arg1, arg2)
 }
 
 // GetAllApplications mocks base method.

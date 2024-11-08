@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/G-Research/unicorn-history-server/internal/config"
+	"github.com/G-Research/yunikorn-core/pkg/webservice"
 
 	"github.com/G-Research/unicorn-history-server/internal/log"
 
@@ -19,6 +20,7 @@ const (
 	endpointPartitions        = "/ws/v1/partitions"
 	endpointAppsHistory       = "/ws/v1/history/apps"
 	endpointContainersHistory = "/ws/v1/history/containers"
+	endpointFullStateDump     = "/ws/v1/fullstatedump"
 	endpointHealthcheck       = "/ws/v1/scheduler/healthcheck"
 )
 
@@ -39,6 +41,24 @@ func NewRESTClient(cfg *config.YunikornConfig) *RESTClient {
 		host:     cfg.Host,
 		port:     cfg.Port,
 	}
+}
+
+func (c *RESTClient) GetFullStateDump(ctx context.Context) (*webservice.AggregatedStateInfo, error) {
+	resp, err := c.get(ctx, endpointFullStateDump)
+	if err != nil {
+		return nil, err
+	}
+	defer closeBody(ctx, resp)
+
+	if resp.StatusCode != 200 {
+		return nil, handleNonOKResponse(ctx, resp)
+	}
+
+	var state webservice.AggregatedStateInfo
+	if err = unmarshallBody(ctx, resp, &state); err != nil {
+		return nil, err
+	}
+	return &state, nil
 }
 
 func (c *RESTClient) GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error) {

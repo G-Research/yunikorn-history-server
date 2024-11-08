@@ -2,10 +2,6 @@ package yunikorn
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
-	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -38,28 +34,19 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setup         func() *httptest.Server
-		partitions    []*model.Partition
+		stateNodes    []*dao.NodesDAOInfo
 		existingNodes []*model.Node
 		expectedNodes []*model.Node
 		wantErr       bool
 	}{
 		{
 			name: "Sync nodes with no existing nodes",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-					response := []dao.NodeDAOInfo{
-						{ID: "1", NodeID: "node-1", Partition: partitionName, HostName: "host-1"},
-						{ID: "2", NodeID: "node-2", Partition: partitionName, HostName: "host-2"},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{
+			stateNodes: []*dao.NodesDAOInfo{
 				{
-					PartitionInfo: dao.PartitionInfo{
-						Name: "default",
+					PartitionName: "default",
+					Nodes: []*dao.NodeDAOInfo{
+						{ID: "1", NodeID: "node-1", Partition: "default", HostName: "host-1"},
+						{ID: "2", NodeID: "node-2", Partition: "default", HostName: "host-2"},
 					},
 				},
 			},
@@ -72,19 +59,11 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 		},
 		{
 			name: "Sync nodes with existing nodes in DB",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-					response := []dao.NodeDAOInfo{
-						{ID: "2", NodeID: "node-2", Partition: partitionName, HostName: "host-2-updated"},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{
+			stateNodes: []*dao.NodesDAOInfo{
 				{
-					PartitionInfo: dao.PartitionInfo{
-						Name: "default",
+					PartitionName: "default",
+					Nodes: []*dao.NodeDAOInfo{
+						{ID: "2", NodeID: "node-2", Partition: "default", HostName: "host-2-updated"},
 					},
 				},
 			},
@@ -116,13 +95,9 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			ts := tt.setup()
-			defer ts.Close()
+			s := NewService(repo, eventRepository, nil)
 
-			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
-			s := NewService(repo, eventRepository, client)
-
-			err := s.syncNodes(ctx, tt.partitions)
+			err := s.syncNodes(ctx, tt.stateNodes)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -159,49 +134,36 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		setup          func() *httptest.Server
-		partitions     []*model.Partition
+		stateQueues    []dao.PartitionQueueDAOInfo
 		existingQueues []*model.Queue
 		expected       []*model.Queue
 		wantErr        bool
 	}{
 		{
 			name: "Sync queues with no existing queues",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-					response := dao.PartitionQueueDAOInfo{
-						ID:          "1",
-						QueueName:   "root",
-						PartitionID: partitionName,
-						Children: []dao.PartitionQueueDAOInfo{
-							{
-								ID:          "2",
-								QueueName:   "root.child-1",
-								PartitionID: partitionName,
-								Children: []dao.PartitionQueueDAOInfo{
-									{
-										ID:          "3",
-										QueueName:   "root.child-1.1",
-										PartitionID: partitionName,
-									},
-									{
-										ID:          "4",
-										QueueName:   "root.child-1.2",
-										PartitionID: partitionName,
-									},
+			stateQueues: []dao.PartitionQueueDAOInfo{
+				{
+					ID:          "1",
+					QueueName:   "root",
+					PartitionID: "1",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							ID:          "2",
+							QueueName:   "root.child-1",
+							PartitionID: "1",
+							Children: []dao.PartitionQueueDAOInfo{
+								{
+									ID:          "3",
+									QueueName:   "root.child-1.1",
+									PartitionID: "1",
+								},
+								{
+									ID:          "4",
+									QueueName:   "root.child-1.2",
+									PartitionID: "1",
 								},
 							},
 						},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{
-				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "1",
-						Name: "1",
 					},
 				},
 			},
@@ -240,38 +202,25 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 		},
 		{
 			name: "Sync queues with existing queues in DB",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-
-					response := dao.PartitionQueueDAOInfo{
-						ID:          "1",
-						QueueName:   "root",
-						PartitionID: partitionName,
-						Children: []dao.PartitionQueueDAOInfo{
-							{
-								ID:          "2",
-								QueueName:   "root.child-1",
-								PartitionID: partitionName,
-							},
-							{
-								ID:          "3",
-								QueueName:   "root.child-2",
-								PartitionID: partitionName,
-							},
-						},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{
-				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "1",
-						Name: "1",
+			stateQueues: []dao.PartitionQueueDAOInfo{{
+				ID:          "1",
+				QueueName:   "root",
+				PartitionID: "1",
+				Children: []dao.PartitionQueueDAOInfo{
+					{
+						ID:          "2",
+						QueueName:   "root.child-1",
+						PartitionID: "1",
+					},
+					{
+						ID:          "3",
+						QueueName:   "root.child-2",
+						PartitionID: "1",
 					},
 				},
 			},
+			},
+
 			existingQueues: []*model.Queue{
 				{
 					Metadata: model.Metadata{
@@ -311,29 +260,17 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 		},
 		{
 			name: "Sync queues when queue is deleted",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-					response := dao.PartitionQueueDAOInfo{
-						ID:          "1",
-						QueueName:   "root",
-						PartitionID: partitionName,
-						Children: []dao.PartitionQueueDAOInfo{
-							{
-								ID:          "3",
-								QueueName:   "root.child-2",
-								PartitionID: partitionName,
-							},
-						},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{
+			stateQueues: []dao.PartitionQueueDAOInfo{
 				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "1",
-						Name: "1",
+					ID:          "1",
+					QueueName:   "root",
+					PartitionID: "1",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							ID:          "3",
+							QueueName:   "root.child-2",
+							PartitionID: "1",
+						},
 					},
 				},
 			},
@@ -378,64 +315,40 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Sync queues with HTTP error",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					http.Error(w, "internal server error", http.StatusInternalServerError)
-				}))
-			},
-			partitions: []*model.Partition{{
-				PartitionInfo: dao.PartitionInfo{
-					ID:   "1",
-					Name: "1",
-				},
-			}},
-			existingQueues: nil,
-			expected:       nil,
-			wantErr:        true,
-		},
-		{
 			name: "Sync queues with multiple partitions",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-					response := dao.PartitionQueueDAOInfo{
-						ID:          partitionName + "1",
-						QueueName:   "root",
-						PartitionID: partitionName,
-						Children: []dao.PartitionQueueDAOInfo{
-							{
-								ID:          partitionName + "2",
-								QueueName:   "root.child-1",
-								PartitionID: partitionName,
-							},
-							{
-								ID:          partitionName + "3",
-								QueueName:   "root.child-2",
-								PartitionID: partitionName,
-							},
+			stateQueues: []dao.PartitionQueueDAOInfo{
+				{
+					ID:          "1",
+					QueueName:   "root",
+					PartitionID: "1",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							ID:          "2",
+							QueueName:   "root.child-1",
+							PartitionID: "1",
 						},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{
-				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "1",
-						Name: "1",
+						{
+							ID:          "3",
+							QueueName:   "root.child-2",
+							PartitionID: "1",
+						},
 					},
 				},
 				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "2",
-						Name: "2",
-					},
-				},
-				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "3",
-						Name: "3",
+					ID:          "4",
+					QueueName:   "root",
+					PartitionID: "2",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							ID:          "5",
+							QueueName:   "root.child-1",
+							PartitionID: "2",
+						},
+						{
+							ID:          "6",
+							QueueName:   "root.child-2",
+							PartitionID: "2",
+						},
 					},
 				},
 			},
@@ -443,65 +356,44 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 			expected: []*model.Queue{
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "11",
+						ID:          "1",
 						QueueName:   "root",
 						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "12",
+						ID:          "2",
 						QueueName:   "root.child-1",
 						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "13",
+						ID:          "3",
 						QueueName:   "root.child-2",
 						PartitionID: "1",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "21",
+						ID:          "4",
 						QueueName:   "root",
 						PartitionID: "2",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "22",
+						ID:          "5",
 						QueueName:   "root.child-1",
 						PartitionID: "2",
 					},
 				},
 				{
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "23",
+						ID:          "6",
 						QueueName:   "root.child-2",
 						PartitionID: "2",
-					},
-				},
-				{
-					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "31",
-						QueueName:   "root",
-						PartitionID: "3",
-					},
-				},
-				{
-					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "32",
-						QueueName:   "root.child-1",
-						PartitionID: "3",
-					},
-				},
-				{
-					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:          "33",
-						QueueName:   "root.child-2",
-						PartitionID: "3",
 					},
 				},
 			},
@@ -510,50 +402,39 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 		},
 		{
 			name: "Sync queues with deeply nested queues",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					partitionName := extractPartitionNameFromURL(r.URL.Path)
-
-					response := dao.PartitionQueueDAOInfo{
-						ID:          "1",
-						QueueName:   "root",
-						PartitionID: partitionName,
-						Children: []dao.PartitionQueueDAOInfo{
-							{
-								ID:          "2",
-								QueueName:   "root.child-1",
-								PartitionID: partitionName,
-								Children: []dao.PartitionQueueDAOInfo{
-									{
-										ID:          "3",
-										QueueName:   "root.child-1.1",
-										PartitionID: partitionName,
-										Children: []dao.PartitionQueueDAOInfo{
-											{
-												ID:          "4",
-												QueueName:   "root.child-1.1.1",
-												PartitionID: partitionName,
-											},
-											{
-												ID:          "5",
-												QueueName:   "root.child-1.1.2",
-												PartitionID: partitionName,
-											},
+			stateQueues: []dao.PartitionQueueDAOInfo{
+				{
+					ID:          "1",
+					QueueName:   "root",
+					PartitionID: "1",
+					Children: []dao.PartitionQueueDAOInfo{
+						{
+							ID:          "2",
+							QueueName:   "root.child-1",
+							PartitionID: "1",
+							Children: []dao.PartitionQueueDAOInfo{
+								{
+									ID:          "3",
+									QueueName:   "root.child-1.1",
+									PartitionID: "1",
+									Children: []dao.PartitionQueueDAOInfo{
+										{
+											ID:          "4",
+											QueueName:   "root.child-1.1.1",
+											PartitionID: "1",
+										},
+										{
+											ID:          "5",
+											QueueName:   "root.child-1.1.2",
+											PartitionID: "1",
 										},
 									},
 								},
 							},
 						},
-					}
-					writeResponse(t, w, response)
-				}))
-			},
-			partitions: []*model.Partition{{
-				PartitionInfo: dao.PartitionInfo{
-					ID:   "1",
-					Name: "1",
+					},
 				},
-			}},
+			},
 			existingQueues: nil,
 			expected: []*model.Queue{
 				{
@@ -609,21 +490,9 @@ func TestSync_syncQueues_Integration(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			ts := tt.setup()
-			defer ts.Close()
+			s := NewService(repo, eventRepository, nil)
 
-			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
-			s := NewService(repo, eventRepository, client)
-
-			// Create a cancellable context for this specific service
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			// Start the service in a goroutine
-			go func() {
-				_ = s.Run(ctx)
-			}()
-
-			err := s.syncQueues(context.Background(), tt.partitions)
+			err := s.syncQueues(context.Background(), tt.stateQueues)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -656,58 +525,49 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		setup              func() *httptest.Server
+		statePartitions    []*dao.PartitionInfo
 		existingPartitions []*model.Partition
 		expected           []*model.Partition
 		wantErr            bool
 	}{
 		{
 			name: "Sync partition with no existing partitions in DB",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					response := []*dao.PartitionInfo{
-						{
-							ID:   "1",
-							Name: "1",
-						},
-						{
-							ID:   "2",
-							Name: "2",
-						},
-					}
-					writeResponse(t, w, response)
-				}))
+			statePartitions: []*dao.PartitionInfo{
+				{
+					ID:   "1",
+					Name: "1",
+				},
+				{
+					ID:   "2",
+					Name: "2",
+				},
 			},
 			existingPartitions: nil,
 			expected: []*model.Partition{
-				{
-					PartitionInfo: dao.PartitionInfo{
-						ID:   "1",
-						Name: "1",
-					},
-				},
 				{
 					PartitionInfo: dao.PartitionInfo{
 						ID:   "2",
 						Name: "2",
 					},
 				},
+				{
+					PartitionInfo: dao.PartitionInfo{
+						ID:   "1",
+						Name: "1",
+					},
+				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Should mark secondary partition as deleted in DB",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					response := []*dao.PartitionInfo{
-						{
-							ID:   "1",
-							Name: "1",
-						},
-					}
-					writeResponse(t, w, response)
-				}))
+			name: "Should mark partition 2 as deleted in DB",
+			statePartitions: []*dao.PartitionInfo{
+				{
+					ID:   "1",
+					Name: "1",
+				},
 			},
+
 			existingPartitions: []*model.Partition{
 				{
 					Metadata: model.Metadata{
@@ -741,6 +601,7 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		// TODO: test syncPartition when statePartitions is nil
 	}
 
 	for _, tt := range tests {
@@ -756,56 +617,37 @@ func TestSync_syncPartitions_Integration(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			ts := tt.setup()
-			defer ts.Close()
-
-			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
-			s := NewService(repo, eventRepository, client)
+			s := NewService(repo, eventRepository, nil)
 
 			// Start the service
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			partitions, err := s.syncPartitions(ctx)
+			err := s.syncPartitions(ctx, tt.statePartitions)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
 
-			sort.Slice(partitions, func(i, j int) bool {
-				return partitions[i].Name < partitions[j].Name
-			})
-
 			var partitionsInDB []*model.Partition
 			partitionsInDB, err = s.repo.GetAllPartitions(ctx, repository.PartitionFilters{})
 			require.NoError(t, err)
 
-			sort.Slice(partitionsInDB, func(i, j int) bool {
-				return partitionsInDB[i].Name < partitionsInDB[j].Name
-			})
-
-			i := 0
-			j := 0
-			for i < len(partitions) && j < len(partitionsInDB) {
-				newPartition := partitions[i]
-				dbPartition := partitionsInDB[j]
-				if newPartition.ID == dbPartition.ID {
-					assert.Equal(t, newPartition.PartitionInfo, dbPartition.PartitionInfo)
-					assert.Nil(t, newPartition.DeletedAtNano)
-					i++
-					j++
-					continue
+			for _, dbPartition := range partitionsInDB {
+				found := false
+				for _, expectedPartition := range tt.expected {
+					if dbPartition.ID == expectedPartition.ID {
+						assert.Equal(t, expectedPartition.PartitionInfo, dbPartition.PartitionInfo)
+						assert.Nil(t, expectedPartition.DeletedAtNano)
+						found = true
+					}
 				}
-				assert.NotNil(t, dbPartition.DeletedAtNano)
-				j++
+				if !found {
+					assert.NotNil(t, dbPartition.DeletedAtNano)
+				}
 			}
-			assert.Equal(t, i, len(partitions))
 
-			assert.Equal(t, len(partitions), i)
-			for i := j; i < len(partitionsInDB); i++ {
-				assert.NotNil(t, partitionsInDB[i].DeletedAtNano)
-			}
 		})
 	}
 }
@@ -825,7 +667,7 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 	now := time.Now().UnixNano()
 	tests := []struct {
 		name                 string
-		setup                func() *httptest.Server
+		stateApplications    []*dao.ApplicationDAOInfo
 		existingApplications []*model.Application
 		expectedLive         []*model.Application
 		expectedDeleted      []*model.Application
@@ -833,14 +675,9 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 	}{
 		{
 			name: "Sync applications with no existing applications in DB",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					response := []*dao.ApplicationDAOInfo{
-						{ID: "1", ApplicationID: "app-1"},
-						{ID: "2", ApplicationID: "app-2"},
-					}
-					writeResponse(t, w, response)
-				}))
+			stateApplications: []*dao.ApplicationDAOInfo{
+				{ID: "1", ApplicationID: "app-1"},
+				{ID: "2", ApplicationID: "app-2"},
 			},
 			existingApplications: nil,
 			expectedLive: []*model.Application{
@@ -867,13 +704,8 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 		},
 		{
 			name: "Should mark application as deleted in DB",
-			setup: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					response := []*dao.ApplicationDAOInfo{
-						{ID: "1", ApplicationID: "app-1"},
-					}
-					writeResponse(t, w, response)
-				}))
+			stateApplications: []*dao.ApplicationDAOInfo{
+				{ID: "1", ApplicationID: "app-1"},
 			},
 			existingApplications: []*model.Application{
 				{
@@ -934,20 +766,13 @@ func TestSync_syncApplications_Integration(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			ts := tt.setup()
-			defer ts.Close()
-
-			client := NewRESTClient(getMockServerYunikornConfig(t, ts.URL))
-			s := NewService(repo, eventRepository, client)
+			s := NewService(repo, eventRepository, nil)
 
 			// Start the service
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			go func() {
-				_ = s.Run(ctx)
-			}()
 
-			err := s.syncApplications(ctx)
+			err := s.syncApplications(ctx, tt.stateApplications)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -998,16 +823,6 @@ func isQueuePresent(queuesInDB []*model.Queue, targetQueue *model.Queue) bool {
 		}
 	}
 	return false
-}
-
-// Helper function to extract partition name from the URL
-func extractPartitionNameFromURL(urlPath string) string {
-	// Assume URL is like: /ws/v1/partition/{partitionName}/queues
-	parts := strings.Split(urlPath, "/")
-	if len(parts) > 4 {
-		return parts[4]
-	}
-	return ""
 }
 
 func setupDatabase(t *testing.T, ctx context.Context) (*pgxpool.Pool, repository.Repository, func()) {
