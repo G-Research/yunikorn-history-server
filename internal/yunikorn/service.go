@@ -12,7 +12,6 @@ import (
 
 	"github.com/G-Research/unicorn-history-server/internal/database/repository"
 	"github.com/G-Research/unicorn-history-server/internal/log"
-	"github.com/G-Research/unicorn-history-server/internal/workqueue"
 )
 
 type Service struct {
@@ -25,8 +24,6 @@ type Service struct {
 	partitionAccumulator *accumulator
 	// appMap is a map of application IDs to their respective DAOs.
 	appMap map[string]*dao.ApplicationDAOInfo
-	// workqueue processes jobs which store data in database during data sync and retries them with exponential backoff.
-	workqueue *workqueue.WorkQueue
 }
 
 type Option func(*Service)
@@ -37,7 +34,6 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 		eventRepository: eventRepository,
 		client:          client,
 		appMap:          make(map[string]*dao.ApplicationDAOInfo),
-		workqueue:       workqueue.NewWorkQueue(workqueue.WithName("yunikorn_data_sync")),
 	}
 	s.eventHandler = s.handleEvent
 	s.partitionAccumulator = newAccumulator(
@@ -60,11 +56,6 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 
 func (s *Service) Run(ctx context.Context) error {
 	g := run.Group{}
-
-	g.Add(func() error {
-		return s.workqueue.Run(ctx)
-	}, func(err error) {},
-	)
 
 	g.Add(func() error {
 		return s.partitionAccumulator.run(ctx)
