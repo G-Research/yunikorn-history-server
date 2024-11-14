@@ -89,21 +89,21 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 		return
 	}
 
-	// Sync partitions before syncing queues
-	partitions, err := s.client.GetPartitions(ctx)
-	if err != nil {
-		logger.Errorf("could not get partitions: %v", err)
-	}
-	err = s.syncPartitions(ctx, partitions)
-	if err != nil {
-		logger.Errorf("could not sync partitions: %v", err)
-	}
-
 	isNew := ev.GetEventChangeType() == si.EventRecord_ADD &&
 		(ev.GetEventChangeDetail() == si.EventRecord_DETAILS_NONE || ev.GetEventChangeDetail() == si.EventRecord_QUEUE_DYNAMIC)
 
 	var queue *model.Queue
 	if isNew {
+		// Sync partitions before syncing queues
+		partitions, err := s.client.GetPartitions(ctx)
+		if err != nil {
+			logger.Errorf("could not get partitions: %v", err)
+		}
+		err = s.syncPartitions(ctx, partitions)
+		if err != nil {
+			logger.Errorf("could not sync partitions: %v", err)
+		}
+
 		queue = &model.Queue{
 			Metadata: model.Metadata{
 				CreatedAtNano: ev.TimestampNano,
@@ -119,7 +119,7 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 		return
 	}
 
-	queue, err = s.repo.GetQueue(ctx, daoQueue.ID)
+	queue, err := s.repo.GetQueue(ctx, daoQueue.ID)
 	if err != nil {
 		logger.Errorf("could not get queue by partition name and queue name: %v", err)
 		return
