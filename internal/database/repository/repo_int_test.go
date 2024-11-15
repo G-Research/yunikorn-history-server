@@ -24,7 +24,7 @@ func (ts *RepositoryTestSuite) SetupSuite() {
 		Password: "test",
 		DBName:   "template",
 		Host:     "localhost",
-		Port:     "15433",
+		Port:     15433,
 	}
 
 	tp, err := database.NewTestPostgresContainer(ctx, cfg)

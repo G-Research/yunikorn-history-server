@@ -20,11 +20,11 @@ type InstanceConfig struct {
 	Password string
 	DBName   string
 	Host     string
-	Port     string
+	Port     int
 }
 
 func (c InstanceConfig) DBConnStr() string {
-	s := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", c.User, c.Password, c.Host, c.Port, c.DBName)
+	s := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", c.User, c.Password, c.Host, c.Port, c.DBName)
 	return s
 }
 
@@ -35,7 +35,7 @@ type TestPostgresContainer struct {
 }
 
 func NewTestPostgresContainer(ctx context.Context, cfg InstanceConfig) (*TestPostgresContainer, error) {
-	port := fmt.Sprintf("%s:5432/tcp", cfg.Port)
+	port := fmt.Sprintf("%d:5432/tcp", cfg.Port)
 	cr := testcontainers.ContainerRequest{
 		Image: "postgres:16.0-bookworm", // TODO: change to correct version
 		Env: map[string]string{
