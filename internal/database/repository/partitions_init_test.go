@@ -6,84 +6,36 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/G-Research/unicorn-history-server/internal/model"
 	"github.com/G-Research/unicorn-history-server/internal/util"
-	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
-func TestGetAllPartitions_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
+type PartitionTestSuite struct {
+	suite.Suite
+	pool *pgxpool.Pool
+	repo *PostgresRepository
+}
 
+func (ps *PartitionTestSuite) SetupSuite() {
 	ctx := context.Background()
+	require.NotNil(ps.T(), ps.pool)
+	repo, err := NewPostgresRepository(ps.pool)
+	require.NoError(ps.T(), err)
+	ps.repo = repo
 
-	connPool := database.NewTestConnectionPool(ctx, t)
+	seedPartitions(ctx, ps.T(), ps.repo)
+}
 
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
+func (ps *PartitionTestSuite) TearDownSuite() {
+	ps.pool.Close()
+}
 
-	now := time.Now()
-	nowNano := now.UnixNano()
-	partitions := []*model.Partition{
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: nowNano,
-			},
-			PartitionInfo: dao.PartitionInfo{
-				ID:                      "1",
-				Name:                    "default",
-				ClusterID:               "cluster1",
-				State:                   "Active",
-				LastStateTransitionTime: now.Add(-1 * time.Hour).UnixMilli(),
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: nowNano,
-			},
-			PartitionInfo: dao.PartitionInfo{
-				ID:                      "2",
-				Name:                    "second",
-				ClusterID:               "cluster1",
-				State:                   "Active",
-				LastStateTransitionTime: now.Add(-2 * time.Hour).UnixMilli(),
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: nowNano,
-			},
-			PartitionInfo: dao.PartitionInfo{
-				ID:                      "3",
-				Name:                    "third",
-				ClusterID:               "cluster1",
-				State:                   "Active",
-				LastStateTransitionTime: now.Add(-3 * time.Hour).UnixMilli(),
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: nowNano,
-			},
-			PartitionInfo: dao.PartitionInfo{
-				ID:                      "4",
-				Name:                    "fourth",
-				ClusterID:               "cluster1",
-				State:                   "FakeState",
-				LastStateTransitionTime: now.Add(-4 * time.Hour).UnixMilli(),
-			},
-		},
-	}
-	for _, p := range partitions {
-		err = repo.InsertPartition(ctx, p)
-		require.NoError(t, err)
-	}
-
+func (ps *PartitionTestSuite) TestGetAllPartitions() {
+	ctx := context.Background()
 	tests := []struct {
 		name     string
 		filters  PartitionFilters
@@ -138,11 +90,73 @@ func TestGetAllPartitions_Integration(t *testing.T) {
 			expected: 4,
 		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			nodes, err := repo.GetAllPartitions(ctx, tt.filters)
-			require.NoError(t, err)
-			require.Len(t, nodes, tt.expected)
+		ps.Run(tt.name, func() {
+			nodes, err := ps.repo.GetAllPartitions(ctx, tt.filters)
+			require.NoError(ps.T(), err)
+			require.Len(ps.T(), nodes, tt.expected)
 		})
+	}
+}
+
+func seedPartitions(ctx context.Context, t *testing.T, repo *PostgresRepository) {
+	t.Helper()
+
+	now := time.Now()
+	nowNano := now.UnixNano()
+	partitions := []*model.Partition{
+		{
+			Metadata: model.Metadata{
+				CreatedAtNano: nowNano,
+			},
+			PartitionInfo: dao.PartitionInfo{
+				ID:                      "1",
+				Name:                    "default",
+				ClusterID:               "cluster1",
+				State:                   "Active",
+				LastStateTransitionTime: now.Add(-1 * time.Hour).UnixMilli(),
+			},
+		},
+		{
+			Metadata: model.Metadata{
+				CreatedAtNano: nowNano,
+			},
+			PartitionInfo: dao.PartitionInfo{
+				ID:                      "2",
+				Name:                    "second",
+				ClusterID:               "cluster1",
+				State:                   "Active",
+				LastStateTransitionTime: now.Add(-2 * time.Hour).UnixMilli(),
+			},
+		},
+		{
+			Metadata: model.Metadata{
+				CreatedAtNano: nowNano,
+			},
+			PartitionInfo: dao.PartitionInfo{
+				ID:                      "3",
+				Name:                    "third",
+				ClusterID:               "cluster1",
+				State:                   "Active",
+				LastStateTransitionTime: now.Add(-3 * time.Hour).UnixMilli(),
+			},
+		},
+		{
+			Metadata: model.Metadata{
+				CreatedAtNano: nowNano,
+			},
+			PartitionInfo: dao.PartitionInfo{
+				ID:                      "4",
+				Name:                    "fourth",
+				ClusterID:               "cluster1",
+				State:                   "FakeState",
+				LastStateTransitionTime: now.Add(-4 * time.Hour).UnixMilli(),
+			},
+		},
+	}
+	for _, p := range partitions {
+		err := repo.InsertPartition(ctx, p)
+		require.NoError(t, err)
 	}
 }
