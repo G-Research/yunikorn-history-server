@@ -7,30 +7,37 @@ import (
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/G-Research/unicorn-history-server/internal/model"
 	"github.com/G-Research/unicorn-history-server/internal/util"
-	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
-func TestGetAllApplications_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
+type ApplicationTestSuite struct {
+	suite.Suite
+	pool *pgxpool.Pool
+	repo *PostgresRepository
+}
 
+func (as *ApplicationTestSuite) SetupSuite() {
 	ctx := context.Background()
+	require.NotNil(as.T(), as.pool)
+	repo, err := NewPostgresRepository(as.pool)
+	require.NoError(as.T(), err)
+	as.repo = repo
 
-	connPool := database.NewTestConnectionPool(ctx, t)
+	seedApplications(ctx, as.T(), as.repo)
+}
 
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
+func (as *ApplicationTestSuite) TearDownSuite() {
+	as.pool.Close()
+}
 
-	seedApplications(ctx, t, repo)
-
+func (as *ApplicationTestSuite) TestGetAllApplications() {
+	ctx := context.Background()
 	tests := []struct {
 		name     string
 		filters  ApplicationFilters
@@ -91,30 +98,16 @@ func TestGetAllApplications_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			apps, err := repo.GetAllApplications(context.Background(), tt.filters)
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, len(apps))
+		as.Run(tt.name, func() {
+			apps, err := as.repo.GetAllApplications(ctx, tt.filters)
+			require.NoError(as.T(), err)
+			assert.Equal(as.T(), tt.expected, len(apps))
 		})
 	}
 }
 
-func TestGetAppsPerPartitionPerQueue_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-
+func (as *ApplicationTestSuite) TestGetAppsPerPartitionPerQueue() {
 	ctx := context.Background()
-
-	connPool := database.NewTestConnectionPool(ctx, t)
-
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
-
-	seedApplications(ctx, t, repo)
-
 	tests := []struct {
 		name     string
 		filters  ApplicationFilters
@@ -175,10 +168,10 @@ func TestGetAppsPerPartitionPerQueue_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			apps, err := repo.GetAppsPerPartitionPerQueue(context.Background(), "1", "1", tt.filters)
-			require.NoError(t, err)
-			assert.Equal(t, tt.expected, len(apps))
+		as.Run(tt.name, func() {
+			apps, err := as.repo.GetAppsPerPartitionPerQueue(ctx, "1", "1", tt.filters)
+			require.NoError(as.T(), err)
+			assert.Equal(as.T(), tt.expected, len(apps))
 		})
 	}
 }

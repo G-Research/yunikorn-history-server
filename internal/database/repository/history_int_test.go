@@ -6,30 +6,37 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/G-Research/unicorn-history-server/internal/model"
 	"github.com/G-Research/unicorn-history-server/internal/util"
-	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
-func TestHistory_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
+type HistoryTestSuite struct {
+	suite.Suite
+	pool *pgxpool.Pool
+	repo *PostgresRepository
+}
 
+func (hs *HistoryTestSuite) SetupSuite() {
 	ctx := context.Background()
+	require.NotNil(hs.T(), hs.pool)
+	repo, err := NewPostgresRepository(hs.pool)
+	require.NoError(hs.T(), err)
+	hs.repo = repo
 
-	connPool := database.NewTestConnectionPool(ctx, t)
+	seedHistory(ctx, hs.T(), hs.repo)
+}
 
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
+func (hs *HistoryTestSuite) TearDownSuite() {
+	hs.pool.Close()
+}
 
-	seedHistory(ctx, t, repo)
-
+func (hs *HistoryTestSuite) TestGetApplicationsHistory() {
+	ctx := context.Background()
 	tests := []struct {
 		name     string
 		filters  HistoryFilters
@@ -61,14 +68,51 @@ func TestHistory_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			apps, err := repo.GetApplicationsHistory(context.Background(), tt.filters)
-			require.NoError(t, err)
-			require.Equal(t, tt.expected, len(apps))
+		hs.Run(tt.name, func() {
+			apps, err := hs.repo.GetApplicationsHistory(ctx, tt.filters)
+			require.NoError(hs.T(), err)
+			require.Equal(hs.T(), tt.expected, len(apps))
+		})
+	}
+}
 
-			containers, err := repo.GetContainersHistory(context.Background(), tt.filters)
-			require.NoError(t, err)
-			require.Equal(t, tt.expected, len(containers))
+func (hs *HistoryTestSuite) TestGetContainersHistory() {
+	ctx := context.Background()
+	tests := []struct {
+		name     string
+		filters  HistoryFilters
+		expected int
+	}{
+		{
+			name: "Filter by Timestamp Range",
+			filters: HistoryFilters{
+				TimestampStart: util.ToPtr(time.Now().Add(-8 * time.Hour)),
+				TimestampEnd:   util.ToPtr(time.Now().Add(-2 * time.Hour)),
+			},
+			expected: 3,
+		},
+		{
+			name: "Filter by Limit",
+			filters: HistoryFilters{
+				Limit: util.ToPtr(2),
+			},
+			expected: 2,
+		},
+		{
+			name: "Filter by Offset",
+			filters: HistoryFilters{
+				Limit:  util.ToPtr(2),
+				Offset: util.ToPtr(3),
+			},
+			expected: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		hs.Run(tt.name, func() {
+			containers, err := hs.repo.GetContainersHistory(ctx, tt.filters)
+			require.NoError(hs.T(), err)
+			require.Equal(hs.T(), tt.expected, len(containers))
 		})
 	}
 }
