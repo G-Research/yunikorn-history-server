@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
-	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/oklog/run"
 
 	"github.com/G-Research/unicorn-history-server/internal/database/repository"
@@ -20,8 +19,6 @@ type Service struct {
 	client          Client
 	// eventHandler is a function that handles events from the Yunikorn event stream.
 	eventHandler EventHandler
-	// partitionAccumulator accumulates new queue events and synchronizes partitions after a certain interval.
-	partitionAccumulator *accumulator
 	// appMap is a map of application IDs to their respective DAOs.
 	appMap map[string]*dao.ApplicationDAOInfo
 }
@@ -36,17 +33,6 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 		appMap:          make(map[string]*dao.ApplicationDAOInfo),
 	}
 	s.eventHandler = s.handleEvent
-	s.partitionAccumulator = newAccumulator(
-		func(ctx context.Context, event []*si.EventRecord) {
-			logger := log.FromContext(ctx)
-			_, err := s.syncPartitions(ctx)
-			if err != nil {
-				logger.Errorf("error syncing partitions: %v", err)
-				return
-			}
-		},
-		2*time.Second,
-	)
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -57,26 +43,28 @@ func NewService(repository repository.Repository, eventRepository repository.Eve
 func (s *Service) Run(ctx context.Context) error {
 	g := run.Group{}
 
-	g.Add(func() error {
-		return s.partitionAccumulator.run(ctx)
-	}, func(err error) {},
-	)
-
-	partitions, err := s.syncPartitions(ctx)
+	fullState, err := s.client.GetFullStateDump(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get full state dump: %v", err)
 	}
-	if err := s.syncQueues(ctx, partitions); err != nil {
+
+	if err := s.syncPartitions(ctx, fullState.Partitions); err != nil {
+		return fmt.Errorf("error syncing partitions: %v", err)
+	}
+	if err := s.syncQueues(ctx, fullState.Queues); err != nil {
 		return fmt.Errorf("error syncing queues: %v", err)
 	}
-	if err := s.syncApplications(ctx); err != nil {
+	if err := s.syncApplications(ctx, fullState.Applications); err != nil {
 		return fmt.Errorf("error syncing applications: %v", err)
 	}
-	if err := s.syncNodes(ctx, partitions); err != nil {
+	if err := s.syncNodes(ctx, fullState.Nodes); err != nil {
 		return fmt.Errorf("error syncing nodes: %v", err)
 	}
-	if err := s.syncHistory(ctx); err != nil {
-		return fmt.Errorf("error syncing app and container history: %v", err)
+	if err := s.syncAppHistory(ctx, fullState.AppHistory); err != nil {
+		return fmt.Errorf("error syncing app history: %v", err)
+	}
+	if err := s.syncContainerHistory(ctx, fullState.ContainerHistory); err != nil {
+		return fmt.Errorf("error syncing container history: %v", err)
 	}
 
 	g.Add(func() error {

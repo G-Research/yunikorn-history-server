@@ -14,6 +14,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
+	webservice "github.com/G-Research/yunikorn-core/pkg/webservice"
 	dao "github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -114,6 +115,21 @@ func (m *MockClient) GetEventStream(arg0 context.Context) (*http.Response, error
 func (mr *MockClientMockRecorder) GetEventStream(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventStream", reflect.TypeOf((*MockClient)(nil).GetEventStream), arg0)
+}
+
+// GetFullStateDump mocks base method.
+func (m *MockClient) GetFullStateDump(arg0 context.Context) (*webservice.AggregatedStateInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFullStateDump", arg0)
+	ret0, _ := ret[0].(*webservice.AggregatedStateInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFullStateDump indicates an expected call of GetFullStateDump.
+func (mr *MockClientMockRecorder) GetFullStateDump(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFullStateDump", reflect.TypeOf((*MockClient)(nil).GetFullStateDump), arg0)
 }
 
 // GetPartitionNodes mocks base method.

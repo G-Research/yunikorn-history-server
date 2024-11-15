@@ -308,9 +308,9 @@ test-k6-performance: ## run k6 performance tests.
 
 .PHONY: web-build
 web-build: ng ## build the web components.
-	npm install --prefix web
-	uhsApiURL=$(strip $(call uhs_api_url)) yunikornApiURL=$(strip $(call yunikorn_api_url)) npm run setenv --prefix web
-	npm run build --prefix web
+	pnpm --prefix ./web install
+	uhsApiURL=$(strip $(call uhs_api_url)) yunikornApiURL=$(strip $(call yunikorn_api_url)) pnpm --prefix ./web setenv
+	pnpm --prefix ./web build
 
 .PHONY: build
 build: bin/app ## build the unicorn-history-server binary for current OS and architecture.
@@ -330,7 +330,7 @@ clean: ## remove generated build artifacts.
 	rm -rf $(LOCALBIN_APP)
 
 ##@ Publish
-NODE_VERSION ?= 20
+NODE_VERSION ?= 18
 ALPINE_VERSION ?= 3.20
 DOCKER_OUTPUT ?= type=docker
 DOCKER_TAGS ?= $(IMAGE_TAG)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/G-Research/yunikorn-core/pkg/webservice"
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 )
 
@@ -11,6 +12,7 @@ import (
 //
 //go:generate mockgen -destination=mock_client.go -package=yunikorn github.com/G-Research/unicorn-history-server/internal/yunikorn Client
 type Client interface {
+	GetFullStateDump(ctx context.Context) (*webservice.AggregatedStateInfo, error)
 	GetPartitions(ctx context.Context) ([]*dao.PartitionInfo, error)
 	GetPartitionQueues(ctx context.Context, partitionName string) (*dao.PartitionQueueDAOInfo, error)
 	GetPartitionQueue(ctx context.Context, partitionName, queueName string) (*dao.PartitionQueueDAOInfo, error)

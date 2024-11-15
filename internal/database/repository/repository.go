@@ -33,5 +33,5 @@ type Repository interface {
 	UpdateQueue(ctx context.Context, queue *model.Queue) error
 	GetAllQueues(ctx context.Context) ([]*model.Queue, error)
 	GetQueuesInPartition(ctx context.Context, partitionID string) ([]*model.Queue, error)
-	DeleteQueuesNotInIDs(ctx context.Context, partitionID string, ids []string, deletedAtNano int64) error
+	DeleteQueuesNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error
 }

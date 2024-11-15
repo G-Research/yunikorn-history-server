@@ -94,7 +94,16 @@ func (s *Service) handleQueueEvent(ctx context.Context, ev *si.EventRecord) {
 
 	var queue *model.Queue
 	if isNew {
-		s.partitionAccumulator.add(ev)
+		// Sync partitions before syncing queues
+		partitions, err := s.client.GetPartitions(ctx)
+		if err != nil {
+			logger.Errorf("could not get partitions: %v", err)
+		}
+		err = s.syncPartitions(ctx, partitions)
+		if err != nil {
+			logger.Errorf("could not sync partitions: %v", err)
+		}
+
 		queue = &model.Queue{
 			Metadata: model.Metadata{
 				CreatedAtNano: ev.TimestampNano,

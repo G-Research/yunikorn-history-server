@@ -9,19 +9,12 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/oklog/ulid/v2"
 
-	"github.com/G-Research/unicorn-history-server/internal/log"
 	"github.com/G-Research/unicorn-history-server/internal/model"
 	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
 // syncPartitions fetches partitions from the Yunikorn API and syncs them into the database
-func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error) {
-	// Get partitions from Yunikorn API and upsert into DB
-	partitions, err := s.client.GetPartitions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not get partitions: %v", err)
-	}
-
+func (s *Service) syncPartitions(ctx context.Context, partitions []*dao.PartitionInfo) error {
 	ids := make([]string, 0, len(partitions))
 	for _, p := range partitions {
 		ids = append(ids, p.ID)
@@ -29,10 +22,9 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error
 
 	now := time.Now().UnixNano()
 	if err := s.repo.DeletePartitionsNotInIDs(ctx, ids, now); err != nil {
-		return nil, fmt.Errorf("could not delete partitions not in IDs: %w", err)
+		return fmt.Errorf("could not delete partitions not in IDs: %w", err)
 	}
 
-	result := make([]*model.Partition, 0, len(partitions))
 	for _, p := range partitions {
 		current, err := s.repo.GetPartitionByID(ctx, p.ID)
 		fmt.Printf("Getting partition resulted in current: %+v, err: %v\n", current, err)
@@ -46,48 +38,24 @@ func (s *Service) syncPartitions(ctx context.Context) ([]*model.Partition, error
 			}
 
 			if err := s.repo.InsertPartition(ctx, partition); err != nil {
-				return nil, fmt.Errorf("could not insert partition: %w", err)
+				return fmt.Errorf("could not insert partition: %w", err)
 			}
-
-			result = append(result, partition)
 			continue
 		}
 
 		current.MergeFrom(p)
 
 		if err := s.repo.UpdatePartition(ctx, current); err != nil {
-			return nil, fmt.Errorf("could not update partition: %w", err)
+			return fmt.Errorf("could not update partition: %w", err)
 		}
-
-		result = append(result, current)
 	}
-
-	return result, nil
+	return nil
 }
 
-// syncQueues fetches queues for each partition and upserts them into the database
-func (s *Service) syncQueues(ctx context.Context, partitions []*model.Partition) error {
-	logger := log.FromContext(ctx)
-
+func (s *Service) syncQueues(ctx context.Context, clientQueues []dao.PartitionQueueDAOInfo) error {
 	var errs []error
-	for _, p := range partitions {
-		logger.Info("syncing queues for partition", "partition", p.Name)
-		err := s.syncPartitionQueues(ctx, p)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("syncing queues for partition %q failed: %v", p.Name, err))
-		}
-	}
 
-	return errors.Join(errs...)
-}
-
-func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Partition) error {
-	clientQueues, err := s.client.GetPartitionQueues(ctx, partition.Name)
-	if err != nil {
-		return fmt.Errorf("could not get queues for partition %s: %v", partition.Name, err)
-	}
-
-	queues := flattenQueues([]*dao.PartitionQueueDAOInfo{clientQueues})
+	queues := flattenQueues(util.ToPtrSlice(clientQueues))
 
 	ids := make([]string, 0, len(queues))
 	for _, q := range queues {
@@ -95,7 +63,7 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 	}
 
 	now := time.Now().UnixNano()
-	if err := s.repo.DeleteQueuesNotInIDs(ctx, partition.Name, ids, now); err != nil {
+	if err := s.repo.DeleteQueuesNotInIDs(ctx, ids, now); err != nil {
 		return fmt.Errorf("could not delete queues not in IDs: %w", err)
 	}
 
@@ -109,18 +77,17 @@ func (s *Service) syncPartitionQueues(ctx context.Context, partition *model.Part
 				PartitionQueueDAOInfo: *q,
 			}
 			if err := s.repo.InsertQueue(ctx, queue); err != nil {
-				return fmt.Errorf("could not insert queue: %w", err)
+				errs = append(errs, fmt.Errorf("could not insert queue: %w", err))
 			}
 			continue
 		}
 
 		current.MergeFrom(q)
 		if err := s.repo.UpdateQueue(ctx, current); err != nil {
-			return fmt.Errorf("could not update queue: %w", err)
+			errs = append(errs, fmt.Errorf("could not update queue: %w", err))
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 // flattenQueues returns a list of all queues in the hierarchy in a flat array.
@@ -131,24 +98,16 @@ func flattenQueues(qs []*dao.PartitionQueueDAOInfo) []*dao.PartitionQueueDAOInfo
 	for _, q := range qs {
 		queues = append(queues, q)
 		if len(q.Children) > 0 {
-			// update partitionName for children #148
-			for i := range q.Children {
-				q.Children[i].PartitionID = q.PartitionID
-			}
 			queues = append(queues, flattenQueues(util.ToPtrSlice(q.Children))...)
 		}
 	}
 	return queues
 }
 
-func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) error {
+func (s *Service) syncNodes(ctx context.Context, daoNodes []*dao.NodesDAOInfo) error {
 	var errs []error
-	for _, p := range partitions {
-		nodes, err := s.client.GetPartitionNodes(ctx, p.Name)
-		if err != nil {
-			return fmt.Errorf("could not get nodes for partition %s: %v", p.Name, err)
-		}
-
+	for _, nodesInfo := range daoNodes {
+		nodes := nodesInfo.Nodes
 		ids := make([]string, 0, len(nodes))
 		for _, n := range nodes {
 			ids = append(ids, n.ID)
@@ -184,11 +143,7 @@ func (s *Service) syncNodes(ctx context.Context, partitions []*model.Partition) 
 }
 
 // syncApplications fetches applications for each queue and upserts them into the database
-func (s *Service) syncApplications(ctx context.Context) error {
-	applications, err := s.client.GetApplications(ctx, "", "")
-	if err != nil {
-		return fmt.Errorf("could not get applications: %v", err)
-	}
+func (s *Service) syncApplications(ctx context.Context, applications []*dao.ApplicationDAOInfo) error {
 
 	ids := make([]string, 0, len(applications))
 	for _, a := range applications {
@@ -224,23 +179,13 @@ func (s *Service) syncApplications(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) syncHistory(ctx context.Context) error {
-
-	appsHistory, err := s.client.GetAppsHistory(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get apps history: %w", err)
-	}
-	containersHistory, err := s.client.GetContainersHistory(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get containers history: %w", err)
-	}
-
-	now := time.Now().UnixNano()
+func (s *Service) syncAppHistory(ctx context.Context, appsHistory []*dao.ApplicationHistoryDAOInfo) error {
 	var errs []error
+	nowNano := time.Now().UnixNano()
 	for _, ah := range appsHistory {
 		history := &model.AppHistory{
 			Metadata: model.Metadata{
-				CreatedAtNano: now,
+				CreatedAtNano: nowNano,
 			},
 			ID:                        ulid.Make().String(),
 			ApplicationHistoryDAOInfo: *ah,
@@ -249,11 +194,16 @@ func (s *Service) syncHistory(ctx context.Context) error {
 			errs = append(errs, fmt.Errorf("could not insert app history: %v", err))
 		}
 	}
+	return errors.Join(errs...)
+}
 
+func (s *Service) syncContainerHistory(ctx context.Context, containersHistory []*dao.ContainerHistoryDAOInfo) error {
+	var errs []error
+	nowNano := time.Now().UnixNano()
 	for _, ch := range containersHistory {
 		history := &model.ContainerHistory{
 			Metadata: model.Metadata{
-				CreatedAtNano: now,
+				CreatedAtNano: nowNano,
 			},
 			ID:                      ulid.Make().String(),
 			ContainerHistoryDAOInfo: *ch,
@@ -262,6 +212,5 @@ func (s *Service) syncHistory(ctx context.Context) error {
 			errs = append(errs, fmt.Errorf("could not insert container history: %v", err))
 		}
 	}
-
 	return errors.Join(errs...)
 }
