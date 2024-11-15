@@ -97,6 +97,10 @@ KIND_VERSION ?= latest
 MINIKUBE ?= $(LOCALBIN_TOOLING)/minikube
 MINIKUBE_VERSION ?= latest
 
+# The release version of Yunikorn images
+# used in integration and performance tests.
+YK_VERSION=ccae7ff
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
@@ -419,18 +423,18 @@ install-and-patch-yunikorn: helm-install-yunikorn patch-yunikorn-service ## inst
 .ONESHELL:
 helm-install-yunikorn: ## install yunikorn using helm.
 	@echo "\nLoading Local Docker images into kind cluster..."
-	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:admission-${ARCH}-latest --name ${CLUSTER_NAME}
-	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-plugin-${ARCH}-latest --name ${CLUSTER_NAME}
-	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-${ARCH}-latest --name ${CLUSTER_NAME}
+	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:admission-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
+	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-plugin-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
+	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
 	$(HELM) upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace \
 	    --set image.repository=${IMAGE_REGISTRY}/yunikorn \
-	    --set image.tag=scheduler-${ARCH}-latest \
+	    --set image.tag=scheduler-${ARCH}-${YK_VERSION} \
 	    --set image.pullPolicy=IfNotPresent \
 	    --set pluginImage.repository=${IMAGE_REGISTRY}/yunikorn \
-	    --set pluginImage.tag=scheduler-plugin-${ARCH}-latest \
+	    --set pluginImage.tag=scheduler-plugin-${ARCH}-${YK_VERSION} \
 	    --set pluginImage.pullPolicy=IfNotPresent \
 	    --set admissionController.image.repository=${IMAGE_REGISTRY}/yunikorn \
-	    --set admissionController.image.tag=admission-${ARCH}-latest \
+	    --set admissionController.image.tag=admission-${ARCH}-${YK_VERSION} \
 	    --set admissionController.image.pullPolicy=IfNotPresent
 
 
