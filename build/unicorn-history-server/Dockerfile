@@ -1,4 +1,4 @@
-ARG NODE_VERSION=20
+ARG NODE_VERSION=18
 ARG ALPINE_VERSION=3.20
 
 FROM node:${NODE_VERSION} AS builder
@@ -8,8 +8,9 @@ COPY web /build/src
 WORKDIR /build/src
 
 RUN npm install -g @angular/cli@18 && \
-    npm install                    && \
-    npm run build
+    npm install -g pnpm            && \
+    pnpm install                   && \
+    pnpm run build
 
 FROM alpine:${ALPINE_VERSION}
 

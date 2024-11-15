@@ -1,12 +1,13 @@
 {
   "name": "uhs-components",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "preinstall": "npx only-allow pnpm",
     "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js",
     "setenv": "npx --yes ts-node ./src/environments/setEnvironmentVariables.ts",
     "setenv:prod": "npx --yes ts-node ./src/environments/setEnvironmentVariables.ts prod",
@@ -49,5 +50,10 @@
     "ngx-build-plus": "^18.0.0",
     "prettier": "^3.3.3",
     "typescript": "5.5.4"
-  }
+  },
+  "engines": {
+    "pnpm": "9",
+    "node": "18"
+  },
+  "packageManager": "pnpm@9"
 }
