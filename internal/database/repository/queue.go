@@ -331,11 +331,11 @@ ORDER BY id DESC
 	return queues, nil
 }
 
-func (s *PostgresRepository) DeleteQueuesNotInIDs(ctx context.Context, partitionID string, ids []string, deletedAtNano int64) error {
+func (s *PostgresRepository) DeleteQueuesNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error {
 	const q = `
 UPDATE queues
 SET deleted_at_nano = @deleted_at_nano
-WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids)) AND partition_id = @partition_id
+WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))
 		`
 
 	_, err := s.dbpool.Exec(
@@ -344,7 +344,6 @@ WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids)) AND partition_id = @parti
 		pgx.NamedArgs{
 			"ids":             ids,
 			"deleted_at_nano": deletedAtNano,
-			"partition_id":    partitionID,
 		},
 	)
 
