@@ -326,7 +326,7 @@ clean: ## remove generated build artifacts.
 	rm -rf $(LOCALBIN_APP)
 
 ##@ Publish
-NODE_VERSION ?= 18
+NODE_VERSION ?= 22
 ALPINE_VERSION ?= 3.20
 DOCKER_OUTPUT ?= type=docker
 DOCKER_TAGS ?= $(IMAGE_TAG)
