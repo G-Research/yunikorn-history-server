@@ -5,30 +5,35 @@ import (
 	"testing"
 	"time"
 
+	"github.com/G-Research/unicorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/G-Research/unicorn-history-server/internal/model"
-	"github.com/G-Research/unicorn-history-server/test/database"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestGetAllQueues_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
+type QueueTestSuite struct {
+	suite.Suite
+	pool *pgxpool.Pool
+	repo *PostgresRepository
+}
 
+func (qs *QueueTestSuite) SetupSuite() {
+	require.NotNil(qs.T(), qs.pool)
+	repo, err := NewPostgresRepository(qs.pool)
+	require.NoError(qs.T(), err)
+	qs.repo = repo
+
+	seedQueues(qs.T(), qs.repo)
+}
+
+func (qs *QueueTestSuite) TearDownSuite() {
+	qs.pool.Close()
+}
+
+func (qs *QueueTestSuite) TestGetAllQueues() {
 	ctx := context.Background()
-
-	connPool := database.NewTestConnectionPool(ctx, t)
-
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
-
-	seedQueues(t, repo)
-
 	tests := []struct {
 		name               string
 		expectedTotalQueue int
@@ -40,34 +45,16 @@ func TestGetAllQueues_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			queues, err := repo.GetAllQueues(context.Background())
-			if err != nil {
-				t.Fatalf("could not get queues: %v", err)
-			}
-			if len(queues) != tt.expectedTotalQueue {
-				t.Fatalf("expected %d total queues, got %d", tt.expectedTotalQueue, len(queues))
-			}
+		qs.Run(tt.name, func() {
+			queues, err := qs.repo.GetAllQueues(ctx)
+			require.NoError(qs.T(), err)
+			assert.Len(qs.T(), queues, tt.expectedTotalQueue)
 		})
 	}
 }
 
-func TestGetQueuesInPartition_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-
+func (qs *QueueTestSuite) TestGetQueuesInPartition() {
 	ctx := context.Background()
-
-	connPool := database.NewTestConnectionPool(ctx, t)
-
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
-
-	seedQueues(t, repo)
-
 	tests := []struct {
 		name                string
 		partitionID         string
@@ -86,26 +73,16 @@ func TestGetQueuesInPartition_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			queues, err := repo.GetQueuesInPartition(context.Background(), tt.partitionID)
-			require.NoError(t, err)
-			assert.Len(t, queues, tt.expectedTotalQueues)
+		qs.Run(tt.name, func() {
+			queues, err := qs.repo.GetQueuesInPartition(ctx, tt.partitionID)
+			require.NoError(qs.T(), err)
+			assert.Len(qs.T(), queues, tt.expectedTotalQueues)
 		})
 	}
 }
 
-func TestGetQueue_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-
+func (qs *QueueTestSuite) TestGetQueue() {
 	ctx := context.Background()
-	connPool := database.NewTestConnectionPool(ctx, t)
-	repo, err := NewPostgresRepository(connPool)
-	require.NoError(t, err, "could not create repository")
-
-	seedQueues(t, repo)
-
 	tests := []struct {
 		name          string
 		queueID       string
@@ -131,31 +108,19 @@ func TestGetQueue_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			queue, err := repo.GetQueue(context.Background(), tt.queueID)
-			require.Equal(t, tt.expectedError, err != nil, "unexpected error", err)
+		qs.Run(tt.name, func() {
+			queue, err := qs.repo.GetQueue(ctx, tt.queueID)
+			require.Equal(qs.T(), tt.expectedError, err != nil)
 			if tt.expectedError {
 				return
 			}
-			assert.Equal(t, tt.queueID, queue.ID)
+			assert.Equal(qs.T(), tt.queueID, queue.ID)
 		})
 	}
 }
 
-func TestDeleteQueues_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
+func (qs *QueueTestSuite) TestDeleteQueues() {
 	ctx := context.Background()
-	connPool := database.NewTestConnectionPool(ctx, t)
-
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
-
-	seedQueues(t, repo)
-
 	tests := []struct {
 		name              string
 		partitionID       string
@@ -172,49 +137,34 @@ func TestDeleteQueues_Integration(t *testing.T) {
 			expectedDelQueues: 3,
 		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			queues, err := repo.GetQueuesInPartition(context.Background(), tt.partitionID)
-			if err != nil {
-				t.Fatalf("could not get queues: %v", err)
-			}
+		qs.Run(tt.name, func() {
+			queues, err := qs.repo.GetQueuesInPartition(ctx, tt.partitionID)
+			require.NoError(qs.T(), err)
 			now := time.Now()
 			timestamp := now.UnixNano()
 			for _, q := range queues {
 				q.DeletedAtNano = &timestamp
-				err := repo.UpdateQueue(ctx, q)
-				require.NoError(t, err)
+				err := qs.repo.UpdateQueue(ctx, q)
+				require.NoError(qs.T(), err)
 			}
 
-			queues, err = repo.GetAllQueues(context.Background())
-			if err != nil {
-				t.Fatalf("could not get queues: %v", err)
-			}
-			// count the deleted queues
+			queues, err = qs.repo.GetAllQueues(ctx)
+			require.NoError(qs.T(), err)
 			var delQueues int
 			for _, q := range queues {
 				if q.DeletedAtNano != nil && q.PartitionID == tt.partitionID {
 					delQueues++
 				}
 			}
-			if delQueues != tt.expectedDelQueues {
-				t.Fatalf("expected %d deleted queues, got %d", tt.expectedDelQueues, delQueues)
-			}
+			assert.Equal(qs.T(), tt.expectedDelQueues, delQueues)
 		})
 	}
 }
 
-func TestUpdateQueue_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-
+func (qs *QueueTestSuite) TestUpdateQueue() {
 	ctx := context.Background()
-	connPool := database.NewTestConnectionPool(ctx, t)
-
-	repo, err := NewPostgresRepository(connPool)
-	require.NoError(t, err)
-
 	now := time.Now()
 	tests := []struct {
 		name           string
@@ -230,7 +180,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 						CreatedAtNano: now.UnixNano(),
 					},
 					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-						ID:              "1",
+						ID:              "13",
 						PartitionID:     "1",
 						QueueName:       "root",
 						CurrentPriority: 0,
@@ -242,7 +192,7 @@ func TestUpdateQueue_Integration(t *testing.T) {
 					CreatedAtNano: now.UnixNano(),
 				},
 				PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-					ID:              "1",
+					ID:              "13",
 					PartitionID:     "2",
 					QueueName:       "root",
 					CurrentPriority: 1,
@@ -251,16 +201,16 @@ func TestUpdateQueue_Integration(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:           "Update root queue when root queue does not exist",
+			name:           "Update queue when queue does not exist",
 			existingQueues: nil,
 			queueToUpdate: &model.Queue{
 				Metadata: model.Metadata{
 					CreatedAtNano: now.UnixNano(),
 				},
 				PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-					ID:              "2",
+					ID:              "40",
 					PartitionID:     "1",
-					QueueName:       "root",
+					QueueName:       "non-existent-queue",
 					CurrentPriority: 1,
 				},
 			},
@@ -269,38 +219,24 @@ func TestUpdateQueue_Integration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// clean up the table after the test
-			t.Cleanup(func() {
-				_, err := connPool.Exec(ctx, "DELETE FROM queues")
-				require.NoError(t, err)
-			})
-			// seed the existing queues
+		qs.Run(tt.name, func() {
 			for _, q := range tt.existingQueues {
-				if err := repo.InsertQueue(ctx, q); err != nil {
-					t.Fatalf("could not seed queue: %v", err)
-				}
+				err := qs.repo.InsertQueue(ctx, q)
+				require.NoError(qs.T(), err)
 			}
-			// update the new queue
-			err := repo.UpdateQueue(ctx, tt.queueToUpdate)
+			err := qs.repo.UpdateQueue(ctx, tt.queueToUpdate)
+			require.Equal(qs.T(), tt.expectedError, err != nil)
 			if tt.expectedError {
-				require.Error(t, err)
 				return
 			}
-			require.NoError(t, err)
-			// check if the queue is updated along with its children
-			queueFromDB, err := repo.GetQueue(
-				ctx,
-				tt.queueToUpdate.ID,
-			)
-			require.NoError(t, err)
-			assert.Equal(t, tt.queueToUpdate.ID, queueFromDB.ID)
-			assert.Equal(t, tt.queueToUpdate.QueueName, queueFromDB.QueueName)
-			assert.Equal(t, tt.queueToUpdate.PartitionID, queueFromDB.PartitionID)
-			assert.Equal(t, tt.queueToUpdate.CurrentPriority, queueFromDB.CurrentPriority)
-			// compare the children
+			queueFromDB, err := qs.repo.GetQueue(ctx, tt.queueToUpdate.ID)
+			require.NoError(qs.T(), err)
+			assert.Equal(qs.T(), tt.queueToUpdate.ID, queueFromDB.ID)
+			assert.Equal(qs.T(), tt.queueToUpdate.QueueName, queueFromDB.QueueName)
+			assert.Equal(qs.T(), tt.queueToUpdate.PartitionID, queueFromDB.PartitionID)
+			assert.Equal(qs.T(), tt.queueToUpdate.CurrentPriority, queueFromDB.CurrentPriority)
 			for i, child := range tt.queueToUpdate.Children {
-				assert.Equal(t, child.CurrentPriority, queueFromDB.Children[i].CurrentPriority)
+				assert.Equal(qs.T(), child.CurrentPriority, queueFromDB.Children[i].CurrentPriority)
 			}
 		})
 	}
@@ -309,132 +245,39 @@ func TestUpdateQueue_Integration(t *testing.T) {
 func seedQueues(t *testing.T, repo *PostgresRepository) {
 	t.Helper()
 
-	queues := []*model.Queue{
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "1",
-				PartitionID: "1",
-				QueueName:   "root",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "2",
-				PartitionID: "1",
-				QueueName:   "root.org",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "3",
-				PartitionID: "1",
-				QueueName:   "root.org.eng",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "4",
-				PartitionID: "1",
-				QueueName:   "root.org.eng.test",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "5",
-				PartitionID: "1",
-				QueueName:   "root.org.eng.prod",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "6",
-				PartitionID: "1",
-				QueueName:   "root.org.sales",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "7",
-				PartitionID: "1",
-				QueueName:   "root.org.sales.test",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "8",
-				PartitionID: "1",
-				QueueName:   "root.org.sales.prod",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "9",
-				PartitionID: "1",
-				QueueName:   "root.system",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "10",
-				PartitionID: "2",
-				QueueName:   "root",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "11",
-				PartitionID: "2",
-				QueueName:   "root.child",
-			},
-		},
-		{
-			Metadata: model.Metadata{
-				CreatedAtNano: time.Now().UnixNano(),
-			},
-			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
-				ID:          "12",
-				PartitionID: "2",
-				QueueName:   "root.child2",
-			},
-		},
+	now := time.Now().UnixNano()
+	queueData := []struct {
+		ID          string
+		PartitionID string
+		QueueName   string
+	}{
+		{"1", "1", "root"},
+		{"2", "1", "root.org"},
+		{"3", "1", "root.org.eng"},
+		{"4", "1", "root.org.eng.test"},
+		{"5", "1", "root.org.eng.prod"},
+		{"6", "1", "root.org.sales"},
+		{"7", "1", "root.org.sales.test"},
+		{"8", "1", "root.org.sales.prod"},
+		{"9", "1", "root.system"},
+		{"10", "2", "root"},
+		{"11", "2", "root.child"},
+		{"12", "2", "root.child2"},
 	}
 
-	for _, q := range queues {
-		if err := repo.InsertQueue(context.Background(), q); err != nil {
-			t.Fatalf("could not seed queue: %v", err)
+	for _, qd := range queueData {
+		queue := &model.Queue{
+			Metadata: model.Metadata{
+				CreatedAtNano: now,
+			},
+			PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+				ID:          qd.ID,
+				PartitionID: qd.PartitionID,
+				QueueName:   qd.QueueName,
+			},
+		}
+		if err := repo.InsertQueue(context.Background(), queue); err != nil {
+			t.Fatalf("could not seed queue %s: %v", qd.QueueName, err)
 		}
 	}
 }

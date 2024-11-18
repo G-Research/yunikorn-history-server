@@ -6,31 +6,38 @@ import (
 	"time"
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/G-Research/unicorn-history-server/internal/model"
 
 	"github.com/G-Research/unicorn-history-server/internal/util"
-	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
-func TestGetNodesPerPartition_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
+type NodeTestSuite struct {
+	suite.Suite
+	pool *pgxpool.Pool
+	repo *PostgresRepository
+}
 
+func (ns *NodeTestSuite) SetupSuite() {
 	ctx := context.Background()
+	require.NotNil(ns.T(), ns.pool)
+	repo, err := NewPostgresRepository(ns.pool)
+	require.NoError(ns.T(), err)
+	ns.repo = repo
 
-	connPool := database.NewTestConnectionPool(ctx, t)
+	seedNodes(ctx, ns.T(), ns.repo)
+}
 
-	repo, err := NewPostgresRepository(connPool)
-	if err != nil {
-		t.Fatalf("could not create repository: %v", err)
-	}
+func (ns *NodeTestSuite) TearDownSuite() {
+	ns.pool.Close()
+}
 
-	seedNodes(ctx, t, repo)
-
+func (ns *NodeTestSuite) TestGetNodesPerPartition() {
+	ctx := context.Background()
 	tests := []struct {
 		name      string
 		partition string
@@ -112,11 +119,12 @@ func TestGetNodesPerPartition_Integration(t *testing.T) {
 			expected:  4,
 		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			nodes, err := repo.GetNodesPerPartition(ctx, tt.partition, tt.filters)
-			require.NoError(t, err)
-			require.Len(t, nodes, tt.expected)
+		ns.Run(tt.name, func() {
+			nodes, err := ns.repo.GetNodesPerPartition(ctx, tt.partition, tt.filters)
+			require.NoError(ns.T(), err)
+			require.Equal(ns.T(), tt.expected, len(nodes))
 		})
 	}
 }
