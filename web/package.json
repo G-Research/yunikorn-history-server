@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "postbuild": "cd node_modules/yunikorn-web && pnpm install && pnpm build:prod",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "preinstall": "npx only-allow pnpm",
@@ -49,7 +50,8 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "ngx-build-plus": "^18.0.0",
     "prettier": "^3.3.3",
-    "typescript": "5.5.4"
+    "typescript": "5.5.4",
+    "yunikorn-web": "github:g-research/yunikorn-web"
   },
   "engines": {
     "pnpm": "9",
