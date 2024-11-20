@@ -2,15 +2,18 @@ ARG NODE_VERSION=22
 ARG ALPINE_VERSION=3.20
 
 FROM node:${NODE_VERSION} AS builder
-
-COPY web /build/src
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 WORKDIR /build/src
+COPY web ./
 
-RUN npm install -g @angular/cli@18 && \
-    npm install -g pnpm            && \
-    pnpm install                   && \
-    pnpm run build
+RUN npm install -g @angular/cli@18
+RUN npm install -g pnpm --force
+
+RUN pnpm install
+RUN pnpm run build
 
 FROM alpine:${ALPINE_VERSION}
 
