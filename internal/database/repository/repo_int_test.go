@@ -65,6 +65,9 @@ func (ts *RepositoryTestSuite) TestSubSuites() {
 }
 
 func TestRepositoryIntegrationTestSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
 	topSuite := new(RepositoryTestSuite)
 	suite.Run(t, topSuite)
 }
