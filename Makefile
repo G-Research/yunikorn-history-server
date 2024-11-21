@@ -309,8 +309,15 @@ test-k6-performance: ## run k6 performance tests.
 .PHONY: web-build
 web-build: ng ## build the web components.
 	pnpm --prefix ./web install
+	pnpm --prefix ./web update yunikorn-web ## ensure that the yunikorn-web package is up to date
 	uhsApiURL=$(strip $(call uhs_api_url)) yunikornApiURL=$(strip $(call yunikorn_api_url)) pnpm --prefix ./web setenv
 	pnpm --prefix ./web build
+	mv assets/assets/config/envconfig.json assets/assets/config/envconfig-uhs.json
+	## copy and merge yunikorn-web assets into the UHS assets directory
+	rsync -av web/node_modules/yunikorn-web/dist/yunikorn-web/ assets
+	mv assets/assets/config/envconfig.json assets/assets/config/envconfig-yk.json
+	## merge the two envconfig files
+	cd assets/assets/config && jq -s '.[0] * .[1]' envconfig-yk.json envconfig-uhs.json > envconfig.json
 
 .PHONY: build
 build: bin/app ## build the unicorn-history-server binary for current OS and architecture.
