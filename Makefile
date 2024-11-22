@@ -99,7 +99,7 @@ MINIKUBE_VERSION ?= latest
 
 # The release version of Yunikorn images
 # used in integration and performance tests.
-YK_VERSION=ccae7ff
+YK_VERSION=fab384e
 
 ##@ General
 
