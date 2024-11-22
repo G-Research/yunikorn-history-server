@@ -7,6 +7,7 @@ import (
 
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -31,6 +32,7 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 	eventRepository := repository.NewInMemoryEventRepository()
 
 	nowNano := time.Now().UnixNano()
+	partitionID := ulid.Make().String()
 
 	tests := []struct {
 		name          string
@@ -45,8 +47,8 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 				{
 					PartitionName: "default",
 					Nodes: []*dao.NodeDAOInfo{
-						{ID: "1", NodeID: "node-1", Partition: "default", HostName: "host-1"},
-						{ID: "2", NodeID: "node-2", Partition: "default", HostName: "host-2"},
+						{ID: "1", NodeID: "node-1", PartitionID: partitionID, HostName: "host-1"},
+						{ID: "2", NodeID: "node-2", PartitionID: partitionID, HostName: "host-2"},
 					},
 				},
 			},
@@ -63,19 +65,19 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 				{
 					PartitionName: "default",
 					Nodes: []*dao.NodeDAOInfo{
-						{ID: "2", NodeID: "node-2", Partition: "default", HostName: "host-2-updated"},
+						{ID: "2", NodeID: "node-2", PartitionID: partitionID, HostName: "host-2-updated"},
 					},
 				},
 			},
 			existingNodes: []*model.Node{
-				{NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", Partition: "default"}},
-				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2", Partition: "default"}},
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", PartitionID: partitionID}},
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2", PartitionID: partitionID}},
 			},
 			expectedNodes: []*model.Node{
-				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2-updated", Partition: "default"}}, // updated
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2-updated", PartitionID: partitionID}}, // updated
 				{
 					Metadata:    model.Metadata{DeletedAtNano: &nowNano}, // deleted
-					NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", Partition: "default"},
+					NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", PartitionID: partitionID},
 				},
 			},
 			wantErr: false,
@@ -104,8 +106,9 @@ func TestSync_syncNodes_Integration(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			nodesInDB, err := s.repo.GetNodesPerPartition(ctx, "default", repository.NodeFilters{})
+			nodesInDB, err := s.repo.GetNodesPerPartition(ctx, partitionID, repository.NodeFilters{})
 			require.NoError(t, err)
+			require.Equal(t, len(tt.expectedNodes), len(nodesInDB))
 			for i, target := range tt.expectedNodes {
 				require.Equal(t, target.ID, nodesInDB[i].ID)
 				require.Equal(t, target.NodeID, nodesInDB[i].NodeID)
