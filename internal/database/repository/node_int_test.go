@@ -22,7 +22,7 @@ type NodeTestSuite struct {
 	repo *PostgresRepository
 }
 
-var partitionID = ulid.Make().String()
+partitionID := ulid.Make().String()
 
 func (ns *NodeTestSuite) SetupSuite() {
 	ctx := context.Background()
