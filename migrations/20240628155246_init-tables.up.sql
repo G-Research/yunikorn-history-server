@@ -79,7 +79,7 @@ CREATE TABLE nodes(
     created_at_nano BIGINT NOT NULL,
     deleted_at_nano BIGINT,
     node_id TEXT NOT NULL,
-    partition TEXT NOT NULL,
+    partition_id TEXT NOT NULL,
     host_name TEXT NOT NULL,
     rack_name TEXT,
     attributes JSONB,
