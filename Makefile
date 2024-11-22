@@ -212,7 +212,7 @@ define start-cluster
 	@echo "**********************************"
 	@echo "Creating cluster"
 	@echo "**********************************"
-	$(MAKE) create-cluster
+	@CLUSTER_NAME=uhs-test $(MAKE) create-cluster
 
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
@@ -225,7 +225,7 @@ define cleanup-cluster
 	    echo "**********************************"
 	    echo "Deleting cluster"
 	    echo "**********************************"
-	    $(MAKE) delete-cluster
+	    @CLUSTER_NAME=uhs-test $(MAKE) delete-cluster
     }
 endef
 
@@ -244,7 +244,7 @@ integration-tests: ## start dependencies and run integration tests.
 e2e-tests: ## start dependencies and run e2e tests.
 	@$(cleanup-cluster); trap cleanup EXIT
 	@$(start-cluster)
-	UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
+	@CLUSTER_NAME=uhs-test UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
 .ONESHELL:
