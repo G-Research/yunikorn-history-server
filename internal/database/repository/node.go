@@ -47,7 +47,7 @@ INSERT INTO nodes (
     created_at_nano,
 	deleted_at_nano,
 	node_id,
-	partition,
+	partition_id,
 	host_name,
 	rack_name,
 	attributes,
@@ -65,7 +65,7 @@ INSERT INTO nodes (
 	@created_at_nano,
 	@deleted_at_nano,
 	@node_id,
-	@partition,
+	@partition_id,
 	@host_name,
 	@rack_name,
 	@attributes,
@@ -86,7 +86,7 @@ INSERT INTO nodes (
 			"created_at_nano": node.CreatedAtNano,
 			"deleted_at_nano": node.DeletedAtNano,
 			"node_id":         node.NodeID,
-			"partition":       node.Partition,
+			"partition_id":    node.PartitionID,
 			"host_name":       node.HostName,
 			"rack_name":       node.RackName,
 			"attributes":      node.Attributes,
@@ -112,7 +112,7 @@ UPDATE nodes
 SET
 	deleted_at_nano = @deleted_at_nano,
 	node_id = @node_id,
-	partition = @partition,
+	partition_id = @partition_id,
 	host_name = @host_name,
 	rack_name = @rack_name,
 	attributes = @attributes,
@@ -134,7 +134,7 @@ WHERE id = @id`
 			"id":              node.ID,
 			"deleted_at_nano": node.DeletedAtNano,
 			"node_id":         node.NodeID,
-			"partition":       node.Partition,
+			"partition_id":    node.PartitionID,
 			"host_name":       node.HostName,
 			"rack_name":       node.RackName,
 			"attributes":      node.Attributes,
@@ -167,7 +167,7 @@ func (s *PostgresRepository) GetNodeByID(ctx context.Context, id string) (*model
 		&node.CreatedAtNano,
 		&node.DeletedAtNano,
 		&node.NodeID,
-		&node.Partition,
+		&node.PartitionID,
 		&node.HostName,
 		&node.RackName,
 		&node.Attributes,
@@ -202,10 +202,10 @@ WHERE deleted_at_nano IS NULL AND NOT (id = ANY(@ids))`
 	return err
 }
 
-func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*model.Node, error) {
+func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partitionID string, filters NodeFilters) ([]*model.Node, error) {
 	queryBuilder := sql.NewBuilder().
 		SelectAll("nodes", "").
-		Conditionp("partition", "=", partition).
+		Conditionp("partition_id", "=", partitionID).
 		OrderBy("node_id", sql.OrderByDescending)
 	applyNodeFilters(queryBuilder, filters)
 
@@ -225,7 +225,7 @@ func (s *PostgresRepository) GetNodesPerPartition(ctx context.Context, partition
 			&n.CreatedAtNano,
 			&n.DeletedAtNano,
 			&n.NodeID,
-			&n.Partition,
+			&n.PartitionID,
 			&n.HostName,
 			&n.RackName,
 			&n.Attributes,

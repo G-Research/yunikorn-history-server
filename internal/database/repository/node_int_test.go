@@ -22,6 +22,8 @@ type NodeTestSuite struct {
 	repo *PostgresRepository
 }
 
+var partitionID = ulid.Make().String()
+
 func (ns *NodeTestSuite) SetupSuite() {
 	ctx := context.Background()
 	require.NotNil(ns.T(), ns.pool)
@@ -39,62 +41,62 @@ func (ns *NodeTestSuite) TearDownSuite() {
 func (ns *NodeTestSuite) TestGetNodesPerPartition() {
 	ctx := context.Background()
 	tests := []struct {
-		name      string
-		partition string
-		filters   NodeFilters
-		expected  int
+		name        string
+		partitionID string
+		filters     NodeFilters
+		expected    int
 	}{
 		{
-			name:      "Filter by NodeId",
-			partition: "default",
+			name:        "Filter by NodeId",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				NodeId: util.ToPtr("node1"),
 			},
 			expected: 1,
 		},
 		{
-			name:      "Filter by HostName",
-			partition: "default",
+			name:        "Filter by HostName",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				HostName: util.ToPtr("host2"),
 			},
 			expected: 3,
 		},
 		{
-			name:      "Filter by RackName",
-			partition: "default",
+			name:        "Filter by RackName",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				RackName: util.ToPtr("rack2"),
 			},
 			expected: 3,
 		},
 		{
-			name:      "Filter by Schedulable",
-			partition: "default",
+			name:        "Filter by Schedulable",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				Schedulable: util.ToPtr(false),
 			},
 			expected: 3,
 		},
 		{
-			name:      "Filter by IsReserved",
-			partition: "default",
+			name:        "Filter by IsReserved",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				IsReserved: util.ToPtr(true),
 			},
 			expected: 4,
 		},
 		{
-			name:      "Filter By Limit",
-			partition: "default",
+			name:        "Filter By Limit",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				Limit: util.ToPtr(2),
 			},
 			expected: 2,
 		},
 		{
-			name:      "Filter By Limit and Offset",
-			partition: "default",
+			name:        "Filter By Limit and Offset",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				Limit:  util.ToPtr(2),
 				Offset: util.ToPtr(2),
@@ -102,8 +104,8 @@ func (ns *NodeTestSuite) TestGetNodesPerPartition() {
 			expected: 2,
 		},
 		{
-			name:      "Multiple filters",
-			partition: "default",
+			name:        "Multiple filters",
+			partitionID: partitionID,
 			filters: NodeFilters{
 				HostName:    util.ToPtr("host1"),
 				RackName:    util.ToPtr("rack1"),
@@ -114,15 +116,15 @@ func (ns *NodeTestSuite) TestGetNodesPerPartition() {
 			expected: 1,
 		},
 		{
-			name:      "No Filters",
-			partition: "default",
-			expected:  4,
+			name:        "No Filters",
+			partitionID: partitionID,
+			expected:    4,
 		},
 	}
 
 	for _, tt := range tests {
 		ns.Run(tt.name, func() {
-			nodes, err := ns.repo.GetNodesPerPartition(ctx, tt.partition, tt.filters)
+			nodes, err := ns.repo.GetNodesPerPartition(ctx, tt.partitionID, tt.filters)
 			require.NoError(ns.T(), err)
 			require.Equal(ns.T(), tt.expected, len(nodes))
 		})
@@ -133,7 +135,6 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 	t.Helper()
 
 	now := time.Now().UnixNano()
-	partition := "default"
 
 	nodes := []*model.Node{
 		{
@@ -143,7 +144,7 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 			NodeDAOInfo: dao.NodeDAOInfo{
 				ID:          ulid.Make().String(),
 				NodeID:      "node1",
-				Partition:   partition,
+				PartitionID: partitionID,
 				HostName:    "host1",
 				RackName:    "rack1",
 				Schedulable: true,
@@ -157,7 +158,7 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 			NodeDAOInfo: dao.NodeDAOInfo{
 				ID:          ulid.Make().String(),
 				NodeID:      "node2",
-				Partition:   partition,
+				PartitionID: partitionID,
 				HostName:    "host2",
 				RackName:    "rack2",
 				Schedulable: false,
@@ -171,7 +172,7 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 			NodeDAOInfo: dao.NodeDAOInfo{
 				ID:          ulid.Make().String(),
 				NodeID:      "node3",
-				Partition:   partition,
+				PartitionID: partitionID,
 				HostName:    "host2",
 				RackName:    "rack2",
 				Schedulable: false,
@@ -186,7 +187,7 @@ func seedNodes(ctx context.Context, t *testing.T, repo *PostgresRepository) {
 				NodeID:      "node4",
 				ID:          ulid.Make().String(),
 				HostName:    "host2",
-				Partition:   partition,
+				PartitionID: partitionID,
 				RackName:    "rack2",
 				Schedulable: false,
 				IsReserved:  true,

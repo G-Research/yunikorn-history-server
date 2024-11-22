@@ -1,9 +1,11 @@
 module github.com/G-Research/unicorn-history-server
 
-go 1.22.4
+go 1.23.2
+
+toolchain go1.23.3
 
 require (
-	github.com/G-Research/yunikorn-core v0.0.0-20241106152547-9cb4e802cd38
+	github.com/G-Research/yunikorn-core v0.0.0-20241120004812-3d39b65572b7
 	github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08
 	github.com/emicklei/go-restful-openapi/v2 v2.11.0
 	github.com/emicklei/go-restful/v3 v3.12.1
@@ -35,6 +37,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/brianvoe/gofakeit/v7 v7.1.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect

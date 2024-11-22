@@ -357,13 +357,13 @@ func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *re
 
 func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.Response) {
 	ctx := req.Request.Context()
-	partition := req.PathParameter("partition_id")
+	partitionID := req.PathParameter("partition_id")
 	filters, err := parseNodeFilters(req.Request)
 	if err != nil {
 		badRequestResponse(req, resp, err)
 		return
 	}
-	nodes, err := ws.repository.GetNodesPerPartition(ctx, partition, *filters)
+	nodes, err := ws.repository.GetNodesPerPartition(ctx, partitionID, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
 		return
