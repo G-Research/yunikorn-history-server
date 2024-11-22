@@ -5,10 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/G-Research/unicorn-history-server/test/database"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/G-Research/unicorn-history-server/internal/config"
@@ -18,40 +16,22 @@ import (
 
 type HealthTestSuite struct {
 	suite.Suite
-	tp             *database.TestPostgresContainer
 	pool           *pgxpool.Pool
 	yunikornClient *yunikorn.RESTClient
-	startedAt      time.Time
-	version        string
 }
 
 func (ts *HealthTestSuite) SetupSuite() {
-	ctx := context.Background()
-	cfg := database.InstanceConfig{
-		User:     "test",
-		Password: "test",
-		DBName:   "template",
-		Host:     "localhost",
-		Port:     15437,
-	}
-
-	tp, err := database.NewTestPostgresContainer(ctx, cfg)
-	require.NoError(ts.T(), err)
-	ts.tp = tp
-	ts.pool = tp.Pool(ctx, ts.T(), &cfg)
 	ts.yunikornClient = yunikorn.NewRESTClient(testconfig.GetTestYunikornConfig())
-
-	ts.startedAt = time.Now()
-	ts.version = "1.0.0"
 }
 
 func (ts *HealthTestSuite) TearDownSuite() {
-	err := ts.tp.Container.Terminate(context.Background())
-	require.NoError(ts.T(), err)
+	ts.pool.Close()
 }
 
 func (ts *HealthTestSuite) TestService_Readiness() {
 	ctx := context.Background()
+	startedAt := time.Now()
+	version := "1.0.0"
 
 	ts.Run("status is unhealthy when one component is unhealthy", func() {
 		invalidYunikornConfig := config.YunikornConfig{
@@ -65,8 +45,8 @@ func (ts *HealthTestSuite) TestService_Readiness() {
 			NewPostgresComponent(ts.pool),
 		}
 		service := Service{
-			startedAt:  ts.startedAt,
-			version:    ts.version,
+			startedAt:  startedAt,
+			version:    version,
 			components: components,
 		}
 		status := service.Readiness(ctx)
@@ -74,8 +54,8 @@ func (ts *HealthTestSuite) TestService_Readiness() {
 		assert.False(ts.T(), status.Healthy)
 		assert.Equal(ts.T(), 2, len(status.ComponentStatuses))
 		assertStatus(ts.T(), status.ComponentStatuses, "yunikorn", false, expectErrorPrefix)
-		assert.Equal(ts.T(), ts.startedAt, status.StartedAt)
-		assert.Equal(ts.T(), ts.version, status.Version)
+		assert.Equal(ts.T(), startedAt, status.StartedAt)
+		assert.Equal(ts.T(), version, status.Version)
 	})
 
 	ts.Run("status is healthy when all components are healthy", func() {
@@ -84,8 +64,8 @@ func (ts *HealthTestSuite) TestService_Readiness() {
 			NewPostgresComponent(ts.pool),
 		}
 		service := Service{
-			startedAt:  ts.startedAt,
-			version:    ts.version,
+			startedAt:  startedAt,
+			version:    version,
 			components: components,
 		}
 		status := service.Readiness(ctx)
@@ -93,16 +73,9 @@ func (ts *HealthTestSuite) TestService_Readiness() {
 		for _, componentStatus := range status.ComponentStatuses {
 			assert.True(ts.T(), componentStatus.Healthy)
 		}
-		assert.Equal(ts.T(), ts.startedAt, status.StartedAt)
-		assert.Equal(ts.T(), ts.version, status.Version)
+		assert.Equal(ts.T(), startedAt, status.StartedAt)
+		assert.Equal(ts.T(), version, status.Version)
 	})
-}
-
-func TestHealthIntegrationTestSuite(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	suite.Run(t, new(HealthTestSuite))
 }
 
 func assertStatus(t *testing.T, statuses []*ComponentStatus, identifier string, expectedHealthy bool, expectedErrorPrefix string) {
