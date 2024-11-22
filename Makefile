@@ -97,6 +97,10 @@ KIND_VERSION ?= latest
 MINIKUBE ?= $(LOCALBIN_TOOLING)/minikube
 MINIKUBE_VERSION ?= latest
 
+# The release version of Yunikorn images
+# used in integration and performance tests.
+YK_VERSION=fab384e
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
@@ -261,8 +265,8 @@ performance-tests: k6 ## start dependencies and run performance tests.
 	@echo "Run unicorn history server"
 	@mkdir -p test-reports/performance
 	$(MAKE) clean build
-	bin/app/unicorn-history-server \
-		--config config/unicorn-history-server/local.yml > test-reports/performance/uhs.log & disown
+	nohup bin/app/unicorn-history-server \
+		--config config/unicorn-history-server/local.yml > test-reports/performance/uhs.log & 2>&1
 	UHS_SERVER=$${UHS_SERVER:-http://localhost:8989}
 	@echo "UHS_SERVER is $${UHS_SERVER}"
 	@echo "**********************************"
@@ -270,7 +274,7 @@ performance-tests: k6 ## start dependencies and run performance tests.
 	@echo "**********************************"
 	while true; do
 		echo "Sending request to unicorn history server..."
-		URL="$${UHS_SERVER}/ws/v1/health/readiness"
+		URL="$${UHS_SERVER}/api/v1/health/readiness"
 		http_status=`curl --write-out %{http_code} --silent --output /dev/null $${URL} || true`
 		if [ $$http_status -eq 200 ] ; then
 			echo "Unicorn history server is up and running."
@@ -423,8 +427,23 @@ wait-for-dependencies: ## wait for dependencies to be ready.
 install-and-patch-yunikorn: helm-install-yunikorn patch-yunikorn-service ## install yunikorn and patch Service to expose NodePorts.
 
 .PHONY: helm-install-yunikorn
+.ONESHELL:
 helm-install-yunikorn: ## install yunikorn using helm.
-	$(HELM) upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace
+	@echo "\nLoading Local Docker images into kind cluster..."
+	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:admission-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
+	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-plugin-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
+	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
+	$(HELM) upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace \
+	    --set image.repository=${IMAGE_REGISTRY}/yunikorn \
+	    --set image.tag=scheduler-${ARCH}-${YK_VERSION} \
+	    --set image.pullPolicy=IfNotPresent \
+	    --set pluginImage.repository=${IMAGE_REGISTRY}/yunikorn \
+	    --set pluginImage.tag=scheduler-plugin-${ARCH}-${YK_VERSION} \
+	    --set pluginImage.pullPolicy=IfNotPresent \
+	    --set admissionController.image.repository=${IMAGE_REGISTRY}/yunikorn \
+	    --set admissionController.image.tag=admission-${ARCH}-${YK_VERSION} \
+	    --set admissionController.image.pullPolicy=IfNotPresent
+
 
 .PHONY: helm-uninstall-yunikorn
 helm-uninstall-yunikorn: ## uninstall yunikorn using helm.
@@ -455,7 +474,7 @@ helm-uninstall-uhs-local:
 .PHONY: helm-repos
 helm-repos: helm
 	$(HELM) repo add gresearch https://g-research.github.io/charts
-	helm repo add yunikorn https://apache.github.io/yunikorn-release
+	$(HELM) repo add yunikorn https://apache.github.io/yunikorn-release
 	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami
 	$(HELM) repo update
 

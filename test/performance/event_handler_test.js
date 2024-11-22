@@ -10,7 +10,7 @@ const appAddCounter = new Counter('app_add_counter');
 const namespace = __ENV.NAMESPACE || 'default';
 const uhsServer = __ENV.UHS_SERVER || 'http://localhost:8989';
 
-const EVENT_STATISTICS_PATH = '/ws/v1/event-statistics';
+const EVENT_STATISTICS_PATH = '/api/v1/event-statistics';
 const jobTemplate = {
     apiVersion: 'batch/v1',
     kind: 'Job',
@@ -56,7 +56,7 @@ function createJob(kubernetes) {
 function getStats() {
     const res = http.get(`${uhsServer}${EVENT_STATISTICS_PATH}`);
     if (res.status !== 200) {
-        console.error(`Failed to fetch statistics: ${res.status} ${res.statusText}`);
+        console.error(`Failed to fetch statistics: ${res.status} ${res.status_text}`);
         return null;
     }
     return JSON.parse(res.body);
