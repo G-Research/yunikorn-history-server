@@ -22,7 +22,7 @@ type Repository interface {
 	UpdateNode(ctx context.Context, node *model.Node) error
 	GetNodeByID(ctx context.Context, id string) (*model.Node, error)
 	DeleteNodesNotInIDs(ctx context.Context, ids []string, deletedAtNano int64) error
-	GetNodesPerPartition(ctx context.Context, partition string, filters NodeFilters) ([]*model.Node, error)
+	GetNodesPerPartition(ctx context.Context, partitionID string, filters NodeFilters) ([]*model.Node, error)
 	InsertPartition(ctx context.Context, partition *model.Partition) error
 	UpdatePartition(ctx context.Context, partition *model.Partition) error
 	GetAllPartitions(ctx context.Context, filters PartitionFilters) ([]*model.Partition, error)

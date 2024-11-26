@@ -8,6 +8,7 @@ import (
 	"github.com/G-Research/unicorn-history-server/internal/model"
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -33,6 +34,7 @@ func (ss *SyncNodesTestSuite) TestSyncNodes() {
 
 	ctx := context.Background()
 	nowNano := time.Now().UnixNano()
+	partitionID := ulid.Make().String()
 
 	tests := []struct {
 		name          string
@@ -47,8 +49,8 @@ func (ss *SyncNodesTestSuite) TestSyncNodes() {
 				{
 					PartitionName: "default",
 					Nodes: []*dao.NodeDAOInfo{
-						{ID: "1", NodeID: "node-1", Partition: "default", HostName: "host-1"},
-						{ID: "2", NodeID: "node-2", Partition: "default", HostName: "host-2"},
+						{ID: "1", NodeID: "node-1", PartitionID: partitionID, HostName: "host-1"},
+						{ID: "2", NodeID: "node-2", PartitionID: partitionID, HostName: "host-2"},
 					},
 				},
 			},
@@ -65,19 +67,19 @@ func (ss *SyncNodesTestSuite) TestSyncNodes() {
 				{
 					PartitionName: "default",
 					Nodes: []*dao.NodeDAOInfo{
-						{ID: "2", NodeID: "node-2", Partition: "default", HostName: "host-2-updated"},
+						{ID: "2", NodeID: "node-2", PartitionID: partitionID, HostName: "host-2-updated"},
 					},
 				},
 			},
 			existingNodes: []*model.Node{
-				{NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", Partition: "default"}},
-				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2", Partition: "default"}},
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", PartitionID: partitionID}},
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2", PartitionID: partitionID}},
 			},
 			expectedNodes: []*model.Node{
-				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2-updated", Partition: "default"}}, // updated
+				{NodeDAOInfo: dao.NodeDAOInfo{ID: "2", NodeID: "node-2", HostName: "host-2-updated", PartitionID: partitionID}}, // updated
 				{
 					Metadata:    model.Metadata{DeletedAtNano: &nowNano}, // deleted
-					NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", Partition: "default"},
+					NodeDAOInfo: dao.NodeDAOInfo{ID: "1", NodeID: "node-1", HostName: "host-1", PartitionID: partitionID},
 				},
 			},
 			wantErr: false,
@@ -106,7 +108,7 @@ func (ss *SyncNodesTestSuite) TestSyncNodes() {
 			}
 			require.NoError(ss.T(), err)
 
-			nodesInDB, err := s.repo.GetNodesPerPartition(ctx, "default", repository.NodeFilters{})
+			nodesInDB, err := s.repo.GetNodesPerPartition(ctx, partitionID, repository.NodeFilters{})
 			require.NoError(ss.T(), err)
 			for i, target := range tt.expectedNodes {
 				require.Equal(ss.T(), target.ID, nodesInDB[i].ID)
