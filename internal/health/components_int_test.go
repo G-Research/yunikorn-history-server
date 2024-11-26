@@ -10,21 +10,21 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type ComponentsTestSuite struct {
+type ComponentsIntTest struct {
 	suite.Suite
 	pool           *pgxpool.Pool
 	yunikornClient *yunikorn.RESTClient
 }
 
-func (ts *ComponentsTestSuite) SetupSuite() {
+func (ts *ComponentsIntTest) SetupSuite() {
 	ts.yunikornClient = yunikorn.NewRESTClient(config.GetTestYunikornConfig())
 }
 
-func (ts *ComponentsTestSuite) TearDownSuite() {
+func (ts *ComponentsIntTest) TearDownSuite() {
 	ts.pool.Close()
 }
 
-func (ts *ComponentsTestSuite) TestNewComponents() {
+func (ts *ComponentsIntTest) TestNewComponents() {
 	ctx := context.Background()
 
 	tests := []struct {

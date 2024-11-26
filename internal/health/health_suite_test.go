@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type HealthToptSuite struct {
+type HealthSuite struct {
 	suite.Suite
 	tp   *database.TestPostgresContainer
 	pool *pgxpool.Pool
 }
 
-func (ts *HealthToptSuite) SetupSuite() {
+func (ts *HealthSuite) SetupSuite() {
 	ctx := context.Background()
 	cfg := database.InstanceConfig{
 		User:     "test",
@@ -32,27 +32,27 @@ func (ts *HealthToptSuite) SetupSuite() {
 	ts.pool = tp.Pool(ctx, ts.T(), &cfg)
 }
 
-func (ts *HealthToptSuite) TearDownSuite() {
+func (ts *HealthSuite) TearDownSuite() {
 	err := ts.tp.Container.Terminate(context.Background())
 	require.NoError(ts.T(), err)
 }
 
-func (ts *HealthToptSuite) TestSubSuites() {
-	ts.T().Run("HealthTestSuite", func(t *testing.T) {
+func (ts *HealthSuite) TestSubSuites() {
+	ts.T().Run("HealthIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &HealthTestSuite{pool: pool})
+		suite.Run(t, &HealthIntTest{pool: pool})
 	})
-	ts.T().Run("ComponentsTestSuite", func(t *testing.T) {
+	ts.T().Run("ComponentsIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &ComponentsTestSuite{pool: pool})
+		suite.Run(t, &ComponentsIntTest{pool: pool})
 	})
 
 }
 
-func TestHealthIntegrationTestSuite(t *testing.T) {
+func TestHealthSuiteIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	topSuite := new(HealthToptSuite)
+	topSuite := new(HealthSuite)
 	suite.Run(t, topSuite)
 }

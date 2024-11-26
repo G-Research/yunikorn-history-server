@@ -14,21 +14,21 @@ import (
 	testconfig "github.com/G-Research/unicorn-history-server/test/config"
 )
 
-type HealthTestSuite struct {
+type HealthIntTest struct {
 	suite.Suite
 	pool           *pgxpool.Pool
 	yunikornClient *yunikorn.RESTClient
 }
 
-func (ts *HealthTestSuite) SetupSuite() {
+func (ts *HealthIntTest) SetupSuite() {
 	ts.yunikornClient = yunikorn.NewRESTClient(testconfig.GetTestYunikornConfig())
 }
 
-func (ts *HealthTestSuite) TearDownSuite() {
+func (ts *HealthIntTest) TearDownSuite() {
 	ts.pool.Close()
 }
 
-func (ts *HealthTestSuite) TestService_Readiness() {
+func (ts *HealthIntTest) TestService_Readiness() {
 	ctx := context.Background()
 	startedAt := time.Now()
 	version := "1.0.0"
