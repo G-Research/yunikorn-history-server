@@ -27,7 +27,6 @@ func (s *Service) syncPartitions(ctx context.Context, partitions []*dao.Partitio
 
 	for _, p := range partitions {
 		current, err := s.repo.GetPartitionByID(ctx, p.ID)
-		fmt.Printf("Getting partition resulted in current: %+v, err: %v\n", current, err)
 		if err != nil {
 			fmt.Printf("Error getting partition: %v\n", err)
 			partition := &model.Partition{

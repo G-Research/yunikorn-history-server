@@ -14,13 +14,13 @@ import (
 	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
-type PartitionTestSuite struct {
+type PartitionIntTest struct {
 	suite.Suite
 	pool *pgxpool.Pool
 	repo *PostgresRepository
 }
 
-func (ps *PartitionTestSuite) SetupSuite() {
+func (ps *PartitionIntTest) SetupSuite() {
 	ctx := context.Background()
 	require.NotNil(ps.T(), ps.pool)
 	repo, err := NewPostgresRepository(ps.pool)
@@ -30,11 +30,11 @@ func (ps *PartitionTestSuite) SetupSuite() {
 	seedPartitions(ctx, ps.T(), ps.repo)
 }
 
-func (ps *PartitionTestSuite) TearDownSuite() {
+func (ps *PartitionIntTest) TearDownSuite() {
 	ps.pool.Close()
 }
 
-func (ps *PartitionTestSuite) TestGetAllPartitions() {
+func (ps *PartitionIntTest) TestGetAllPartitions() {
 	ctx := context.Background()
 	tests := []struct {
 		name     string

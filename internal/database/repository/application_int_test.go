@@ -16,13 +16,13 @@ import (
 	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
-type ApplicationTestSuite struct {
+type ApplicationIntTest struct {
 	suite.Suite
 	pool *pgxpool.Pool
 	repo *PostgresRepository
 }
 
-func (as *ApplicationTestSuite) SetupSuite() {
+func (as *ApplicationIntTest) SetupSuite() {
 	ctx := context.Background()
 	require.NotNil(as.T(), as.pool)
 	repo, err := NewPostgresRepository(as.pool)
@@ -32,11 +32,11 @@ func (as *ApplicationTestSuite) SetupSuite() {
 	seedApplications(ctx, as.T(), as.repo)
 }
 
-func (as *ApplicationTestSuite) TearDownSuite() {
+func (as *ApplicationIntTest) TearDownSuite() {
 	as.pool.Close()
 }
 
-func (as *ApplicationTestSuite) TestGetAllApplications() {
+func (as *ApplicationIntTest) TestGetAllApplications() {
 	ctx := context.Background()
 	tests := []struct {
 		name     string
@@ -106,7 +106,7 @@ func (as *ApplicationTestSuite) TestGetAllApplications() {
 	}
 }
 
-func (as *ApplicationTestSuite) TestGetAppsPerPartitionPerQueue() {
+func (as *ApplicationIntTest) TestGetAppsPerPartitionPerQueue() {
 	ctx := context.Background()
 	tests := []struct {
 		name     string

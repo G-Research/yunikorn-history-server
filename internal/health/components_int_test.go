@@ -2,27 +2,30 @@ package health
 
 import (
 	"context"
-	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/G-Research/unicorn-history-server/internal/database/postgres"
 	"github.com/G-Research/unicorn-history-server/internal/yunikorn"
 	"github.com/G-Research/unicorn-history-server/test/config"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestNewComponent_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
+type ComponentsIntTest struct {
+	suite.Suite
+	pool           *pgxpool.Pool
+	yunikornClient *yunikorn.RESTClient
+}
 
+func (ts *ComponentsIntTest) SetupSuite() {
+	ts.yunikornClient = yunikorn.NewRESTClient(config.GetTestYunikornConfig())
+}
+
+func (ts *ComponentsIntTest) TearDownSuite() {
+	ts.pool.Close()
+}
+
+func (ts *ComponentsIntTest) TestNewComponents() {
 	ctx := context.Background()
-
-	yunikornClient := yunikorn.NewRESTClient(config.GetTestYunikornConfig())
-	postgresPool, err := postgres.NewConnectionPool(ctx, config.GetTestPostgresConfig())
-	if err != nil {
-		t.Fatalf("error creating postgres connection pool: %v", err)
-	}
 
 	tests := []struct {
 		name               string
@@ -32,23 +35,23 @@ func TestNewComponent_Integration(t *testing.T) {
 	}{
 		{
 			name:               "should return a valid ComponentStatus when Yunikorn is reachable",
-			component:          NewYunikornComponent(yunikornClient),
+			component:          NewYunikornComponent(ts.yunikornClient),
 			expectedIdentifier: "yunikorn",
 			expectedHealthy:    true,
 		},
 		{
 			name:               "should return a valid ComponentStatus when Postgres is reachable",
-			component:          NewPostgresComponent(postgresPool),
+			component:          NewPostgresComponent(ts.pool),
 			expectedIdentifier: "postgres",
 			expectedHealthy:    true,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		ts.Run(tt.name, func() {
 			status := tt.component.Check(ctx)
-			assert.Equal(t, tt.expectedIdentifier, status.Identifier)
-			assert.Equal(t, tt.expectedHealthy, status.Healthy)
+			assert.Equal(ts.T(), tt.expectedIdentifier, status.Identifier)
+			assert.Equal(ts.T(), tt.expectedHealthy, status.Healthy)
 		})
 	}
 }

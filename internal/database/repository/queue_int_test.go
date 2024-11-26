@@ -13,13 +13,13 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type QueueTestSuite struct {
+type QueueIntTest struct {
 	suite.Suite
 	pool *pgxpool.Pool
 	repo *PostgresRepository
 }
 
-func (qs *QueueTestSuite) SetupSuite() {
+func (qs *QueueIntTest) SetupSuite() {
 	require.NotNil(qs.T(), qs.pool)
 	repo, err := NewPostgresRepository(qs.pool)
 	require.NoError(qs.T(), err)
@@ -28,11 +28,11 @@ func (qs *QueueTestSuite) SetupSuite() {
 	seedQueues(qs.T(), qs.repo)
 }
 
-func (qs *QueueTestSuite) TearDownSuite() {
+func (qs *QueueIntTest) TearDownSuite() {
 	qs.pool.Close()
 }
 
-func (qs *QueueTestSuite) TestGetAllQueues() {
+func (qs *QueueIntTest) TestGetAllQueues() {
 	ctx := context.Background()
 	tests := []struct {
 		name               string
@@ -53,7 +53,7 @@ func (qs *QueueTestSuite) TestGetAllQueues() {
 	}
 }
 
-func (qs *QueueTestSuite) TestGetQueuesInPartition() {
+func (qs *QueueIntTest) TestGetQueuesInPartition() {
 	ctx := context.Background()
 	tests := []struct {
 		name                string
@@ -81,7 +81,7 @@ func (qs *QueueTestSuite) TestGetQueuesInPartition() {
 	}
 }
 
-func (qs *QueueTestSuite) TestGetQueue() {
+func (qs *QueueIntTest) TestGetQueue() {
 	ctx := context.Background()
 	tests := []struct {
 		name          string
@@ -119,7 +119,7 @@ func (qs *QueueTestSuite) TestGetQueue() {
 	}
 }
 
-func (qs *QueueTestSuite) TestDeleteQueues() {
+func (qs *QueueIntTest) TestDeleteQueues() {
 	ctx := context.Background()
 	tests := []struct {
 		name              string
@@ -163,7 +163,7 @@ func (qs *QueueTestSuite) TestDeleteQueues() {
 	}
 }
 
-func (qs *QueueTestSuite) TestUpdateQueue() {
+func (qs *QueueIntTest) TestUpdateQueue() {
 	ctx := context.Background()
 	now := time.Now()
 	tests := []struct {

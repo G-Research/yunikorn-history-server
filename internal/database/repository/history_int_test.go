@@ -15,13 +15,13 @@ import (
 	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
-type HistoryTestSuite struct {
+type HistoryIntTest struct {
 	suite.Suite
 	pool *pgxpool.Pool
 	repo *PostgresRepository
 }
 
-func (hs *HistoryTestSuite) SetupSuite() {
+func (hs *HistoryIntTest) SetupSuite() {
 	ctx := context.Background()
 	require.NotNil(hs.T(), hs.pool)
 	repo, err := NewPostgresRepository(hs.pool)
@@ -31,11 +31,11 @@ func (hs *HistoryTestSuite) SetupSuite() {
 	seedHistory(ctx, hs.T(), hs.repo)
 }
 
-func (hs *HistoryTestSuite) TearDownSuite() {
+func (hs *HistoryIntTest) TearDownSuite() {
 	hs.pool.Close()
 }
 
-func (hs *HistoryTestSuite) TestGetApplicationsHistory() {
+func (hs *HistoryIntTest) TestGetApplicationsHistory() {
 	ctx := context.Background()
 	tests := []struct {
 		name     string
@@ -76,7 +76,7 @@ func (hs *HistoryTestSuite) TestGetApplicationsHistory() {
 	}
 }
 
-func (hs *HistoryTestSuite) TestGetContainersHistory() {
+func (hs *HistoryIntTest) TestGetContainersHistory() {
 	ctx := context.Background()
 	tests := []struct {
 		name     string
