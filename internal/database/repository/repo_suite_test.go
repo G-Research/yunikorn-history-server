@@ -11,13 +11,13 @@ import (
 	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
-type RepositoryTestSuite struct {
+type RepositorySuite struct {
 	suite.Suite
 	tp   *database.TestPostgresContainer
 	pool *pgxpool.Pool
 }
 
-func (ts *RepositoryTestSuite) SetupSuite() {
+func (ts *RepositorySuite) SetupSuite() {
 	ctx := context.Background()
 	cfg := database.InstanceConfig{
 		User:     "test",
@@ -36,38 +36,38 @@ func (ts *RepositoryTestSuite) SetupSuite() {
 	ts.pool = tp.Pool(ctx, ts.T(), &cfg)
 }
 
-func (ts *RepositoryTestSuite) TearDownSuite() {
+func (ts *RepositorySuite) TearDownSuite() {
 	err := ts.tp.Container.Terminate(context.Background())
 	require.NoError(ts.T(), err)
 }
 
-func (ts *RepositoryTestSuite) TestSubSuites() {
-	ts.T().Run("ApplicationTestSuite", func(t *testing.T) {
+func (ts *RepositorySuite) TestSubSuites() {
+	ts.T().Run("ApplicationIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &ApplicationTestSuite{pool: pool})
+		suite.Run(t, &ApplicationIntTest{pool: pool})
 	})
-	ts.T().Run("HistoryTestSuite", func(t *testing.T) {
+	ts.T().Run("HistoryIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &HistoryTestSuite{pool: pool})
+		suite.Run(t, &HistoryIntTest{pool: pool})
 	})
-	ts.T().Run("NodeTestSuite", func(t *testing.T) {
+	ts.T().Run("NodeIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &NodeTestSuite{pool: pool})
+		suite.Run(t, &NodeIntTest{pool: pool})
 	})
-	ts.T().Run("QueueTestSuite", func(t *testing.T) {
+	ts.T().Run("QueueIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &QueueTestSuite{pool: pool})
+		suite.Run(t, &QueueIntTest{pool: pool})
 	})
-	ts.T().Run("PartitionTestSuite", func(t *testing.T) {
+	ts.T().Run("PartitionIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &PartitionTestSuite{pool: pool})
+		suite.Run(t, &PartitionIntTest{pool: pool})
 	})
 }
 
-func TestRepositoryIntegrationTestSuite(t *testing.T) {
+func TestRepositoryIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	topSuite := new(RepositoryTestSuite)
+	topSuite := new(RepositorySuite)
 	suite.Run(t, topSuite)
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/G-Research/unicorn-history-server/internal/util"
 )
 
-type NodeTestSuite struct {
+type NodeIntTest struct {
 	suite.Suite
 	pool *pgxpool.Pool
 	repo *PostgresRepository
@@ -24,7 +24,7 @@ type NodeTestSuite struct {
 
 var partitionID = ulid.Make().String()
 
-func (ns *NodeTestSuite) SetupSuite() {
+func (ns *NodeIntTest) SetupSuite() {
 	ctx := context.Background()
 	require.NotNil(ns.T(), ns.pool)
 	repo, err := NewPostgresRepository(ns.pool)
@@ -34,11 +34,11 @@ func (ns *NodeTestSuite) SetupSuite() {
 	seedNodes(ctx, ns.T(), ns.repo)
 }
 
-func (ns *NodeTestSuite) TearDownSuite() {
+func (ns *NodeIntTest) TearDownSuite() {
 	ns.pool.Close()
 }
 
-func (ns *NodeTestSuite) TestGetNodesPerPartition() {
+func (ns *NodeIntTest) TestGetNodesPerPartition() {
 	ctx := context.Background()
 	tests := []struct {
 		name        string
