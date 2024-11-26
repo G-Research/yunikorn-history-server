@@ -13,24 +13,24 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type SyncNodesTestSuite struct {
+type SyncNodesIntTest struct {
 	suite.Suite
 	pool *pgxpool.Pool
 	repo *repository.PostgresRepository
 }
 
-func (ss *SyncNodesTestSuite) SetupSuite() {
+func (ss *SyncNodesIntTest) SetupSuite() {
 	require.NotNil(ss.T(), ss.pool)
 	repo, err := repository.NewPostgresRepository(ss.pool)
 	require.NoError(ss.T(), err)
 	ss.repo = repo
 }
 
-func (ss *SyncNodesTestSuite) TearDownSuite() {
+func (ss *SyncNodesIntTest) TearDownSuite() {
 	ss.pool.Close()
 }
 
-func (ss *SyncNodesTestSuite) TestSyncNodes() {
+func (ss *SyncNodesIntTest) TestSyncNodes() {
 
 	ctx := context.Background()
 	nowNano := time.Now().UnixNano()

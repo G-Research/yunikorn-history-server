@@ -11,13 +11,13 @@ import (
 	"github.com/G-Research/unicorn-history-server/test/database"
 )
 
-type SyncTestSuite struct {
+type SyncSuite struct {
 	suite.Suite
 	tp   *database.TestPostgresContainer
 	pool *pgxpool.Pool
 }
 
-func (ts *SyncTestSuite) SetupSuite() {
+func (ts *SyncSuite) SetupSuite() {
 	ctx := context.Background()
 	cfg := database.InstanceConfig{
 		User:     "test",
@@ -36,34 +36,34 @@ func (ts *SyncTestSuite) SetupSuite() {
 	ts.pool = tp.Pool(ctx, ts.T(), &cfg)
 }
 
-func (ts *SyncTestSuite) TearDownSuite() {
+func (ts *SyncSuite) TearDownSuite() {
 	err := ts.tp.Container.Terminate(context.Background())
 	require.NoError(ts.T(), err)
 }
 
-func (ts *SyncTestSuite) TestSubSuites() {
-	ts.T().Run("SyncNodesTestSuite", func(t *testing.T) {
+func (ts *SyncSuite) TestSubSuites() {
+	ts.T().Run("SyncNodesIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &SyncNodesTestSuite{pool: pool})
+		suite.Run(t, &SyncNodesIntTest{pool: pool})
 	})
-	ts.T().Run("SyncQueuesTestSuite", func(t *testing.T) {
+	ts.T().Run("SyncQueuesIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &SyncQueuesTestSuite{pool: pool})
+		suite.Run(t, &SyncQueuesIntTest{pool: pool})
 	})
-	ts.T().Run("SyncPartitionTestSuite", func(t *testing.T) {
+	ts.T().Run("SyncPartitionIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &SyncPartitionTestSuite{pool: pool})
+		suite.Run(t, &SyncPartitionIntTest{pool: pool})
 	})
-	ts.T().Run("SyncApplicationsTestSuite", func(t *testing.T) {
+	ts.T().Run("SyncApplicationsIntTest", func(t *testing.T) {
 		pool := database.CloneDB(t, ts.tp, ts.pool)
-		suite.Run(t, &SyncApplicationsTestSuite{pool: pool})
+		suite.Run(t, &SyncApplicationsIntTest{pool: pool})
 	})
 }
 
-func TestRepositoryIntegrationTestSuite(t *testing.T) {
+func TestSyncIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	topSuite := new(SyncTestSuite)
+	topSuite := new(SyncSuite)
 	suite.Run(t, topSuite)
 }
