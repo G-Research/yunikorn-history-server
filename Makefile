@@ -208,23 +208,20 @@ go-lint-fix: golangci-lint ## lint Golang code using golangci-lint.
 
 ##@ Test
 
-define start-cluster
+.PHONY: create-cluster
+create-cluster:
 	@echo "**********************************"
 	@echo "Creating cluster"
 	@echo "**********************************"
-	@CLUSTER_NAME=uhs-test $(MAKE) create-cluster
+	@CLUSTER_NAME=uhs-test $(MAKE) start-cluster
 
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
 	@echo "**********************************"
 	$(MAKE) install-dependencies migrate-up
-endef
 
 define cleanup-cluster
 	cleanup() {
-	    echo "**********************************"
-	    echo "Deleting cluster"
-	    echo "**********************************"
 	    CLUSTER_NAME=uhs-test $(MAKE) delete-cluster
     }
 endef
@@ -236,14 +233,14 @@ test: test-go-unit integration-tests ## run all tests.
 .ONESHELL:
 integration-tests: ## start dependencies and run integration tests.
 	@$(cleanup-cluster); trap cleanup EXIT
-	@$(start-cluster)
+	$(MAKE) create-cluster
 	UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-integration
 
 .PHONY: e2e-tests
 .ONESHELL:
 e2e-tests: ## start dependencies and run e2e tests.
 	@$(cleanup-cluster); trap cleanup EXIT
-	@$(start-cluster)
+	$(MAKE) create-cluster
 	CLUSTER_NAME=uhs-test UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
@@ -260,7 +257,7 @@ performance-tests: k6 ## start dependencies and run performance tests.
 		fi
 		cleanup
 	}; trap stop_perf_cluster EXIT
-	@$(start-cluster)
+	$(MAKE) create-cluster
 	@echo "**********************************"
 	@echo "Run unicorn history server"
 	@mkdir -p test-reports/performance
@@ -396,21 +393,28 @@ kind-all-local: kind-all helm-install-uhs-local ## create kind cluster, install 
 .PHONY: kind-all
 kind-all minikube-all: create-cluster install-dependencies migrate-up ## create cluster and install dependencies.
 
-.PHONY: create-cluster
-create-cluster: $(KIND) $(MINIKUBE) ## create a cluster.
+.PHONY: start-cluster
+start-cluster: $(KIND) $(MINIKUBE) ## start a cluster.
 ifeq ($(strip $(CLUSTER_MGR)),kind)
 	$(KIND) create cluster --name $(CLUSTER_NAME) --config hack/kind-config.yml
 else
 	$(MINIKUBE) start --ports=30000:30000 --ports=30001:30001 --ports=30002:30002 --ports=30003:30003
 endif
 
-.PHONY: delete-cluster
-delete-cluster: $(KIND) $(MINIKUBE) ## delete the cluster.
+.PHONY: stop-cluster
+stop-cluster: $(KIND) $(MINIKUBE) ## stop a cluster.
 ifeq ($(strip $(CLUSTER_MGR)),kind)
 	$(KIND) delete cluster --name $(CLUSTER_NAME)
 else
 	$(MINIKUBE) delete
 endif
+
+.PHONY: delete-cluster
+delete-cluster: $(KIND) $(MINIKUBE) ## delete the cluster.
+	@echo "**********************************"
+	@echo "Deleting cluster"
+	@echo "**********************************"
+	@CLUSTER_NAME=uhs-test $(MAKE) stop-cluster
 
 .PHONY: kind-load-image
 kind-load-image: docker-build-amd64 ## inject the local docker image into the kind cluster.
