@@ -4,8 +4,6 @@ github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 h1:He8af
 github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6/go.mod h1:8o94RPi1/7XTJvwPpRSzSUedZrtlirdB3r9Z20bi2f8=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
-github.com/G-Research/yunikorn-core v0.0.0-20241120004812-3d39b65572b7 h1:XrQO0N9Sw5sYcA7C0ml0CMMeGMMyMs2Ouvd8fOCefAY=
-github.com/G-Research/yunikorn-core v0.0.0-20241120004812-3d39b65572b7/go.mod h1:91B5DZaf9g2j4PBZijOjHGCpAcdGIj/hXPlF2+2jpH8=
 github.com/G-Research/yunikorn-core v0.0.0-20241202214804-ba58310cd431 h1:mpsB7VSfpxTAnVfWEOm0N6HhLhxmvY8r/SXyRASX5gU=
 github.com/G-Research/yunikorn-core v0.0.0-20241202214804-ba58310cd431/go.mod h1:91B5DZaf9g2j4PBZijOjHGCpAcdGIj/hXPlF2+2jpH8=
 github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08 h1:uV9X13Of+UNRBhvhHzf6A1KT2j85emuVMNEua5rO8g4=
