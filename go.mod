@@ -5,7 +5,7 @@ go 1.23.2
 toolchain go1.23.3
 
 require (
-	github.com/G-Research/yunikorn-core v0.0.0-20241120004812-3d39b65572b7
+	github.com/G-Research/yunikorn-core v0.0.0-20241202214804-ba58310cd431
 	github.com/G-Research/yunikorn-scheduler-interface v0.0.0-20241010085204-da837381ae08
 	github.com/emicklei/go-restful-openapi/v2 v2.11.0
 	github.com/emicklei/go-restful/v3 v3.12.1
