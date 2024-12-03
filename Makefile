@@ -99,7 +99,7 @@ MINIKUBE_VERSION ?= latest
 
 # The release version of Yunikorn images
 # used in integration and performance tests.
-YK_VERSION=fab384e
+YK_VERSION=ca3bc94
 
 ##@ General
 
@@ -433,10 +433,7 @@ install-and-patch-yunikorn: helm-install-yunikorn patch-yunikorn-service ## inst
 .PHONY: helm-install-yunikorn
 .ONESHELL:
 helm-install-yunikorn: ## install yunikorn using helm.
-	@echo "\nLoading Local Docker images into kind cluster..."
-	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:admission-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
-	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-plugin-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
-	$(KIND) load docker-image ${IMAGE_REGISTRY}/yunikorn:scheduler-${ARCH}-${YK_VERSION} --name ${CLUSTER_NAME}
+	@echo "\nInstalling yunikorn helm chart..."
 	$(HELM) upgrade --install yunikorn yunikorn/yunikorn --namespace $(NAMESPACE) --create-namespace \
 	    --set image.repository=${IMAGE_REGISTRY}/yunikorn \
 	    --set image.tag=scheduler-${ARCH}-${YK_VERSION} \
