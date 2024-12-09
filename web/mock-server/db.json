@@ -14,539 +14,798 @@
         "clusterName": "kubernetes"
       }
     ],
-    "queues": {
-      "queuename": "root",
-      "status": "Active",
-      "partition": "default",
-      "pendingResource": {
-        "memory": 2147483648,
-        "pods": 10,
-        "vcore": 4000
-      },
-      "maxResource": {
-        "ephemeral-storage": 99833802265,
-        "hugepages-1Gi": 0,
-        "hugepages-2Mi": 0,
-        "hugepages-32Mi": 0,
-        "hugepages-64Ki": 0,
-        "memory": 4110970880,
-        "pods": 110,
-        "vcore": 2000,
-        "nvidia.com/gpu": 10,
-        "amd.com/gpu": 10,
-        "gpu.intel.com/i915": 10
-      },
-      "guaranteedResource": {},
-      "allocatedResource": {
-        "memory": 200000000,
-        "pods": 4,
-        "vcore": 40
-      },
-      "preemptingResource": {},
-      "isLeaf": false,
-      "isManaged": true,
-      "properties": {},
-      "parent": "",
-      "template": {
+    "queues": [
+      {
+        "createdAtNano": 1733498395677759000,
+        "children": [
+          {
+            "createdAtNano": 1733498395677759000,
+            "deletedAtNano": 1733498936244259300,
+            "id": "01JEE8TVV05C707SVK0XG8EPVQ",
+            "queuename": "root.default",
+            "status": "Active",
+            "partition": "",
+            "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+            "headroom": {
+              "ephemeral-storage": 62671097856,
+              "memory": 8217968640,
+              "pods": 110,
+              "vcore": 10000
+            },
+            "isLeaf": true,
+            "isManaged": false,
+            "parent": "root",
+            "parentID": "01JEE8TVV04Z75JQJXPWPR44FF",
+            "currentPriority": -2147483648
+          },
+          {
+            "createdAtNano": 1733747775755684000,
+            "id": "01JEE8TVV03ZHD1441W0VARBTG",
+            "queuename": "root.default",
+            "status": "Active",
+            "partition": "",
+            "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+            "allocatedResource": {
+              "memory": 1600000000,
+              "pods": 10,
+              "vcore": 1000
+            },
+            "headroom": {
+              "ephemeral-storage": 62671097856,
+              "memory": 6617968640,
+              "pods": 100,
+              "vcore": 9000
+            },
+            "isLeaf": true,
+            "isManaged": false,
+            "parent": "root",
+            "parentID": "01JEE8TVV04Z75JQJXPWPR44FF",
+            "runningApps": 10,
+            "currentPriority": -2147483648
+          }
+        ],
+        "id": "01JEE8TVV04Z75JQJXPWPR44FF",
+        "queuename": "root",
+        "status": "Active",
+        "partition": "",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
         "maxResource": {
-          "memory": 500000000,
-          "vcore": 500
+          "ephemeral-storage": 62671097856,
+          "memory": 8217968640,
+          "pods": 110,
+          "vcore": 10000
         },
-        "guaranteedResource": {
-          "memory": 100000000,
-          "vcore": 100
+        "allocatedResource": {
+          "memory": 1600000000,
+          "pods": 10,
+          "vcore": 1000
         },
-        "properties": {
-          "application.sort.policy": "stateaware"
-        }
-      },
-      "children": [
-        {
-          "queuename": "root.b",
-          "status": "Active",
-          "partition": "",
-          "pendingResource": {},
-          "maxResource": {
-            "memory": 300000000,
-            "vcore": 300,
-            "nvidia.com/gpu": 10
-          },
-          "guaranteedResource": {
-            "memory": 200000000,
-            "vcore": 200,
-            "nvidia.com/gpu": 10
-          },
-          "allocatedResource": {
-            "memory": 270000000,
-            "vcore": 270
-          },
-          "preemptingResource": {},
-          "isLeaf": true,
-          "isManaged": true,
-          "properties": {},
-          "parent": "root",
-          "template": null,
-          "children": [],
-          "absUsedCapacity": {
-            "memory": 90,
-            "vcore": 90
-          },
-          "maxRunningApps": 0,
-          "runningApps": 0,
-          "currentPriority": -2147483648,
-          "allocatingAcceptedApps": []
+        "headroom": {
+          "ephemeral-storage": 62671097856,
+          "memory": 6617968640,
+          "pods": 100,
+          "vcore": 9000
         },
-        {
-          "queuename": "root.c",
-          "status": "Active",
-          "partition": "",
-          "pendingResource": {},
-          "maxResource": {
-            "memory": 300000000,
-            "vcore": 300,
-            "amd.com/gpu": 10
-          },
-          "guaranteedResource": {
-            "memory": 200000000,
-            "vcore": 200,
-            "amd.com/gpu": 10
-          },
-          "allocatedResource": {},
-          "preemptingResource": {},
-          "isLeaf": true,
-          "isManaged": true,
-          "properties": {},
-          "parent": "root",
-          "template": null,
-          "children": [],
-          "absUsedCapacity": {},
-          "maxRunningApps": 0,
-          "runningApps": 0,
-          "currentPriority": -2147483648,
-          "allocatingAcceptedApps": []
+        "isLeaf": false,
+        "isManaged": true,
+        "absUsedCapacity": {
+          "memory": 19,
+          "pods": 9,
+          "vcore": 10
         },
-        {
-          "queuename": "root.default",
-          "status": "Active",
-          "partition": "",
-          "pendingResource": {
-            "memory": 2147483648,
-            "pods": 10,
-            "vcore": 4000
-          },
-          "maxResource": {
-            "memory": 500000000,
-            "vcore": 500
-          },
-          "guaranteedResource": {
-            "memory": 100000000,
-            "vcore": 100
-          },
-          "allocatedResource": {
-            "memory": 200000000,
-            "pods": 4,
-            "vcore": 40
-          },
-          "preemptingResource": {},
-          "isLeaf": true,
-          "isManaged": false,
-          "properties": {
-            "application.sort.policy": "stateaware"
-          },
-          "parent": "root",
-          "template": null,
-          "children": [],
-          "absUsedCapacity": {
-            "memory": 40,
-            "vcore": 8
-          },
-          "maxRunningApps": 0,
-          "runningApps": 5,
-          "currentPriority": -2147483648,
-          "allocatingAcceptedApps": []
-        },
-        {
-          "queuename": "root.a",
-          "status": "Active",
-          "partition": "",
-          "pendingResource": {},
-          "maxResource": {
-            "memory": 100000000,
-            "vcore": 100,
-            "gpu.intel.com/i915": 10
-          },
-          "guaranteedResource": {
-            "memory": 100000000,
-            "vcore": 100,
-            "gpu.intel.com/i915": 10
-          },
-          "allocatedResource": {
-            "memory": 80000000,
-            "vcore": 80
-          },
-          "absUsedCapacity": {
-            "memory": 80,
-            "vcore": 80
-          },
-          "preemptingResource": {},
-          "isLeaf": false,
-          "isManaged": true,
-          "properties": {},
-          "parent": "root",
-          "template": {
-            "maxResource": {
-              "memory": 500000000,
-              "vcore": 500
-            },
-            "guaranteedResource": {
-              "memory": 100000000,
-              "vcore": 100
-            },
-            "properties": {
-              "application.sort.policy": "stateaware"
-            }
-          },
-          "children": [
-            {
-              "queuename": "root.a.a1",
-              "status": "Active",
-              "partition": "",
-              "pendingResource": {},
-              "maxResource": {
-                "memory": 100000000,
-                "vcore": 100
-              },
-              "guaranteedResource": {
-                "memory": 100000000,
-                "vcore": 100
-              },
-              "allocatedResource": {
-                "memory": 80000000,
-                "vcore": 80
-              },
-              "preemptingResource": {},
-              "isLeaf": true,
-              "isManaged": true,
-              "properties": {},
-              "parent": "root.a",
-              "template": null,
-              "children": [],
-              "absUsedCapacity": {
-                "memory": 80,
-                "vcore": 80
-              },
-              "maxRunningApps": 0,
-              "runningApps": 0,
-              "currentPriority": -2147483648,
-              "allocatingAcceptedApps": []
-            }
-          ],
-          "maxRunningApps": 0,
-          "runningApps": 0,
-          "currentPriority": -2147483648,
-          "allocatingAcceptedApps": []
-        }
-      ],
-      "absUsedCapacity": {
-        "memory": 4,
-        "pods": 3,
-        "vcore": 2
-      },
-      "maxRunningApps": 0,
-      "runningApps": 5,
-      "currentPriority": -2147483648,
-      "allocatingAcceptedApps": []
-    },
+        "runningApps": 10,
+        "currentPriority": -2147483648
+      }
+    ],
     "apps": [
       {
-        "applicationID": "application-sleep-0005",
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498931668142000,
+        "id": "01JEE8TVV0QY1832R532BBR5ME",
+        "applicationID": "application-sleep-009",
         "usedResource": {
-          "memory": 50000000,
+          "memory": 500000000,
           "pods": 1,
-          "vcore": 10,
-          "nvidia.com/gpu": 5
+          "vcore": 100
         },
         "maxUsedResource": {
-          "memory": 50000000,
+          "memory": 500000000,
           "pods": 1,
-          "vcore": 10
-        },
-        "pendingResource": {
-          "memory": 0,
-          "pods": 0,
-          "vcore": 0
+          "vcore": 100
         },
         "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
         "queueName": "root.default",
-        "submissionTime": 1683692665424997060,
-        "finishedTime": null,
-        "requests": [],
+        "submissionTime": 1733498383250558000,
+        "finishedTime": 1733498931668216300,
         "allocations": [
           {
-            "allocationKey": "67b34cd1-21b7-4ab4-a992-d3c1b5dc0e20",
+            "allocationKey": "9f80787f-015d-441b-a030-daa01a5f4058",
             "allocationTags": {
+              "creationTime": "1733498382",
               "kubernetes.io/label/app": "sleep",
-              "kubernetes.io/label/applicationId": "application-sleep-0005",
-              "kubernetes.io/label/queue": "root.a",
+              "kubernetes.io/label/applicationId": "application-sleep-009",
+              "kubernetes.io/label/queue": "root.sandbox",
               "kubernetes.io/meta/namespace": "default",
-              "kubernetes.io/meta/podName": "task4"
+              "kubernetes.io/meta/podName": "podname009"
             },
-            "requestTime": 1683692667426734436,
-            "allocationTime": 1683692777012541197,
-            "allocationDelay": 109585806761,
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
             "resource": {
-              "memory": 50000000,
+              "memory": 500000000,
               "pods": 1,
-              "vcore": 10,
-              "nvidia.com/gpu": 5
+              "vcore": 100
             },
             "priority": "0",
-            "nodeId": "lima-rancher-desktop",
-            "applicationId": "application-sleep-0005",
-            "partition": "default",
-            "placeholder": false,
-            "placeholderUsed": false,
-            "taskGroupName": "",
-            "preempted": false
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-009",
+            "originator": true
           }
         ],
-        "applicationState": "Starting",
-        "user": "nobody",
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
         "groups": [
-          "nobody"
+          "kubeadm:cluster-admins",
+          "system:authenticated"
         ],
-        "rejectedMessage": "",
         "stateLog": [
           {
-            "time": 1683692667426745978,
+            "time": 1733498385266442800,
             "applicationState": "Accepted"
           },
           {
-            "time": 1683692777012614697,
-            "applicationState": "Starting"
-          }
-        ],
-        "placeholderData": [],
-        "hasReserved": false,
-        "reservations": [],
-        "maxRequestPriority": -2147483648
-      },
-      {
-        "applicationID": "application-sleep-0002",
-        "usedResource": {
-          "memory": 150000000,
-          "pods": 3,
-          "vcore": 30
-        },
-        "maxUsedResource": {
-          "memory": 150000000,
-          "pods": 3,
-          "vcore": 30
-        },
-        "pendingResource": {
-          "memory": 0,
-          "pods": 0,
-          "vcore": 0
-        },
-        "partition": "default",
-        "queueName": "root.default",
-        "submissionTime": 1683692665424798852,
-        "finishedTime": null,
-        "requests": [],
-        "allocations": [
-          {
-            "allocationKey": "89196eb9-42e8-4480-9bd1-91ca0ce80854",
-            "allocationTags": {
-              "kubernetes.io/label/app": "sleep",
-              "kubernetes.io/label/applicationId": "application-sleep-0002",
-              "kubernetes.io/label/pod-template-hash": "7b89667644",
-              "kubernetes.io/label/queue": "root.a",
-              "kubernetes.io/meta/namespace": "default",
-              "kubernetes.io/meta/podName": "sleep-dp-7b89667644-ff75z"
-            },
-            "requestTime": 1683692667425480520,
-            "allocationTime": 1683692667426304895,
-            "allocationDelay": 824375,
-            "resource": {
-              "memory": 50000000,
-              "pods": 1,
-              "vcore": 10
-            },
-            "priority": "0",
-            "nodeId": "lima-rancher-desktop",
-            "applicationId": "application-sleep-0002",
-            "partition": "default",
-            "placeholder": false,
-            "placeholderUsed": false,
-            "taskGroupName": "",
-            "preempted": false
-          },
-          {
-            "allocationKey": "20b73321-20e7-472e-af2b-f3a4da95e2d1",
-            "allocationTags": {
-              "kubernetes.io/label/app": "sleep",
-              "kubernetes.io/label/applicationId": "application-sleep-0002",
-              "kubernetes.io/label/pod-template-hash": "7b89667644",
-              "kubernetes.io/label/queue": "root.a",
-              "kubernetes.io/meta/namespace": "default",
-              "kubernetes.io/meta/podName": "sleep-dp-7b89667644-hd59j"
-            },
-            "requestTime": 1683692667426251936,
-            "allocationTime": 1683692667426598936,
-            "allocationDelay": 347000,
-            "resource": {
-              "memory": 50000000,
-              "pods": 1,
-              "vcore": 10
-            },
-            "priority": "0",
-            "nodeId": "lima-rancher-desktop",
-            "applicationId": "application-sleep-0002",
-            "partition": "default",
-            "placeholder": false,
-            "placeholderUsed": false,
-            "taskGroupName": "",
-            "preempted": false
-          },
-          {
-            "allocationKey": "cdfa6598-dd3b-49b9-805c-ecda2a465c18",
-            "allocationTags": {
-              "kubernetes.io/label/app": "sleep",
-              "kubernetes.io/label/applicationId": "application-sleep-0002",
-              "kubernetes.io/label/pod-template-hash": "7b89667644",
-              "kubernetes.io/label/queue": "root.a",
-              "kubernetes.io/meta/namespace": "default",
-              "kubernetes.io/meta/podName": "sleep-dp-7b89667644-8c6j9"
-            },
-            "requestTime": 1683692667426435311,
-            "allocationTime": 1683692667426990103,
-            "allocationDelay": 554792,
-            "resource": {
-              "memory": 50000000,
-              "pods": 1,
-              "vcore": 10
-            },
-            "priority": "0",
-            "nodeId": "lima-rancher-desktop",
-            "applicationId": "application-sleep-0002",
-            "partition": "default",
-            "placeholder": false,
-            "placeholderUsed": false,
-            "taskGroupName": "",
-            "preempted": false
-          }
-        ],
-        "applicationState": "Running",
-        "user": "nobody",
-        "groups": [
-          "nobody"
-        ],
-        "rejectedMessage": "",
-        "stateLog": [
-          {
-            "time": 1683692667425545686,
-            "applicationState": "Accepted"
-          },
-          {
-            "time": 1683692667426366145,
-            "applicationState": "Starting"
-          },
-          {
-            "time": 1683692667426627228,
+            "time": 1733498385284489200,
             "applicationState": "Running"
-          }
-        ],
-        "placeholderData": [],
-        "hasReserved": false,
-        "reservations": [],
-        "maxRequestPriority": -2147483648
-      },
-      {
-        "applicationID": "application-sleep-0001",
-        "usedResource": {
-          "memory": 0,
-          "pods": 0,
-          "vcore": 0
-        },
-        "maxUsedResource": {
-          "memory": 50000000,
-          "pods": 1,
-          "vcore": 10
-        },
-        "pendingResource": {
-          "memory": 0,
-          "pods": 0,
-          "vcore": 0
-        },
-        "partition": "default",
-        "queueName": "root.default",
-        "submissionTime": 1683692665424937977,
-        "finishedTime": null,
-        "requests": [],
-        "allocations": [],
-        "applicationState": "Completing",
-        "user": "nobody",
-        "groups": [
-          "nobody"
-        ],
-        "rejectedMessage": "",
-        "stateLog": [
-          {
-            "time": 1683692667426534811,
-            "applicationState": "Accepted"
           },
           {
-            "time": 1683692743829099181,
-            "applicationState": "Starting"
-          },
-          {
-            "time": 1683692777012085530,
+            "time": 1733498901665331700,
             "applicationState": "Completing"
+          },
+          {
+            "time": 1733498931666714400,
+            "applicationState": "Completed"
           }
         ],
-        "placeholderData": [],
-        "hasReserved": false,
-        "reservations": [],
         "maxRequestPriority": -2147483648
       },
       {
-        "applicationID": "application-sleep-0006",
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498929655096000,
+        "id": "01JEE8TVV0YQQF5QW78YWXHQ4X",
+        "applicationID": "application-sleep-008",
         "usedResource": {
-          "memory": 0,
-          "pods": 0,
-          "vcore": 0
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
         },
         "maxUsedResource": {
-          "memory": 150000000,
-          "pods": 3,
-          "vcore": 30
-        },
-        "pendingResource": {
-          "memory": 150000000,
-          "pods": 3,
-          "vcore": 30
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
         },
         "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
         "queueName": "root.default",
-        "submissionTime": 1683692669425545686,
-        "finishedTime": null,
-        "requests": [],
-        "allocations": [],
-        "applicationState": "Accepted",
-        "user": "nobody",
-        "groups": [
-          "nobody"
-        ],
-        "rejectedMessage": "",
-        "stateLog": [
+        "submissionTime": 1733498383250506200,
+        "finishedTime": 1733498929655136500,
+        "allocations": [
           {
-            "time": 1683692671425545686,
-            "applicationState": "Accepted"
+            "allocationKey": "9e57ebf3-ef2b-49c5-a8a7-0f6543c843ad",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-008",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname008"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-008",
+            "originator": true
           }
         ],
-        "placeholderData": [],
-        "hasReserved": false,
-        "reservations": [],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385266218800,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385284128000,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498899653175600,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498929654811600,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498924613830700,
+        "id": "01JEE8TVV0TVAB12EE0DSCZFJH",
+        "applicationID": "application-sleep-006",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383250450400,
+        "finishedTime": 1733498924613860600,
+        "allocations": [
+          {
+            "allocationKey": "469ad010-337f-4f70-862f-e67fea66a159",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-006",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname006"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-006",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385266058800,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385283768600,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498894612944100,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498924613652500,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498928647851300,
+        "id": "01JEE8TVV0B9YGV81RYRJF9W98",
+        "applicationID": "application-sleep-003",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383250392300,
+        "finishedTime": 1733498928647882000,
+        "allocations": [
+          {
+            "allocationKey": "767403f8-0be9-4d46-9745-44c916e58c46",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-003",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname003"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-003",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385265888300,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385283400400,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498898647246000,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498928647633400,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498930653820200,
+        "id": "01JEE8TVV0QA6FPF6143KFS3RP",
+        "applicationID": "application-sleep-000",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383250348000,
+        "finishedTime": 1733498930653909500,
+        "allocations": [
+          {
+            "allocationKey": "6e0c6d3c-db59-4653-8525-e8dff6a35bc7",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-000",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname000"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-000",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385263666000,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385283062800,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498900651742500,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498930652383200,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498926627356000,
+        "id": "01JEE8TVV0GKGX4NXE55YGC2EY",
+        "applicationID": "application-sleep-007",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383250284500,
+        "finishedTime": 1733498926627428000,
+        "allocations": [
+          {
+            "allocationKey": "bcd7093c-3082-42c4-8962-aeaaa00606d1",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-007",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname007"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-007",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385267541000,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385282189600,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498896621336600,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498926623879000,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498927635385300,
+        "id": "01JEE8TVV0VAKEY2TGDBYJK7GX",
+        "applicationID": "application-sleep-005",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383250229000,
+        "finishedTime": 1733498927635444700,
+        "allocations": [
+          {
+            "allocationKey": "0ed0109f-9d90-4c13-9136-bd2a3ff81edb",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-005",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname005"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-005",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385267403300,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385281972200,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498897634585300,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498927634776600,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498923623842600,
+        "id": "01JEE8TVV02N8WYQRZJKC7W8EE",
+        "applicationID": "application-sleep-004",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383250162000,
+        "finishedTime": 1733498923623882200,
+        "allocations": [
+          {
+            "allocationKey": "7d6a075e-e34b-4307-be8b-51262e9893bc",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-004",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname004"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-004",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385267205400,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385281756700,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498893621620700,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498923623328500,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498921588404700,
+        "id": "01JEE8TVV02E3BK4DAHPJYZN17",
+        "applicationID": "application-sleep-002",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383249949000,
+        "finishedTime": 1733498921588605000,
+        "allocations": [
+          {
+            "allocationKey": "4c5d7469-b0cc-4f42-972a-ebd1fe2871b8",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-002",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname002"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-002",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385266999300,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385281513200,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498891582076700,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498921586334500,
+            "applicationState": "Completed"
+          }
+        ],
+        "maxRequestPriority": -2147483648
+      },
+      {
+        "createdAtNano": 1733498395683605000,
+        "deletedAtNano": 1733498922586126300,
+        "id": "01JEE8TVV0PK9TDZAMB84HAX2W",
+        "applicationID": "application-sleep-001",
+        "usedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "maxUsedResource": {
+          "memory": 500000000,
+          "pods": 1,
+          "vcore": 100
+        },
+        "partition": "default",
+        "partition_id": "01JEE8TVV09AYGJT40Z2ZBN972",
+        "queueID": "01JEE8TVV05C707SVK0XG8EPVQ",
+        "queueName": "root.default",
+        "submissionTime": 1733498383247037700,
+        "finishedTime": 1733498922586169600,
+        "allocations": [
+          {
+            "allocationKey": "4be9c400-8bda-4486-959d-f6566308db6e",
+            "allocationTags": {
+              "creationTime": "1733498382",
+              "kubernetes.io/label/app": "sleep",
+              "kubernetes.io/label/applicationId": "application-sleep-001",
+              "kubernetes.io/label/queue": "root.sandbox",
+              "kubernetes.io/meta/namespace": "default",
+              "kubernetes.io/meta/podName": "podname001"
+            },
+            "requestTime": 1733498382000000000,
+            "allocationTime": 1733498382000000000,
+            "resource": {
+              "memory": 500000000,
+              "pods": 1,
+              "vcore": 100
+            },
+            "priority": "0",
+            "nodeId": "uhs-test-control-plane",
+            "applicationId": "application-sleep-001",
+            "originator": true
+          }
+        ],
+        "applicationState": "Completed",
+        "user": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ],
+        "stateLog": [
+          {
+            "time": 1733498385266664700,
+            "applicationState": "Accepted"
+          },
+          {
+            "time": 1733498385277868800,
+            "applicationState": "Running"
+          },
+          {
+            "time": 1733498892584610300,
+            "applicationState": "Completing"
+          },
+          {
+            "time": 1733498922585820000,
+            "applicationState": "Completed"
+          }
+        ],
         "maxRequestPriority": -2147483648
       }
     ],
@@ -1345,83 +1604,38 @@
     ],
     "partitions": [
       {
+        "createdAtNano": 1733498395663744000,
+        "id": "01JEE8TVV09AYGJT40Z2ZBN972",
         "clusterId": "mycluster",
         "name": "default",
         "capacity": {
           "capacity": {
-            "ephemeral-storage": 99833802265,
-            "hugepages-1Gi": 0,
-            "hugepages-2Mi": 0,
-            "hugepages-32Mi": 0,
-            "hugepages-64Ki": 0,
-            "memory": 4110970880,
+            "ephemeral-storage": 62671097856,
+            "memory": 8217968640,
             "pods": 110,
-            "vcore": 2000
+            "vcore": 10000
           },
           "usedCapacity": {
-            "memory": 200000000,
-            "pods": 4,
-            "vcore": 40
+            "memory": 1600000000,
+            "pods": 10,
+            "vcore": 1000
           },
           "utilization": {
-            "memory": 4,
-            "pods": 3,
-            "vcore": 2
+            "memory": 19,
+            "pods": 9,
+            "vcore": 10
           }
         },
-        "nodeSortingPolicy": {
-          "type": "fair",
-          "resourceWeights": {
-            "memory": 1,
-            "vcore": 1
-          }
-        },
+        "nodeSortingPolicy": {},
         "totalNodes": 1,
         "applications": {
-          "Completed": 2,
-          "Completing": 1,
-          "Running": 1,
-          "Starting": 1,
-          "total": 5
+          "Completed": 10,
+          "Running": 10,
+          "total": 20
         },
-        "totalContainers": 4,
+        "totalContainers": 10,
         "state": "Active",
-        "lastStateTransitionTime": 1683692664405879143
-      },
-      {
-        "clusterId": "mycluster-2",
-        "name": "cluster-2",
-        "capacity": {
-          "capacity": {
-            "ephemeral-storage": 2707068785486,
-            "hugepages-1Gi": 0,
-            "hugepages-2Mi": 0,
-            "memory": 365306871808,
-            "pods": 2553,
-            "vcore": 152000
-          },
-          "usedCapacity": {
-            "memory": 0,
-            "vcore": 0
-          },
-          "utilization": {
-            "memory": 0,
-            "vcore": 0
-          }
-        },
-        "nodeSortingPolicy": {
-          "type": "fair",
-          "resourceWeights": {
-            "memory": 1,
-            "vcore": 1
-          }
-        },
-        "applications": {
-          "Expired": 200,
-          "total": 200
-        },
-        "state": "Active",
-        "lastStateTransitionTime": 1682667061800465538
+        "lastStateTransitionTime": 1733498336165492700
       }
     ],
     "healthCheck": {
@@ -1496,4 +1710,3 @@
       ]
     }
   }
-  

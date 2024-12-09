@@ -1,11 +1,10 @@
 {
-    "/ws/v1/scheduler/node-utilizations": "/node-utilizations",
-    "/ws/v1/*": "/$1",
+    "/api/v1/scheduler/node-utilizations": "/node-utilizations",
+    "/api/v1/*": "/$1",
     "/history/apps": "/appHistory",
     "/history/containers": "/containerHistory",
-    "/partition/:partition/queues": "/queues",
-    "/partition/:partition/nodes": "/nodes",
-    "/partition/:partition/queue/:queue/applications": "/apps",
+    "/partition/:partition_id/queues": "/queues",
+    "/partition/:partition_id/nodes": "/nodes",
+    "/partition/:partition_id/queue/:queueID/applications": "/apps",
     "/scheduler/healthcheck": "/healthCheck"
   }
-  

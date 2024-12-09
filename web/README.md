@@ -34,6 +34,12 @@ To run a mock server for local development, follow these steps:
 
 This will start the JSON Server and serve mock data. You can access it at `http://localhost:3000`.
 
+Some endpoints that can be tested with ID's are:
+
+- Get partitions: `GET http://localhost:3000/api/v1/partitions`
+- Get queues for partition ID `01JEE8TVV09AYGJT40Z2ZBN972`: `GET http://localhost:3000/api/v1/partition/01JEE8TVV09AYGJT40Z2ZBN972/queues`
+- Get application for partition ID `01JEE8TVV09AYGJT40Z2ZBN972` and queue ID `01JEE8TVV05C707SVK0XG8EPVQ`: `GET http://localhost:3000/api/v1/partition/01JEE8TVV09AYGJT40Z2ZBN972/queue/01JEE8TVV05C707SVK0XG8EPVQ/applications`
+
 ### Build
 
 Run `make web-build` from the project root or `npm run build`. Build output is set to `/assets` folder in project root as it will be served from the UHS server.
