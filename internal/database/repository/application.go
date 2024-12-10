@@ -234,6 +234,8 @@ func (s *PostgresRepository) UpdateApplication(ctx context.Context, app *model.A
 	const q = `
 UPDATE applications
 SET
+	partition_id = @partition_id,
+	queue_id = @queue_id,
 	deleted_at_nano = @deleted_at_nano,
 	used_resource = @used_resource,
 	max_used_resource = @max_used_resource,
@@ -256,6 +258,8 @@ WHERE id = @id
 		q,
 		pgx.NamedArgs{
 			"id":                   app.ID,
+			"partition_id":         app.PartitionID,
+			"queue_id":             app.QueueID,
 			"deleted_at_nano":      app.DeletedAtNano,
 			"used_resource":        app.UsedResource,
 			"max_used_resource":    app.MaxUsedResource,

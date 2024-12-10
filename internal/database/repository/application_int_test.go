@@ -8,6 +8,7 @@ import (
 	"github.com/G-Research/yunikorn-core/pkg/webservice/dao"
 	"github.com/G-Research/yunikorn-scheduler-interface/lib/go/si"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -172,6 +173,45 @@ func (as *ApplicationIntTest) TestGetAppsPerPartitionPerQueue() {
 			apps, err := as.repo.GetAppsPerPartitionPerQueue(ctx, "1", "1", tt.filters)
 			require.NoError(as.T(), err)
 			assert.Equal(as.T(), tt.expected, len(apps))
+		})
+	}
+}
+
+func (as *ApplicationIntTest) TestUpdateApplication() {
+	ctx := context.Background()
+	tests := []struct {
+		name          string
+		app           *model.Application
+		expectedError bool
+	}{
+		{
+			name: "Update Application when partitionID and queueID are changed",
+			app: &model.Application{
+				Metadata: model.Metadata{
+					CreatedAtNano: time.Now().UnixNano(),
+				},
+				ApplicationDAOInfo: dao.ApplicationDAOInfo{
+					ID:            "1",
+					ApplicationID: "app1",
+					PartitionID:   ulid.Make().String(),
+					QueueID:       util.ToPtr(ulid.Make().String()),
+				},
+			},
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		as.Run(tt.name, func() {
+			err := as.repo.UpdateApplication(ctx, tt.app)
+			require.Equal(as.T(), tt.expectedError, err != nil)
+
+			if !tt.expectedError {
+				app, err := as.repo.GetApplicationByID(ctx, tt.app.ID)
+				require.NoError(as.T(), err)
+				assert.Equal(as.T(), tt.app.PartitionID, app.PartitionID)
+				assert.Equal(as.T(), tt.app.QueueID, app.QueueID)
+			}
 		})
 	}
 }
