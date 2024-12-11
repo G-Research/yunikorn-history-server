@@ -271,6 +271,10 @@ func (ws *WebService) getPartitions(req *restful.Request, resp *restful.Response
 		errorResponse(req, resp, err)
 		return
 	}
+	if partitions == nil {
+		notFoundResponse(req, resp, fmt.Errorf("no partitions found"))
+		return
+	}
 	jsonResponse(resp, partitions)
 }
 
@@ -280,6 +284,10 @@ func (ws *WebService) getQueuesPerPartition(req *restful.Request, resp *restful.
 	queues, err := ws.repository.GetQueuesInPartition(ctx, partitionID)
 	if err != nil {
 		errorResponse(req, resp, err)
+		return
+	}
+	if queues == nil {
+		notFoundResponse(req, resp, fmt.Errorf("no queues found"))
 		return
 	}
 	root, err := buildPartitionQueueTrees(ctx, queues)
@@ -351,6 +359,10 @@ func (ws *WebService) getAppsPerPartitionPerQueue(req *restful.Request, resp *re
 		errorResponse(req, resp, err)
 		return
 	}
+	if apps == nil {
+		notFoundResponse(req, resp, fmt.Errorf("no applications found"))
+		return
+	}
 
 	jsonResponse(resp, apps)
 }
@@ -366,6 +378,10 @@ func (ws *WebService) getNodesPerPartition(req *restful.Request, resp *restful.R
 	nodes, err := ws.repository.GetNodesPerPartition(ctx, partitionID, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
+		return
+	}
+	if nodes == nil {
+		notFoundResponse(req, resp, fmt.Errorf("no nodes found"))
 		return
 	}
 	jsonResponse(resp, nodes)
@@ -384,6 +400,10 @@ func (ws *WebService) getAppsHistory(req *restful.Request, resp *restful.Respons
 		errorResponse(req, resp, err)
 		return
 	}
+	if appsHistory == nil {
+		notFoundResponse(req, resp, fmt.Errorf("no applications history found"))
+		return
+	}
 	jsonResponse(resp, appsHistory)
 }
 
@@ -397,6 +417,10 @@ func (ws *WebService) getContainersHistory(req *restful.Request, resp *restful.R
 	containersHistory, err := ws.repository.GetContainersHistory(ctx, *filters)
 	if err != nil {
 		errorResponse(req, resp, err)
+		return
+	}
+	if containersHistory == nil {
+		notFoundResponse(req, resp, fmt.Errorf("no containers history found"))
 		return
 	}
 	jsonResponse(resp, containersHistory)

@@ -43,3 +43,17 @@ func badRequestResponse(req *restful.Request, resp *restful.Response, err error)
 		log.Logger.Errorf("could not write error response: %v", err)
 	}
 }
+
+func notFoundResponse(req *restful.Request, resp *restful.Response, err error) {
+	log.Logger.Errorf("error processing request for %s: %v", req.Request.URL.Path, err)
+	problemDetails := ProblemDetails{
+		Type:     "about:blank",
+		Title:    "Not Found",
+		Status:   http.StatusNotFound,
+		Detail:   err.Error(),
+		Instance: req.Request.URL.Path,
+	}
+	if err := resp.WriteHeaderAndJson(http.StatusNotFound, problemDetails, "application/problem+json"); err != nil {
+		log.Logger.Errorf("could not write error response: %v", err)
+	}
+}
