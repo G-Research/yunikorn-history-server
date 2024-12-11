@@ -17,7 +17,6 @@ func jsonResponse(response *restful.Response, data any) {
 
 // errorResponse writes an RFC7807 Problem error response to the response writer.
 func errorResponse(req *restful.Request, resp *restful.Response, err error) {
-	log.Logger.Errorf("error processing request for %s: %v", req.Request.URL.Path, err)
 	problemDetails := ProblemDetails{
 		Type:     "about:blank",
 		Title:    "Internal Server Error",
@@ -31,7 +30,6 @@ func errorResponse(req *restful.Request, resp *restful.Response, err error) {
 }
 
 func badRequestResponse(req *restful.Request, resp *restful.Response, err error) {
-	log.Logger.Errorf("error processing request for %s: %v", req.Request.URL.Path, err)
 	problemDetails := ProblemDetails{
 		Type:     "about:blank",
 		Title:    "Bad Request",
@@ -45,7 +43,6 @@ func badRequestResponse(req *restful.Request, resp *restful.Response, err error)
 }
 
 func notFoundResponse(req *restful.Request, resp *restful.Response, err error) {
-	log.Logger.Errorf("error processing request for %s: %v", req.Request.URL.Path, err)
 	problemDetails := ProblemDetails{
 		Type:     "about:blank",
 		Title:    "Not Found",
