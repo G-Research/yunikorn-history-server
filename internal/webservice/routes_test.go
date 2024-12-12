@@ -278,3 +278,270 @@ func TestGetAppsPerPartitionPerQueue(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPartitions(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockRepo := repository.NewMockRepository(ctrl)
+
+	tests := []struct {
+		name               string
+		expectedPartitions []*model.Partition
+		expectedStatus     int
+	}{
+		{
+			name: "Partitions found",
+			expectedPartitions: []*model.Partition{
+				{
+					Metadata: model.Metadata{
+						CreatedAtNano: time.Now().UnixNano(),
+					},
+					PartitionInfo: dao.PartitionInfo{
+						ID:                      "1",
+						Name:                    "default",
+						ClusterID:               "cluster1",
+						State:                   "Active",
+						LastStateTransitionTime: time.Now().Add(-1 * time.Hour).UnixMilli(),
+					},
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:               "No Partition found",
+			expectedPartitions: nil,
+			expectedStatus:     http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().
+				GetAllPartitions(gomock.Any(), gomock.Any()).
+				Return(tt.expectedPartitions, nil)
+
+			ws := &WebService{repository: mockRepo}
+
+			req, err := http.NewRequest(http.MethodGet, "/api/v1/partitions", nil)
+			require.NoError(t, err)
+
+			rr := httptest.NewRecorder()
+
+			ws.getPartitions(restful.NewRequest(req), restful.NewResponse(rr))
+			require.Equal(t, tt.expectedStatus, rr.Code)
+		})
+	}
+}
+
+func TestGetQueuesPerPartition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockRepo := repository.NewMockRepository(ctrl)
+
+	tests := []struct {
+		name           string
+		partitionID    string
+		expectedQueues []*model.Queue
+		expectedStatus int
+	}{
+		{
+			name:        "Apps found",
+			partitionID: "1",
+			expectedQueues: []*model.Queue{
+				{
+					Metadata: model.Metadata{
+						CreatedAtNano: time.Now().UnixNano(),
+					},
+					PartitionQueueDAOInfo: dao.PartitionQueueDAOInfo{
+						ID:          "1",
+						PartitionID: "1",
+						QueueName:   "root",
+					},
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "No queue found",
+			partitionID:    "1",
+			expectedQueues: nil,
+			expectedStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().
+				GetQueuesInPartition(gomock.Any(), gomock.Any()).
+				Return(tt.expectedQueues, nil)
+
+			ws := &WebService{repository: mockRepo}
+
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/partitions/%s/queues", tt.partitionID), nil)
+
+			require.NoError(t, err)
+
+			rr := httptest.NewRecorder()
+
+			ws.getQueuesPerPartition(restful.NewRequest(req), restful.NewResponse(rr))
+			require.Equal(t, tt.expectedStatus, rr.Code)
+		})
+	}
+}
+
+func TestGetNodesPerPartition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockRepo := repository.NewMockRepository(ctrl)
+
+	tests := []struct {
+		name           string
+		partitionID    string
+		expectedNodes  []*model.Node
+		expectedStatus int
+	}{
+		{
+			name:        "Nodes found",
+			partitionID: "1",
+			expectedNodes: []*model.Node{
+				{
+					Metadata: model.Metadata{
+						CreatedAtNano: time.Now().UnixNano(),
+					},
+					NodeDAOInfo: dao.NodeDAOInfo{
+						ID:          "1",
+						PartitionID: "1",
+						NodeID:      "node1",
+					},
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "No nodes found",
+			partitionID:    "1",
+			expectedNodes:  nil,
+			expectedStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().
+				GetNodesPerPartition(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(tt.expectedNodes, nil)
+
+			ws := &WebService{repository: mockRepo}
+
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/partitions/%s/nodes", tt.partitionID), nil)
+			require.NoError(t, err)
+
+			rr := httptest.NewRecorder()
+
+			ws.getNodesPerPartition(restful.NewRequest(req), restful.NewResponse(rr))
+			require.Equal(t, tt.expectedStatus, rr.Code)
+		})
+	}
+}
+
+func TestGetAppsHistory(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockRepo := repository.NewMockRepository(ctrl)
+
+	tests := []struct {
+		name           string
+		expectedApps   []*model.AppHistory
+		expectedStatus int
+	}{
+		{
+			name: "App History found",
+			expectedApps: []*model.AppHistory{
+				{
+					Metadata: model.Metadata{
+						CreatedAtNano: time.Now().UnixNano(),
+					},
+					ApplicationHistoryDAOInfo: dao.ApplicationHistoryDAOInfo{
+						Timestamp:         time.Now().UnixNano(),
+						TotalApplications: "5",
+					},
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "No apps found",
+			expectedApps:   nil,
+			expectedStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().
+				GetApplicationsHistory(gomock.Any(), gomock.Any()).
+				Return(tt.expectedApps, nil)
+
+			ws := &WebService{repository: mockRepo}
+
+			req, err := http.NewRequest(http.MethodGet, "/api/v1/apps/history", nil)
+			require.NoError(t, err)
+
+			rr := httptest.NewRecorder()
+
+			ws.getAppsHistory(restful.NewRequest(req), restful.NewResponse(rr))
+			require.Equal(t, tt.expectedStatus, rr.Code)
+		})
+	}
+}
+
+func TestGetContainersHistory(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockRepo := repository.NewMockRepository(ctrl)
+
+	tests := []struct {
+		name           string
+		expectedApps   []*model.ContainerHistory
+		expectedStatus int
+	}{
+		{
+			name: "Container History found",
+			expectedApps: []*model.ContainerHistory{
+				{
+					Metadata: model.Metadata{
+						CreatedAtNano: time.Now().UnixNano(),
+					},
+					ContainerHistoryDAOInfo: dao.ContainerHistoryDAOInfo{
+						Timestamp:       time.Now().UnixNano(),
+						TotalContainers: "5",
+					},
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "No containers found",
+			expectedApps:   nil,
+			expectedStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().
+				GetContainersHistory(gomock.Any(), gomock.Any()).
+				Return(tt.expectedApps, nil)
+
+			ws := &WebService{repository: mockRepo}
+
+			req, err := http.NewRequest(http.MethodGet, "/api/v1/containers/history", nil)
+			require.NoError(t, err)
+
+			rr := httptest.NewRecorder()
+
+			ws.getContainersHistory(restful.NewRequest(req), restful.NewResponse(rr))
+			require.Equal(t, tt.expectedStatus, rr.Code)
+		})
+	}
+}
