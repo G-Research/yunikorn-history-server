@@ -213,16 +213,17 @@ create-cluster:
 	@echo "**********************************"
 	@echo "Creating cluster"
 	@echo "**********************************"
-	@CLUSTER_NAME=uhs-test $(MAKE) start-cluster
+	@CLUSTER_NAME=$(CLUSTER_NAME) $(MAKE) start-cluster
 
 	@echo "**********************************"
 	@echo "Install and configure dependencies"
 	@echo "**********************************"
-	$(MAKE) install-dependencies migrate-up
+	$(MAKE) install-dependencies
 
+## Uses argument or CLUSTER_NAME env variable.
 define cleanup-cluster
 	cleanup() {
-	    CLUSTER_NAME=uhs-test $(MAKE) delete-cluster
+	    $(MAKE) delete-cluster
     }
 endef
 
@@ -232,6 +233,7 @@ test: test-go-unit integration-tests ## run all tests.
 .PHONY: integration-tests
 .ONESHELL:
 integration-tests: ## start dependencies and run integration tests.
+	export CLUSTER_NAME=uhs-test
 	@$(cleanup-cluster); trap cleanup EXIT
 	$(MAKE) create-cluster
 	UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-integration
@@ -239,13 +241,15 @@ integration-tests: ## start dependencies and run integration tests.
 .PHONY: e2e-tests
 .ONESHELL:
 e2e-tests: ## start dependencies and run e2e tests.
+	export CLUSTER_NAME=uhs-test
 	@$(cleanup-cluster); trap cleanup EXIT
-	$(MAKE) create-cluster
-	CLUSTER_NAME=uhs-test UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
+	$(MAKE) create-cluster migrate-up
+	UHS_SERVER=${UHS_SERVER:-http://localhost:8989} $(MAKE) test-go-e2e
 
 .PHONY: performance-tests
 .ONESHELL:
 performance-tests: k6 ## start dependencies and run performance tests.
+	export CLUSTER_NAME=uhs-test
 	@$(cleanup-cluster)
 	@stop_perf_cluster() {
 	    uhs_pid=`ps ax | grep 'unicorn-history-server' | grep -v grep | awk '{print $$1}'`
@@ -257,7 +261,7 @@ performance-tests: k6 ## start dependencies and run performance tests.
 		fi
 		cleanup
 	}; trap stop_perf_cluster EXIT
-	$(MAKE) create-cluster
+	$(MAKE) create-cluster migrate-up
 	@echo "**********************************"
 	@echo "Run unicorn history server"
 	@mkdir -p test-reports/performance
@@ -365,7 +369,7 @@ docker-build: OS=linux
 docker-build: bin/docker clean build ## build docker image using buildx.
 	echo "Building docker image for linux/$(ARCH)"
 	docker buildx build    				     			 \
-		--file build/unicorn-history-server/Dockerfile  \
+		--file build/unicorn-history-server/Dockerfile   \
 		--platform linux/$(ARCH) 		 				 \
 		--output $(DOCKER_OUTPUT) 						 \
 		--build-arg NODE_VERSION=$(NODE_VERSION) 		 \
@@ -414,7 +418,7 @@ delete-cluster: $(KIND) $(MINIKUBE) ## delete the cluster.
 	@echo "**********************************"
 	@echo "Deleting cluster"
 	@echo "**********************************"
-	@CLUSTER_NAME=uhs-test $(MAKE) stop-cluster
+	@CLUSTER_NAME=$(CLUSTER_NAME) $(MAKE) stop-cluster
 
 .PHONY: kind-load-image
 kind-load-image: docker-build-amd64 ## inject the local docker image into the kind cluster.
