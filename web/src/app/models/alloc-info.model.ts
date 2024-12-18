@@ -8,6 +8,8 @@ export class AllocationInfo {
     public queueName: string,
     public nodeId: string,
     public applicationId: string,
-    public partition: string
+    public partition: string,
+    public requestTime: string,
+    public allocationTime: string
   ) {}
 }
