@@ -27,22 +27,25 @@ export class SchedulerService {
   ) {}
 
   fetchClusterList(): Observable<ClusterInfo[]> {
-    const clusterUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/clusters`;
+    const clusterUrl = `${this.envConfig.getYuniKornWebAddress()}/v1/clusters`;
     return this.httpClient.get(clusterUrl).pipe(map((data) => data as ClusterInfo[]));
   }
 
   fetchPartitionList(): Observable<Partition[]> {
-    const partitionUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partitions`;
+    const partitionUrl = `${this.envConfig.getUHSWebAddress()}/v1/partitions`;
     return this.httpClient.get(partitionUrl).pipe(map((data) => data as Partition[]));
   }
 
-  fetchSchedulerQueues(partitionName: string): Observable<any> {
-    const queuesUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partition/${partitionName}/queues`;
+  fetchSchedulerQueues(partitionId: string): Observable<any> {
+    const queuesUrl = `${this.envConfig.getUHSWebAddress()}/v1/partition/${partitionId}/queues`;
 
     return this.httpClient.get(queuesUrl).pipe(
-      map((data: any) => {
+      map((dataz: any) => {
+        let data = dataz;
+        if (Array.isArray(dataz)) data = dataz[0];
         if (data && !CommonUtil.isEmpty(data)) {
           let rootQueue = new QueueInfo();
+          rootQueue.id = data.id;
           rootQueue.queueName = data.queuename;
           rootQueue.status = data.status || NOT_AVAILABLE;
           rootQueue.isLeaf = data.isLeaf;
@@ -65,8 +68,8 @@ export class SchedulerService {
     );
   }
 
-  fetchAppList(partitionName: string, queueName: string): Observable<AppInfo[]> {
-    const appsUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partition/${partitionName}/queue/${queueName}/applications`;
+  fetchAppList(partitionId: string, queueId: string): Observable<AppInfo[]> {
+    const appsUrl = `${this.envConfig.getUHSWebAddress()}/v1/partition/${partitionId}/queue/${queueId}/applications`;
     return this.httpClient.get(appsUrl).pipe(
       map((data: any) => {
         const result: AppInfo[] = [];
@@ -74,6 +77,7 @@ export class SchedulerService {
         if (data && data.length > 0) {
           data.forEach((app: any) => {
             const appInfo = new AppInfo(
+              app['id'],
               app['applicationID'],
               this.formatResource(app['usedResource'] as SchedulerResourceInfo),
               this.formatResource(app['pendingResource'] as SchedulerResourceInfo),
@@ -113,7 +117,9 @@ export class SchedulerService {
                     alloc['queueName'],
                     alloc['nodeId'],
                     alloc['applicationId'],
-                    alloc['partition']
+                    alloc['partition'],
+                    alloc['requestTime'],
+                    alloc['allocationTime']
                   )
                 );
               });
@@ -131,7 +137,7 @@ export class SchedulerService {
   }
 
   fetchAppHistory(): Observable<HistoryInfo[]> {
-    const appHistoryUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/history/apps`;
+    const appHistoryUrl = `${this.envConfig.getYuniKornWebAddress()}/v1/history/apps`;
     return this.httpClient.get(appHistoryUrl).pipe(
       map((data: any) => {
         const result: HistoryInfo[] = [];
@@ -150,7 +156,7 @@ export class SchedulerService {
   }
 
   fetchContainerHistory(): Observable<HistoryInfo[]> {
-    const containerHistoryUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/history/containers`;
+    const containerHistoryUrl = `${this.envConfig.getYuniKornWebAddress()}/v1/history/containers`;
     return this.httpClient.get(containerHistoryUrl).pipe(
       map((data: any) => {
         const result: HistoryInfo[] = [];
@@ -169,7 +175,7 @@ export class SchedulerService {
   }
 
   fetchNodeList(partitionName: string): Observable<NodeInfo[]> {
-    const nodesUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/partition/${partitionName}/nodes`;
+    const nodesUrl = `${this.envConfig.getYuniKornWebAddress()}/v1/partition/${partitionName}/nodes`;
 
     return this.httpClient.get(nodesUrl).pipe(
       map((data: any) => {
@@ -218,7 +224,9 @@ export class SchedulerService {
                     alloc['queueName'],
                     alloc['nodeId'],
                     alloc['applicationId'],
-                    alloc['partition']
+                    alloc['partition'],
+                    alloc['requestTime'],
+                    alloc['allocationTime']
                   )
                 );
               });
@@ -236,14 +244,14 @@ export class SchedulerService {
   }
 
   fetchNodeUtilizationsInfo(): Observable<NodeUtilizationsInfo[]> {
-    const nodeUtilizationsUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/scheduler/node-utilizations`;
+    const nodeUtilizationsUrl = `${this.envConfig.getYuniKornWebAddress()}/v1/scheduler/node-utilizations`;
     return this.httpClient
       .get(nodeUtilizationsUrl)
       .pipe(map((data: any) => data as NodeUtilizationsInfo[]));
   }
 
   fecthHealthchecks(): Observable<SchedulerHealthInfo> {
-    const healthCheckUrl = `${this.envConfig.getYuniKornWebAddress()}/ws/v1/scheduler/healthcheck`;
+    const healthCheckUrl = `${this.envConfig.getYuniKornWebAddress()}/v1/scheduler/healthcheck`;
     return this.httpClient
       .get(healthCheckUrl)
       .pipe(map((data: any) => data as SchedulerHealthInfo));
@@ -260,6 +268,7 @@ export class SchedulerService {
         childQueue.status = queueData.status || NOT_AVAILABLE;
         childQueue.parentQueue = currentQueue ? currentQueue : null;
         childQueue.isLeaf = queueData.isLeaf;
+        childQueue.id = queueData.id;
 
         this.fillQueueResources(queueData, childQueue);
         this.fillQueuePropertiesAndTemplate(queueData, childQueue);

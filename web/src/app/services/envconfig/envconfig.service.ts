@@ -41,7 +41,7 @@ export class EnvConfigService {
     this.uiHostname = window.location.hostname;
     this.uiPort = window.location.port;
     this.envConfig = {
-      yunikornApiURL: 'http://localhost:9889',
+      yunikornApiURL: 'http://localhost:30001',
       uhsApiURL: 'http://localhost:8989',
     };
   }
