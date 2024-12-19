@@ -37,6 +37,39 @@ func (as *ApplicationIntTest) TearDownSuite() {
 	as.pool.Close()
 }
 
+func (as *ApplicationIntTest) TestGetApplicationByID() {
+	ctx := context.Background()
+	tests := []struct {
+		name     string
+		id       string
+		expected bool
+	}{
+		{
+			name:     "Get Application by ID",
+			id:       "1",
+			expected: true,
+		},
+		{
+			name:     "Get Application by ID that does not exist",
+			id:       "100",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		as.Run(tt.name, func() {
+			app, err := as.repo.GetApplicationByID(ctx, tt.id)
+			if tt.expected {
+				require.NoError(as.T(), err)
+				assert.Equal(as.T(), tt.id, app.ID)
+			} else {
+				require.Error(as.T(), err)
+				assert.Nil(as.T(), app)
+			}
+		})
+	}
+}
+
 func (as *ApplicationIntTest) TestGetAllApplications() {
 	ctx := context.Background()
 	tests := []struct {
@@ -214,6 +247,38 @@ func (as *ApplicationIntTest) TestUpdateApplication() {
 			}
 		})
 	}
+}
+
+func (as *ApplicationIntTest) TestDeleteApplicationsNotInIDs() {
+	ctx := context.Background()
+	tests := []struct {
+		name        string
+		ids         []string
+		expectCount int
+	}{
+		{
+			name:        "Delete Applications not in IDs",
+			ids:         []string{"1", "2", "3"},
+			expectCount: 3,
+		},
+	}
+	deletedAtNano := time.Now().UnixNano()
+
+	for _, tt := range tests {
+		as.Run(tt.name, func() {
+			err := as.repo.DeleteApplicationsNotInIDs(ctx, tt.ids, deletedAtNano)
+			require.NoError(as.T(), err)
+
+			query := `SELECT COUNT(id) FROM applications WHERE deleted_at_nano IS NULL`
+			var count int
+			err = as.repo.dbpool.QueryRow(ctx, query).Scan(&count)
+
+			require.NoError(as.T(), err)
+			assert.Equal(as.T(), tt.expectCount, count)
+
+		})
+	}
+
 }
 
 func seedApplications(ctx context.Context, t *testing.T, repo *PostgresRepository) {
