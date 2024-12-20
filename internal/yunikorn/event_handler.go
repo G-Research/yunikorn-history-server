@@ -58,8 +58,17 @@ func (s *Service) handleAppEvent(ctx context.Context, ev *si.EventRecord) {
 			logger.Errorf("could not insert application: %v", err)
 			return
 		}
-
 		return
+	}
+
+	// Re-fetch the application if it's an allocation event, Ref: #380
+	if ev.GetEventChangeType() == si.EventRecord_ADD && ev.GetEventChangeDetail() == si.EventRecord_APP_ALLOC {
+		newDaoApp, err := s.client.GetApplication(ctx, daoApp.Partition, daoApp.QueueName, daoApp.ApplicationID)
+		if err != nil {
+			logger.Errorf("could not get application by application id: %v", err)
+			return
+		}
+		daoApp = *newDaoApp
 	}
 
 	app, err := s.repo.GetApplicationByID(ctx, daoApp.ID)
